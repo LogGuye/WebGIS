@@ -1,5 +1,5 @@
-# WebGIS
 # Hệ thống Web Quản lý & Phân phối Bất động sản (Django + PostGIS)
+# <img width="2542" height="1187" alt="image" src="https://github.com/user-attachments/assets/a45dd238-533a-4c54-ad22-182ec54edf2b" />
 
 ## Giới thiệu & mục tiêu
 - Ứng dụng quản lý danh mục BĐS, agent môi giới, lead và tiện ích xung quanh; hỗ trợ tìm kiếm theo khoảng cách và tự động phân phối lead cho agent gần nhất.
@@ -120,9 +120,9 @@ requirements.txt
 - Có thể thêm screenshot vào thư mục `docs/` (đặt tên `home.png`, `property-list.png`, ...).
 
 
-# <img width="2542" height="1187" alt="image" src="https://github.com/user-attachments/assets/a45dd238-533a-4c54-ad22-182ec54edf2b" />
+
 # <img width="2523" height="634" alt="image" src="https://github.com/user-attachments/assets/5be08eff-0145-4736-b45d-8db3c4416fbf" />
 # <img width="2523" height="634" alt="image" src="https://github.com/user-attachments/assets/cd680ba1-f421-4e8b-9f23-00bfdd21e98a" />
 # <img width="2523" height="825" alt="image" src="https://github.com/user-attachments/assets/4eac4faf-1713-4512-981a-a2118e73cdb3" />
-# ![Uploading image.png…]()
+
 
