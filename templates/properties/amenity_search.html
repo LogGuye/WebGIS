@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Amenity Search{% endblock %}
+{% block content %}
+<h2>Tìm tiện ích gần vị trí</h2>
+<form method="get" class="row g-2 align-items-end mb-3">
+    <div class="col-md-3">
+        <label class="form-label">Latitude</label>
+        <input type="text" name="lat" class="form-control" value="{{ params.lat }}">
+    </div>
+    <div class="col-md-3">
+        <label class="form-label">Longitude</label>
+        <input type="text" name="lng" class="form-control" value="{{ params.lng }}">
+    </div>
+    <div class="col-md-2">
+        <label class="form-label">Bán kính (km)</label>
+        <input type="number" step="0.1" name="radius" class="form-control" value="{{ params.radius }}">
+    </div>
+    <div class="col-md-2">
+        <label class="form-label">Loại tiện ích</label>
+        <select name="amenity_type" class="form-select">
+            <option value="">Tất cả</option>
+            {% for value,label in amenity_types %}
+                <option value="{{ value }}" {% if params.amenity_type == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-2">
+        <button class="btn btn-primary w-100">Tìm</button>
+    </div>
+</form>
+
+{% if results != None %}
+    <p class="text-muted">Tìm thấy {{ results|length }} tiện ích.</p>
+    <div class="list-group">
+        {% for a in results %}
+        <div class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+                <h6 class="mb-1">{{ a.name }}</h6>
+                <small class="text-muted">{{ a.get_amenity_type_display }}</small>
+            </div>
+            <span class="badge text-bg-info">{{ a.distance.km|floatformat:2 }} km</span>
+        </div>
+        {% empty %}
+        <p>Không có kết quả.</p>
+        {% endfor %}
+    </div>
+{% endif %}
+{% endblock %}
