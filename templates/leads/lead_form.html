@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Lead Form{% endblock %}
+{% block content %}
+<h2>Lead Form - Phân phối agent gần nhất</h2>
+<form method="post" class="row g-2">
+    {% csrf_token %}
+    <div class="col-md-4">
+        <label class="form-label">Tên khách</label>
+        <input type="text" name="name" class="form-control" required>
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">Số điện thoại</label>
+        <input type="text" name="phone" class="form-control" required>
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">Budget (VND)</label>
+        <input type="number" name="budget" class="form-control" required>
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">Latitude mong muốn</label>
+        <input type="text" name="lat" class="form-control" required>
+    </div>
+    <div class="col-md-4">
+        <label class="form-label">Longitude mong muốn</label>
+        <input type="text" name="lng" class="form-control" required>
+    </div>
+    <div class="col-md-4 d-grid">
+        <button class="btn btn-primary mt-4">Gửi lead</button>
+    </div>
+</form>
+
+{% if assignment %}
+    <div class="alert alert-success mt-3">
+        Lead đã gán cho agent: <strong>{{ assignment.agent.name }}</strong>
+        (cách {{ assignment.distance }} km)
+    </div>
+{% endif %}
+
+{% if lead %}
+    <div class="card mt-3">
+        <div class="card-body">
+            <h6 class="text-muted mb-1">Lead mới tạo</h6>
+            <p class="mb-0">{{ lead.name }} - {{ lead.phone }}</p>
+            <small>Budget: {{ lead.budget }} VND</small>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

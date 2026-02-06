@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Danh sách BĐS{% endblock %}
+{% block content %}
+<h2>Danh sách Bất động sản</h2>
+<form method="get" class="row g-2 align-items-end mb-3">
+    <div class="col-md-2">
+        <label class="form-label">Loại</label>
+        <select name="type" class="form-select">
+            <option value="">Tất cả</option>
+            <option value="apartment" {% if filters.type == "apartment" %}selected{% endif %}>Apartment</option>
+            <option value="house" {% if filters.type == "house" %}selected{% endif %}>House</option>
+            <option value="land" {% if filters.type == "land" %}selected{% endif %}>Land</option>
+        </select>
+    </div>
+    <div class="col-md-2">
+        <label class="form-label">Giá tối thiểu</label>
+        <input type="number" step="1000000" name="price_min" class="form-control" value="{{ filters.price_min }}">
+    </div>
+    <div class="col-md-2">
+        <label class="form-label">Giá tối đa</label>
+        <input type="number" step="1000000" name="price_max" class="form-control" value="{{ filters.price_max }}">
+    </div>
+    <div class="col-md-2">
+        <label class="form-label">Diện tích min (m²)</label>
+        <input type="number" step="1" name="area_min" class="form-control" value="{{ filters.area_min }}">
+    </div>
+    <div class="col-md-2">
+        <label class="form-label">Diện tích max (m²)</label>
+        <input type="number" step="1" name="area_max" class="form-control" value="{{ filters.area_max }}">
+    </div>
+    <div class="col-md-2">
+        <button class="btn btn-primary w-100">Lọc</button>
+    </div>
+</form>
+
+<div class="row">
+    {% for p in properties %}
+    <div class="col-md-4 mb-3">
+        <div class="card h-100 shadow-sm">
+            <div class="card-body">
+                <h5 class="card-title">{{ p.title }}</h5>
+                <p class="text-muted mb-1">{{ p.get_property_type_display }} · {{ p.area }} m²</p>
+                <p class="fw-bold">{{ p.price|floatformat:0 }} đ</p>
+                <p class="small mb-2">{{ p.address }}</p>
+                <a class="btn btn-sm btn-outline-primary" href="{% url 'properties:detail' p.pk %}">Xem chi tiết</a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <p>Chưa có BĐS.</p>
+    {% endfor %}
+</div>
+{% endblock %}
