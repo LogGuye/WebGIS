@@ -1,53 +1,860 @@
 {% extends "base.html" %}
-{% block title %}Danh sách BĐS{% endblock %}
-{% block content %}
-<h2>Danh sách Bất động sản</h2>
-<form method="get" class="row g-2 align-items-end mb-3">
-    <div class="col-md-2">
-        <label class="form-label">Loại</label>
-        <select name="type" class="form-select">
-            <option value="">Tất cả</option>
-            <option value="apartment" {% if filters.type == "apartment" %}selected{% endif %}>Apartment</option>
-            <option value="house" {% if filters.type == "house" %}selected{% endif %}>House</option>
-            <option value="land" {% if filters.type == "land" %}selected{% endif %}>Land</option>
-        </select>
-    </div>
-    <div class="col-md-2">
-        <label class="form-label">Giá tối thiểu</label>
-        <input type="number" step="1000000" name="price_min" class="form-control" value="{{ filters.price_min }}">
-    </div>
-    <div class="col-md-2">
-        <label class="form-label">Giá tối đa</label>
-        <input type="number" step="1000000" name="price_max" class="form-control" value="{{ filters.price_max }}">
-    </div>
-    <div class="col-md-2">
-        <label class="form-label">Diện tích min (m²)</label>
-        <input type="number" step="1" name="area_min" class="form-control" value="{{ filters.area_min }}">
-    </div>
-    <div class="col-md-2">
-        <label class="form-label">Diện tích max (m²)</label>
-        <input type="number" step="1" name="area_max" class="form-control" value="{{ filters.area_max }}">
-    </div>
-    <div class="col-md-2">
-        <button class="btn btn-primary w-100">Lọc</button>
-    </div>
-</form>
+{% block title %}Property Listings | GeoEstate{% endblock %}
 
-<div class="row">
-    {% for p in properties %}
-    <div class="col-md-4 mb-3">
-        <div class="card h-100 shadow-sm">
-            <div class="card-body">
-                <h5 class="card-title">{{ p.title }}</h5>
-                <p class="text-muted mb-1">{{ p.get_property_type_display }} · {{ p.area }} m²</p>
-                <p class="fw-bold">{{ p.price|floatformat:0 }} đ</p>
-                <p class="small mb-2">{{ p.address }}</p>
-                <a class="btn btn-sm btn-outline-primary" href="{% url 'properties:detail' p.pk %}">Xem chi tiết</a>
-            </div>
-        </div>
-    </div>
-    {% empty %}
-    <p>Chưa có BĐS.</p>
-    {% endfor %}
+{% block breadcrumb %}
+<div class="breadcrumb-strip">
+  <div class="container">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'core:home' %}"><i class="bi bi-house me-1"></i>Home</a></li>
+        <li class="breadcrumb-item active">Properties</li>
+      </ol>
+    </nav>
+  </div>
 </div>
+{% endblock %}
+
+{% block head %}
+<style>
+  /* ══════════════════════════════════════════
+     PROPERTY LIST — all colors via var() tokens
+  ══════════════════════════════════════════ */
+
+  /* ── Page hero ── */
+  .page-hero {
+    background: var(--bg-2);
+    border-bottom: 1px solid var(--border);
+    padding: 40px 0 36px;
+  }
+
+  .page-eyebrow {
+    font-size: 10.5px; font-weight: 600; letter-spacing: 3px;
+    text-transform: uppercase; color: var(--gold); margin-bottom: 6px;
+  }
+
+  .page-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(1.6rem, 3vw, 2.2rem);
+    font-weight: 700; color: var(--text); line-height: 1.15; margin-bottom: 6px;
+  }
+
+  .page-desc { color: var(--text-muted); font-size: 14px; font-weight: 300; }
+
+  /* ── Main layout ── */
+  .list-layout {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 28px;
+    align-items: start;
+    padding: 36px 0 80px;
+  }
+
+  @media (max-width: 1024px) {
+    .list-layout { grid-template-columns: 1fr; }
+    .filter-sidebar { display: none; }
+    .filter-sidebar.open { display: block; }
+  }
+
+  /* ── Filter sidebar ── */
+  .filter-sidebar-sticky { position: sticky; top: calc(var(--nav-h) + 16px); }
+
+  .filter-panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    box-shadow: var(--shadow-card);
+  }
+
+  .filter-panel-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  .filter-panel-title {
+    font-size: 11px; font-weight: 600; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--gold);
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .filter-clear-btn {
+    font-size: 11.5px; color: var(--text-muted);
+    background: none; border: none; cursor: pointer;
+    font-family: 'Outfit', sans-serif;
+    transition: color var(--transition);
+    padding: 0;
+  }
+
+  .filter-clear-btn:hover { color: var(--gold); }
+
+  .filter-section { padding: 18px 20px; border-bottom: 1px solid var(--border); }
+  .filter-section:last-child { border-bottom: none; }
+
+  .filter-section-label {
+    font-size: 11px; font-weight: 600; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--text-dim);
+    margin-bottom: 12px; display: flex; align-items: center; gap: 6px;
+  }
+
+  .filter-section-label i { color: var(--gold); }
+
+  /* Field input */
+  .field-input {
+    background: var(--bg-3); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); color: var(--text);
+    font-family: 'Outfit', sans-serif; font-size: 13.5px;
+    padding: 9px 12px; outline: none; width: 100%;
+    transition: border-color var(--transition), box-shadow var(--transition);
+  }
+
+  .field-input::placeholder { color: var(--text-muted); }
+  .field-input:focus { border-color: var(--gold-border); box-shadow: 0 0 0 3px var(--gold-dim); }
+  .field-input option { background: var(--bg-2); }
+
+  /* Type chips inside filter */
+  .type-chip-group { display: flex; flex-direction: column; gap: 6px; }
+
+  .type-chip-radio {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px; border-radius: var(--radius-sm);
+    border: 1px solid var(--border); background: var(--bg-3);
+    cursor: pointer; transition: all var(--transition);
+    user-select: none;
+  }
+
+  .type-chip-radio:hover { border-color: var(--gold-border); background: var(--gold-dim); }
+  .type-chip-radio.active { border-color: var(--gold-border); background: var(--gold-dim); color: var(--gold); }
+  .type-chip-radio input[type="radio"] { display: none; }
+
+  .type-chip-radio-label {
+    font-size: 13px; font-weight: 500; color: var(--text-dim);
+    flex: 1; display: flex; align-items: center; gap: 8px;
+  }
+
+  .type-chip-radio.active .type-chip-radio-label { color: var(--gold); }
+
+  .type-chip-dot {
+    width: 16px; height: 16px; border-radius: 50%;
+    border: 2px solid var(--border); flex-shrink: 0;
+    display: grid; place-items: center; transition: all var(--transition);
+  }
+
+  .type-chip-radio.active .type-chip-dot {
+    border-color: var(--gold); background: var(--gold);
+  }
+
+  .type-chip-radio.active .type-chip-dot::after {
+    content: ''; width: 6px; height: 6px;
+    background: #0C0F1A; border-radius: 50%;
+  }
+
+  /* Price range inputs */
+  .range-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .range-sep { text-align: center; font-size: 12px; color: var(--text-muted); padding-top: 10px; }
+
+  /* Apply button */
+  .btn-apply-filter {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 12px;
+    background: var(--gold); color: #0C0F1A;
+    border: none; border-radius: var(--radius-md);
+    font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 600;
+    cursor: pointer; transition: all var(--transition);
+    margin-top: 4px;
+  }
+
+  .btn-apply-filter:hover {
+    background: var(--gold-light);
+    box-shadow: 0 6px 20px rgba(200,169,110,.3);
+    transform: translateY(-1px);
+  }
+
+  /* Active filters summary */
+  .active-filters {
+    display: flex; flex-wrap: wrap; gap: 6px; padding: 12px 20px;
+    background: var(--gold-dim); border-bottom: 1px solid var(--gold-border);
+  }
+
+  .active-filter-tag {
+    display: flex; align-items: center; gap: 5px;
+    padding: 3px 10px; border-radius: 999px;
+    background: var(--bg-card); border: 1px solid var(--gold-border);
+    font-size: 11.5px; color: var(--gold); font-weight: 500;
+  }
+
+  .active-filter-tag button {
+    background: none; border: none; cursor: pointer;
+    color: var(--gold); font-size: 13px; padding: 0; line-height: 1;
+    transition: color var(--transition);
+  }
+
+  .active-filter-tag button:hover { color: var(--text); }
+
+  /* ── Results header ── */
+  .results-topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px; margin-bottom: 20px;
+  }
+
+  .results-count-row { display: flex; align-items: center; gap: 10px; }
+
+  .results-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.8rem; font-weight: 700; color: var(--gold); line-height: 1;
+  }
+
+  .results-label { font-size: 13px; color: var(--text-muted); }
+
+  .topbar-right { display: flex; align-items: center; gap: 10px; }
+
+  .sort-select {
+    background: var(--bg-3); border: 1px solid var(--border);
+    color: var(--text); border-radius: var(--radius-sm);
+    padding: 8px 12px; font-family: 'Outfit', sans-serif;
+    font-size: 13px; outline: none; cursor: pointer;
+    transition: border-color var(--transition);
+  }
+
+  .sort-select:focus { border-color: var(--gold-border); }
+  .sort-select option { background: var(--bg-2); }
+
+  /* View toggle */
+  .view-toggle {
+    display: flex; gap: 3px;
+    background: var(--bg-3); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); padding: 3px;
+  }
+
+  .view-btn {
+    padding: 6px 11px; border-radius: 6px; border: none;
+    background: transparent; color: var(--text-muted);
+    font-size: 14px; cursor: pointer; transition: all var(--transition);
+  }
+
+  .view-btn.active { background: var(--bg-card); color: var(--text); }
+
+  /* Mobile filter toggle */
+  .mobile-filter-btn {
+    display: none;
+    align-items: center; gap: 7px;
+    padding: 9px 16px; background: var(--bg-card);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+    color: var(--text-dim); font-family: 'Outfit', sans-serif;
+    font-size: 13.5px; font-weight: 500; cursor: pointer;
+    transition: all var(--transition);
+  }
+
+  @media (max-width: 1024px) { .mobile-filter-btn { display: flex; } }
+  .mobile-filter-btn:hover { border-color: var(--gold-border); color: var(--gold); }
+
+  /* ── Grid view ── */
+  .prop-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 18px;
+  }
+
+  .prop-card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); overflow: hidden;
+    transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition);
+    display: flex; flex-direction: column;
+  }
+
+  .prop-card:hover {
+    border-color: var(--border-hover);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-card), var(--shadow-glow);
+  }
+
+  .prop-card-thumb {
+    height: 180px;
+    background: linear-gradient(135deg, var(--bg-2) 0%, var(--bg-3) 100%);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 44px; position: relative;
+    flex-shrink: 0;
+  }
+
+  .prop-card-thumb::after {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 40px;
+    background: linear-gradient(to bottom, transparent, var(--bg-card));
+  }
+
+  .prop-card-body { padding: 16px 18px; flex: 1; display: flex; flex-direction: column; }
+
+  .prop-card-title {
+    font-size: 15px; font-weight: 600; color: var(--text);
+    margin-bottom: 4px; line-height: 1.3;
+    display: -webkit-box; -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical; overflow: hidden;
+  }
+
+  .prop-card-address {
+    font-size: 12px; color: var(--text-muted); margin-bottom: 12px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  .prop-card-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 12px; }
+
+  .prop-tag {
+    font-size: 11px; font-weight: 500; color: var(--text-dim);
+    background: var(--bg-3); border: 1px solid var(--border);
+    border-radius: 6px; padding: 2px 8px;
+    display: flex; align-items: center; gap: 3px;
+  }
+
+  .prop-card-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-top: 12px; border-top: 1px solid var(--border); margin-top: auto;
+  }
+
+  .prop-card-price {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.25rem; font-weight: 700; color: var(--gold);
+  }
+
+  .btn-card-view {
+    display: flex; align-items: center; gap: 5px;
+    padding: 7px 14px; background: transparent;
+    color: var(--text-dim); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); font-family: 'Outfit', sans-serif;
+    font-size: 12.5px; font-weight: 500; text-decoration: none;
+    transition: all var(--transition);
+  }
+
+  .btn-card-view:hover { border-color: var(--gold-border); color: var(--gold); background: var(--gold-dim); }
+
+  /* ── List view ── */
+  .prop-list { display: flex; flex-direction: column; gap: 12px; }
+
+  .prop-list-item {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); overflow: hidden;
+    display: grid; grid-template-columns: 150px 1fr auto;
+    transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition);
+  }
+
+  .prop-list-item:hover {
+    border-color: var(--border-hover);
+    transform: translateX(4px);
+    box-shadow: var(--shadow-card);
+  }
+
+  .prop-list-thumb {
+    background: linear-gradient(135deg, var(--bg-2) 0%, var(--bg-3) 100%);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 36px; position: relative; min-height: 110px;
+  }
+
+  .prop-list-body { padding: 14px 16px; display: flex; flex-direction: column; justify-content: center; min-width: 0; }
+
+  .prop-list-title {
+    font-size: 14.5px; font-weight: 600; color: var(--text); margin-bottom: 3px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  .prop-list-address { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
+
+  .prop-list-right {
+    display: flex; flex-direction: column; align-items: flex-end;
+    justify-content: center; padding: 14px 16px; gap: 8px;
+    border-left: 1px solid var(--border); min-width: 130px;
+  }
+
+  .prop-list-price {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.2rem; font-weight: 700; color: var(--gold); white-space: nowrap;
+  }
+
+  /* ── Empty state ── */
+  .empty-state {
+    grid-column: 1 / -1; text-align: center; padding: 72px 24px;
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius-xl); color: var(--text-muted);
+  }
+
+  .empty-icon { font-size: 52px; margin-bottom: 16px; opacity: .4; }
+  .empty-state h5 { color: var(--text); font-size: 17px; margin-bottom: 8px; }
+  .empty-state p  { font-size: 14px; max-width: 380px; margin: 0 auto 24px; line-height: 1.7; }
+
+  /* ── Pagination ── */
+  .pagination-row {
+    display: flex; align-items: center; justify-content: center;
+    gap: 6px; margin-top: 36px; flex-wrap: wrap;
+  }
+
+  .page-btn {
+    width: 38px; height: 38px; border-radius: var(--radius-sm);
+    background: var(--bg-card); border: 1px solid var(--border);
+    color: var(--text-dim); font-size: 13.5px; font-weight: 500;
+    cursor: pointer; transition: all var(--transition);
+    display: grid; place-items: center;
+    font-family: 'Outfit', sans-serif; text-decoration: none;
+  }
+
+  .page-btn:hover { border-color: var(--gold-border); color: var(--gold); background: var(--gold-dim); }
+  .page-btn.active { background: var(--gold); color: #0C0F1A; border-color: var(--gold); font-weight: 700; }
+  .page-btn:disabled { opacity: .35; cursor: not-allowed; }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    .prop-list-item { grid-template-columns: 100px 1fr; }
+    .prop-list-right { display: none; }
+  }
+
+  @media (max-width: 480px) {
+    .prop-grid { grid-template-columns: 1fr; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ══ PAGE HERO ══ -->
+<div class="page-hero">
+  <div class="container">
+    <div class="d-flex align-items-start justify-content-between flex-wrap gap-3">
+      <div>
+        <p class="page-eyebrow">Real Estate Listings</p>
+        <h1 class="page-title">Browse Properties</h1>
+        <p class="page-desc">Explore our curated selection of properties across Ho Chi Minh City.</p>
+      </div>
+      <a href="{% url 'properties:nearby_search' %}" class="btn-geo-secondary" style="font-size:13px;padding:9px 18px;margin-top:8px">
+        <i class="bi bi-geo-alt"></i> Nearby Search
+      </a>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="list-layout">
+
+    <!-- ══ FILTER SIDEBAR ══ -->
+    <aside class="filter-sidebar" id="filterSidebar">
+      <div class="filter-sidebar-sticky">
+        <form method="get" id="filterForm">
+          <div class="filter-panel">
+
+            <div class="filter-panel-header">
+              <div class="filter-panel-title">
+                <i class="bi bi-sliders"></i> Filters
+              </div>
+              <button type="button" class="filter-clear-btn" id="btnClearFilters">
+                Clear all
+              </button>
+            </div>
+
+            <!-- Active filter tags shown here via JS -->
+            <div id="activeFilterBar" style="display:none"></div>
+
+            <!-- Property type -->
+            <div class="filter-section">
+              <div class="filter-section-label"><i class="bi bi-buildings"></i> Property Type</div>
+              <div class="type-chip-group" id="typeChipGroup">
+                <label class="type-chip-radio {% if not filters.type %}active{% endif %}">
+                  <input type="radio" name="type" value="" {% if not filters.type %}checked{% endif %} />
+                  <div class="type-chip-dot"></div>
+                  <span class="type-chip-radio-label">🏘️ All types</span>
+                </label>
+                <label class="type-chip-radio {% if filters.type == 'apartment' %}active{% endif %}">
+                  <input type="radio" name="type" value="apartment" {% if filters.type == 'apartment' %}checked{% endif %} />
+                  <div class="type-chip-dot"></div>
+                  <span class="type-chip-radio-label">🏢 Apartment</span>
+                </label>
+                <label class="type-chip-radio {% if filters.type == 'house' %}active{% endif %}">
+                  <input type="radio" name="type" value="house" {% if filters.type == 'house' %}checked{% endif %} />
+                  <div class="type-chip-dot"></div>
+                  <span class="type-chip-radio-label">🏠 House</span>
+                </label>
+                <label class="type-chip-radio {% if filters.type == 'land' %}active{% endif %}">
+                  <input type="radio" name="type" value="land" {% if filters.type == 'land' %}checked{% endif %} />
+                  <div class="type-chip-dot"></div>
+                  <span class="type-chip-radio-label">🌿 Land</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Price range -->
+            <div class="filter-section">
+              <div class="filter-section-label"><i class="bi bi-cash-coin"></i> Price Range (VND)</div>
+              <div class="range-inputs">
+                <div>
+                  <div class="filter-section-label" style="font-size:10px;margin-bottom:5px">Min price</div>
+                  <input type="number" name="price_min" class="field-input" step="500000000"
+                         placeholder="0" value="{{ filters.price_min }}" />
+                </div>
+                <div>
+                  <div class="filter-section-label" style="font-size:10px;margin-bottom:5px">Max price</div>
+                  <input type="number" name="price_max" class="field-input" step="500000000"
+                         placeholder="Any" value="{{ filters.price_max }}" />
+                </div>
+              </div>
+
+              <!-- Quick price presets -->
+              <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:10px" id="pricePresets">
+                <button type="button" class="quick-loc-btn" style="font-size:11px;padding:4px 10px"
+                        data-min="" data-max="2000000000">Under 2B</button>
+                <button type="button" class="quick-loc-btn" style="font-size:11px;padding:4px 10px"
+                        data-min="2000000000" data-max="5000000000">2B – 5B</button>
+                <button type="button" class="quick-loc-btn" style="font-size:11px;padding:4px 10px"
+                        data-min="5000000000" data-max="10000000000">5B – 10B</button>
+                <button type="button" class="quick-loc-btn" style="font-size:11px;padding:4px 10px"
+                        data-min="10000000000" data-max="">Over 10B</button>
+              </div>
+            </div>
+
+            <!-- Area range -->
+            <div class="filter-section">
+              <div class="filter-section-label"><i class="bi bi-aspect-ratio"></i> Area (m²)</div>
+              <div class="range-inputs">
+                <div>
+                  <div class="filter-section-label" style="font-size:10px;margin-bottom:5px">Min area</div>
+                  <input type="number" name="area_min" class="field-input" step="10"
+                         placeholder="0" value="{{ filters.area_min }}" />
+                </div>
+                <div>
+                  <div class="filter-section-label" style="font-size:10px;margin-bottom:5px">Max area</div>
+                  <input type="number" name="area_max" class="field-input" step="10"
+                         placeholder="Any" value="{{ filters.area_max }}" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Keyword search -->
+            <div class="filter-section">
+              <div class="filter-section-label"><i class="bi bi-search"></i> Keyword</div>
+              <input type="text" name="q" class="field-input"
+                     placeholder="Title, address…" value="{{ filters.q|default:'' }}" />
+            </div>
+
+            <!-- Apply -->
+            <div class="filter-section" style="border-bottom:none;padding-bottom:20px">
+              <button type="submit" class="btn-apply-filter">
+                <i class="bi bi-funnel-fill"></i> Apply Filters
+              </button>
+            </div>
+
+          </div><!-- /filter-panel -->
+        </form>
+      </div>
+    </aside>
+
+    <!-- ══ RESULTS ══ -->
+    <div>
+
+      <!-- Results topbar -->
+      <div class="results-topbar fade-up">
+        <div class="results-count-row">
+          <span class="results-num">{{ properties|length }}</span>
+          <span class="results-label">
+            propert{{ properties|length|pluralize:"y,ies" }} found
+          </span>
+          <!-- Mobile filter toggle -->
+          <button class="mobile-filter-btn" id="mobileFilterToggle">
+            <i class="bi bi-sliders"></i> Filters
+          </button>
+        </div>
+
+        <div class="topbar-right">
+          <select class="sort-select" id="sortSelect">
+            <option value="default">Sort: Default</option>
+            <option value="price_asc">Price: Low → High</option>
+            <option value="price_desc">Price: High → Low</option>
+            <option value="area_desc">Area: Largest first</option>
+            <option value="area_asc">Area: Smallest first</option>
+          </select>
+
+          <div class="view-toggle">
+            <button class="view-btn active" id="btnGrid" title="Grid view"><i class="bi bi-grid-3x3-gap"></i></button>
+            <button class="view-btn"        id="btnList" title="List view"><i class="bi bi-list-ul"></i></button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── GRID VIEW ── -->
+      <div class="prop-grid fade-up delay-1" id="gridView">
+        {% for p in properties %}
+        <div class="prop-card"
+             data-price="{{ p.price|default:0 }}"
+             data-area="{{ p.area|default:0 }}">
+
+          <div class="prop-card-thumb">
+            {% with t=p.get_property_type_display|lower %}
+              {% if "apartment" in t %}🏢
+              {% elif "house" in t %}🏠
+              {% elif "land" in t %}🌿
+              {% elif "villa" in t %}🏡
+              {% else %}🏗️
+              {% endif %}
+            {% endwith %}
+            <span class="badge-gold" style="position:absolute;top:10px;left:10px;z-index:1">
+              {{ p.get_property_type_display }}
+            </span>
+          </div>
+
+          <div class="prop-card-body">
+            <div class="prop-card-title">{{ p.title }}</div>
+            <div class="prop-card-address">
+              <i class="bi bi-geo-alt" style="color:var(--gold)"></i> {{ p.address }}
+            </div>
+            <div class="prop-card-tags">
+              {% if p.area %}
+              <span class="prop-tag"><i class="bi bi-aspect-ratio"></i> {{ p.area }} m²</span>
+              {% endif %}
+              {% if p.bedrooms %}
+              <span class="prop-tag"><i class="bi bi-door-open"></i> {{ p.bedrooms }} bed</span>
+              {% endif %}
+              {% if p.bathrooms %}
+              <span class="prop-tag"><i class="bi bi-droplet"></i> {{ p.bathrooms }} bath</span>
+              {% endif %}
+            </div>
+            <div class="prop-card-footer">
+              <div class="prop-card-price">
+                {% if p.price %}{{ p.price|floatformat:0 }}<span style="font-size:.8rem;font-weight:400;color:var(--text-muted)"> đ</span>{% else %}<span style="color:var(--text-muted);font-size:.9rem">On request</span>{% endif %}
+              </div>
+              <a class="btn-card-view" href="{% url 'properties:detail' p.pk %}">
+                <i class="bi bi-eye"></i> View
+              </a>
+            </div>
+          </div>
+        </div>
+        {% empty %}
+        <div class="empty-state">
+          <div class="empty-icon">🏚️</div>
+          <h5>No properties found</h5>
+          <p>Try adjusting your filters or clearing them to see all available listings.</p>
+          <a href="{% url 'properties:list' %}" class="btn-geo-primary" style="display:inline-flex">
+            <i class="bi bi-arrow-counterclockwise"></i> Clear filters
+          </a>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- ── LIST VIEW (hidden by default) ── -->
+      <div class="prop-list fade-up delay-1" id="listView" style="display:none">
+        {% for p in properties %}
+        <div class="prop-list-item"
+             data-price="{{ p.price|default:0 }}"
+             data-area="{{ p.area|default:0 }}">
+
+          <div class="prop-list-thumb">
+            {% with t=p.get_property_type_display|lower %}
+              {% if "apartment" in t %}🏢
+              {% elif "house" in t %}🏠
+              {% elif "land" in t %}🌿
+              {% elif "villa" in t %}🏡
+              {% else %}🏗️
+              {% endif %}
+            {% endwith %}
+            <span class="badge-gold" style="position:absolute;bottom:8px;left:8px;font-size:9px">
+              {{ p.get_property_type_display }}
+            </span>
+          </div>
+
+          <div class="prop-list-body">
+            <div class="prop-list-title">{{ p.title }}</div>
+            <div class="prop-list-address">
+              <i class="bi bi-geo-alt me-1" style="color:var(--gold)"></i>{{ p.address }}
+            </div>
+            <div class="prop-card-tags">
+              {% if p.area %}
+              <span class="prop-tag"><i class="bi bi-aspect-ratio"></i> {{ p.area }} m²</span>
+              {% endif %}
+              {% if p.bedrooms %}
+              <span class="prop-tag">{{ p.bedrooms }} bed</span>
+              {% endif %}
+              {% if p.bathrooms %}
+              <span class="prop-tag">{{ p.bathrooms }} bath</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="prop-list-right">
+            <div class="prop-list-price">
+              {% if p.price %}{{ p.price|floatformat:0 }}<span style="font-size:.75rem;color:var(--text-muted)"> đ</span>{% else %}<span style="color:var(--text-muted)">On request</span>{% endif %}
+            </div>
+            <a class="btn-card-view" href="{% url 'properties:detail' p.pk %}">
+              <i class="bi bi-eye"></i> View
+            </a>
+          </div>
+
+        </div>
+        {% empty %}
+        <div class="empty-state">
+          <div class="empty-icon">🏚️</div>
+          <h5>No properties found</h5>
+          <p>Try adjusting your filters or clearing them to see all available listings.</p>
+        </div>
+        {% endfor %}
+      </div>
+
+      <!-- ── PAGINATION ── -->
+      {% if is_paginated %}
+      <div class="pagination-row">
+        {% if page_obj.has_previous %}
+        <a class="page-btn" href="?page={{ page_obj.previous_page_number }}{% if filters.type %}&type={{ filters.type }}{% endif %}">
+          <i class="bi bi-chevron-left"></i>
+        </a>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+          {% if page_obj.number == num %}
+          <span class="page-btn active">{{ num }}</span>
+          {% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}
+          <a class="page-btn" href="?page={{ num }}{% if filters.type %}&type={{ filters.type }}{% endif %}">{{ num }}</a>
+          {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+        <a class="page-btn" href="?page={{ page_obj.next_page_number }}{% if filters.type %}&type={{ filters.type }}{% endif %}">
+          <i class="bi bi-chevron-right"></i>
+        </a>
+        {% endif %}
+      </div>
+      {% endif %}
+
+    </div><!-- /results -->
+  </div><!-- /list-layout -->
+</div><!-- /container -->
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+
+  /* ── View toggle: Grid ↔ List ── */
+  const gridView = document.getElementById('gridView');
+  const listView = document.getElementById('listView');
+  const btnGrid  = document.getElementById('btnGrid');
+  const btnList  = document.getElementById('btnList');
+
+  btnGrid && btnGrid.addEventListener('click', () => {
+    gridView.style.display = 'grid';
+    listView.style.display = 'none';
+    btnGrid.classList.add('active'); btnList.classList.remove('active');
+    localStorage.setItem('geo_list_view', 'grid');
+  });
+
+  btnList && btnList.addEventListener('click', () => {
+    listView.style.display = 'flex';
+    gridView.style.display = 'none';
+    btnList.classList.add('active'); btnGrid.classList.remove('active');
+    localStorage.setItem('geo_list_view', 'list');
+  });
+
+  // Restore saved preference
+  const savedView = localStorage.getItem('geo_list_view');
+  if (savedView === 'list') btnList && btnList.click();
+
+  /* ── Type chip radio styling ── */
+  document.querySelectorAll('.type-chip-radio input[type="radio"]').forEach(radio => {
+    radio.addEventListener('change', () => {
+      document.querySelectorAll('.type-chip-radio').forEach(el => el.classList.remove('active'));
+      radio.closest('.type-chip-radio').classList.add('active');
+    });
+  });
+
+  /* ── Price preset buttons ── */
+  document.querySelectorAll('#pricePresets button[data-min]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const form = document.getElementById('filterForm');
+      form.querySelector('[name="price_min"]').value = btn.dataset.min;
+      form.querySelector('[name="price_max"]').value = btn.dataset.max;
+    });
+  });
+
+  /* ── Clear all filters ── */
+  const clearBtn = document.getElementById('btnClearFilters');
+  clearBtn && clearBtn.addEventListener('click', () => {
+    window.location.href = window.location.pathname;
+  });
+
+  /* ── Client-side sort ── */
+  const sortSelect = document.getElementById('sortSelect');
+
+  function sortCards(key) {
+    [gridView, listView].forEach(container => {
+      if (!container) return;
+      const selector = container === gridView ? '.prop-card' : '.prop-list-item';
+      const items = [...container.querySelectorAll(selector)];
+      items.sort((a, b) => {
+        const ap = parseFloat(a.dataset.price), bp = parseFloat(b.dataset.price);
+        const aa = parseFloat(a.dataset.area),  ba = parseFloat(b.dataset.area);
+        if (key === 'price_asc')  return ap - bp;
+        if (key === 'price_desc') return bp - ap;
+        if (key === 'area_desc')  return ba - aa;
+        if (key === 'area_asc')   return aa - ba;
+        return 0;
+      });
+      items.forEach(item => container.appendChild(item));
+    });
+  }
+
+  sortSelect && sortSelect.addEventListener('change', () => sortCards(sortSelect.value));
+
+  /* ── Mobile filter sidebar toggle ── */
+  const mobileToggle = document.getElementById('mobileFilterToggle');
+  const sidebar      = document.getElementById('filterSidebar');
+
+  mobileToggle && mobileToggle.addEventListener('click', () => {
+    sidebar.classList.toggle('open');
+    mobileToggle.innerHTML = sidebar.classList.contains('open')
+      ? '<i class="bi bi-x-lg"></i> Close'
+      : '<i class="bi bi-sliders"></i> Filters';
+  });
+
+  /* ── Active filter tags ── */
+  (function renderActiveFilters() {
+    const params  = new URLSearchParams(window.location.search);
+    const bar     = document.getElementById('activeFilterBar');
+    if (!bar) return;
+
+    const labels = {
+      type:      v => ({ label: `Type: ${v}` }),
+      price_min: v => ({ label: `Min: ${Number(v).toLocaleString()} đ` }),
+      price_max: v => ({ label: `Max: ${Number(v).toLocaleString()} đ` }),
+      area_min:  v => ({ label: `Area ≥ ${v} m²` }),
+      area_max:  v => ({ label: `Area ≤ ${v} m²` }),
+      q:         v => ({ label: `"${v}"` }),
+    };
+
+    const tags = [];
+    for (const [key, fn] of Object.entries(labels)) {
+      const val = params.get(key);
+      if (val) tags.push({ key, val, ...fn(val) });
+    }
+
+    if (tags.length === 0) { bar.style.display = 'none'; return; }
+
+    bar.style.display = 'flex';
+    bar.className = 'active-filters';
+    bar.innerHTML = tags.map(t => `
+      <span class="active-filter-tag">
+        ${t.label}
+        <button onclick="removeFilter('${t.key}')" title="Remove filter">×</button>
+      </span>
+    `).join('');
+  })();
+
+  window.removeFilter = function(key) {
+    const params = new URLSearchParams(window.location.search);
+    params.delete(key);
+    window.location.search = params.toString();
+  };
+
+})();
+</script>
+
+<style>
+  .quick-loc-btn {
+    background: var(--bg-3); border: 1px solid var(--border);
+    border-radius: 999px; padding: 5px 14px;
+    font-size: 12px; font-weight: 500; color: var(--text-dim);
+    cursor: pointer; transition: all var(--transition);
+    font-family: 'Outfit', sans-serif;
+  }
+  .quick-loc-btn:hover { border-color: var(--gold-border); color: var(--gold); background: var(--gold-dim); }
+</style>
 {% endblock %}

@@ -1,20 +1,699 @@
 {% extends "base.html" %}
-{% block title %}{{ property.title }}{% endblock %}
+{% block title %}{{ property.title }} | GeoEstate{% endblock %}
+
+{% block breadcrumb %}
+<div class="breadcrumb-strip">
+  <div class="container">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'core:home' %}"><i class="bi bi-house me-1"></i>Home</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'properties:list' %}">Properties</a></li>
+        <li class="breadcrumb-item active">{{ property.title }}</li>
+      </ol>
+    </nav>
+  </div>
+</div>
+{% endblock %}
+
+{% block head %}
+<style>
+  /* ══════════════════════════════════════════
+     PROPERTY DETAIL — all colors via var()
+  ══════════════════════════════════════════ */
+
+  /* ── Hero banner ── */
+  .detail-hero {
+    background: var(--bg-2);
+    border-bottom: 1px solid var(--border);
+    padding: 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .detail-hero-image {
+    height: 420px;
+    background: linear-gradient(135deg, var(--bg-2) 0%, var(--bg-3) 50%, var(--bg-2) 100%);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 96px; position: relative;
+  }
+
+  /* Decorative corner accent */
+  .detail-hero-image::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, transparent 0%, var(--gold) 40%, var(--gold-light) 60%, transparent 100%);
+  }
+
+  .detail-hero-image::after {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 50% 60% at 50% 50%, rgba(200,169,110,.06) 0%, transparent 70%),
+      linear-gradient(to bottom, transparent 60%, var(--bg-2) 100%);
+  }
+
+  /* Badge strip over the image */
+  .hero-badge-strip {
+    position: absolute; bottom: 20px; left: 0; right: 0;
+    display: flex; align-items: center; gap: 10px;
+    padding: 0 32px; z-index: 2; flex-wrap: wrap;
+  }
+
+  /* ── Main layout ── */
+  .detail-layout {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 28px;
+    align-items: start;
+    padding: 40px 0 80px;
+  }
+
+  @media (max-width: 1024px) {
+    .detail-layout { grid-template-columns: 1fr; }
+    .detail-sidebar { order: -1; }
+  }
+
+  /* ── Content sections ── */
+  .detail-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow-card);
+  }
+
+  .detail-card-header {
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  .detail-card-header-icon {
+    width: 34px; height: 34px;
+    background: var(--gold-dim); border: 1px solid var(--gold-border);
+    border-radius: var(--radius-sm);
+    display: grid; place-items: center; font-size: 16px; flex-shrink: 0;
+  }
+
+  .detail-card-title {
+    font-size: 11px; font-weight: 600; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--gold);
+  }
+
+  .detail-card-body { padding: 24px; }
+
+  /* ── Property headline ── */
+  .prop-headline { margin-bottom: 20px; }
+
+  .prop-type-row {
+    display: flex; align-items: center; gap: 10px;
+    flex-wrap: wrap; margin-bottom: 10px;
+  }
+
+  .prop-main-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(1.6rem, 3.5vw, 2.4rem);
+    font-weight: 700; color: var(--text); line-height: 1.15;
+    margin-bottom: 10px;
+  }
+
+  .prop-address-line {
+    display: flex; align-items: flex-start; gap: 8px;
+    color: var(--text-muted); font-size: 14px; line-height: 1.6;
+  }
+
+  .prop-address-line i { color: var(--gold); margin-top: 3px; flex-shrink: 0; }
+
+  /* ── Stats grid ── */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 12px;
+    margin: 24px 0;
+  }
+
+  .stat-box {
+    background: var(--bg-3); border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 16px 14px; text-align: center;
+    transition: border-color var(--transition), background var(--transition);
+  }
+
+  .stat-box:hover { border-color: var(--gold-border); background: var(--gold-dim); }
+
+  .stat-box-icon { font-size: 20px; margin-bottom: 8px; }
+
+  .stat-box-val {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.3rem; font-weight: 700; color: var(--text); line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .stat-box-label {
+    font-size: 10px; font-weight: 600; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--text-muted);
+  }
+
+  /* ── Description ── */
+  .desc-text {
+    color: var(--text-dim); font-size: 14.5px;
+    line-height: 1.85; font-weight: 300;
+  }
+
+  /* ── Amenity chips ── */
+  .amenity-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+
+  .amenity-chip {
+    display: flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: 999px;
+    background: var(--gold-dim); border: 1px solid var(--gold-border);
+    color: var(--gold); font-size: 12.5px; font-weight: 500;
+    transition: all var(--transition);
+  }
+
+  .amenity-chip:hover {
+    background: var(--gold); color: #0C0F1A;
+    transform: translateY(-1px);
+  }
+
+  .amenity-chip i { font-size: 13px; }
+
+  /* ── Map embed ── */
+  .map-embed-wrap {
+    border-radius: var(--radius-lg); overflow: hidden;
+    height: 260px; border: 1px solid var(--border);
+    background: var(--bg-3); position: relative;
+  }
+
+  .map-embed-wrap iframe {
+    width: 100%; height: 100%; border: none;
+    filter: brightness(.82) saturate(.55) hue-rotate(185deg);
+    transition: filter var(--transition);
+  }
+
+  [data-theme="light"] .map-embed-wrap iframe { filter: brightness(.95) saturate(.75); }
+
+  /* ── Sidebar ── */
+  .detail-sidebar { }
+
+  .sidebar-sticky { position: sticky; top: calc(var(--nav-h) + 16px); }
+
+  /* Price card */
+  .price-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    overflow: hidden; margin-bottom: 16px;
+    box-shadow: var(--shadow-card);
+  }
+
+  .price-card-top {
+    padding: 24px;
+    background: linear-gradient(135deg, var(--bg-3) 0%, var(--bg-2) 100%);
+    border-bottom: 1px solid var(--border);
+    position: relative; overflow: hidden;
+  }
+
+  .price-card-top::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+
+  .price-eyebrow {
+    font-size: 10px; font-weight: 600; letter-spacing: 2.5px;
+    text-transform: uppercase; color: var(--gold); margin-bottom: 8px;
+  }
+
+  .price-main {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2rem; font-weight: 700; color: var(--text); line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .price-unit { font-size: 13px; color: var(--text-muted); font-weight: 300; }
+
+  .price-per-m2 {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 12px; color: var(--text-muted);
+    background: var(--bg-2); border: 1px solid var(--border);
+    border-radius: 999px; padding: 4px 12px; margin-top: 10px;
+  }
+
+  .price-card-body { padding: 20px 24px; }
+
+  .cta-primary {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 14px;
+    background: var(--gold); color: #0C0F1A;
+    border: none; border-radius: var(--radius-md);
+    font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 600;
+    cursor: pointer; text-decoration: none;
+    transition: all var(--transition); margin-bottom: 10px;
+  }
+
+  .cta-primary:hover {
+    background: var(--gold-light); color: #0C0F1A;
+    box-shadow: 0 8px 24px rgba(200,169,110,.35);
+    transform: translateY(-2px);
+  }
+
+  .cta-secondary {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 12px;
+    background: transparent; color: var(--text-dim);
+    border: 1px solid var(--border); border-radius: var(--radius-md);
+    font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 500;
+    cursor: pointer; text-decoration: none;
+    transition: all var(--transition);
+  }
+
+  .cta-secondary:hover {
+    border-color: var(--gold-border); color: var(--gold); background: var(--gold-dim);
+  }
+
+  /* Agent card */
+  .agent-card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius-xl); padding: 20px;
+    margin-bottom: 16px; box-shadow: var(--shadow-card);
+  }
+
+  .agent-card-label {
+    font-size: 10px; font-weight: 600; letter-spacing: 2.5px;
+    text-transform: uppercase; color: var(--gold); margin-bottom: 14px;
+  }
+
+  .agent-row { display: flex; align-items: center; gap: 14px; }
+
+  .agent-avatar {
+    width: 48px; height: 48px; flex-shrink: 0;
+    background: linear-gradient(135deg, var(--gold-dim), var(--bg-3));
+    border: 2px solid var(--gold-border); border-radius: 50%;
+    display: grid; place-items: center; font-size: 20px;
+  }
+
+  .agent-name {
+    font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 2px;
+  }
+
+  .agent-role {
+    font-size: 11.5px; color: var(--text-muted); margin-bottom: 8px;
+  }
+
+  .agent-contacts { display: flex; flex-direction: column; gap: 5px; }
+
+  .agent-contact-item {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 12.5px; color: var(--text-dim);
+    text-decoration: none; transition: color var(--transition);
+  }
+
+  .agent-contact-item:hover { color: var(--gold); }
+  .agent-contact-item i { color: var(--gold); font-size: 13px; width: 16px; }
+
+  /* Share / save row */
+  .action-row {
+    display: flex; gap: 8px; margin-top: 12px;
+  }
+
+  .action-btn {
+    flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+    padding: 9px; background: var(--bg-3); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); color: var(--text-dim);
+    font-size: 12.5px; font-weight: 500; cursor: pointer;
+    font-family: 'Outfit', sans-serif; text-decoration: none;
+    transition: all var(--transition);
+  }
+
+  .action-btn:hover { border-color: var(--gold-border); color: var(--gold); background: var(--gold-dim); }
+
+  /* ── Similar properties ── */
+  .similar-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px;
+  }
+
+  .similar-card {
+    background: var(--bg-3); border: 1px solid var(--border);
+    border-radius: var(--radius-md); overflow: hidden;
+    text-decoration: none; transition: all var(--transition);
+    display: block;
+  }
+
+  .similar-card:hover { border-color: var(--gold-border); transform: translateY(-2px); }
+
+  .similar-thumb {
+    height: 80px; background: var(--bg-2);
+    display: flex; align-items: center; justify-content: center; font-size: 28px;
+  }
+
+  .similar-body { padding: 10px; }
+
+  .similar-title {
+    font-size: 12.5px; font-weight: 600; color: var(--text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    margin-bottom: 3px;
+  }
+
+  .similar-price { font-size: 12px; color: var(--gold); font-weight: 600; }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    .detail-hero-image { height: 260px; font-size: 64px; }
+    .hero-badge-strip { padding: 0 16px; bottom: 12px; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .detail-card-body { padding: 16px; }
+    .similar-grid { grid-template-columns: 1fr; }
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<a href="{% url 'properties:list' %}" class="btn btn-link">&larr; Quay lại danh sách</a>
-<h2>{{ property.title }}</h2>
-<p class="text-muted">{{ property.get_property_type_display }} · {{ property.area }} m²</p>
-<p class="fw-bold">{{ property.price|floatformat:0 }} đ</p>
-<p>{{ property.description }}</p>
-<p><strong>Địa chỉ:</strong> {{ property.address }}</p>
-{% if property.agent %}
-<p><strong>Agent:</strong> {{ property.agent.name }} ({{ property.agent.phone }})</p>
-{% endif %}
-<p><strong>Tiện ích:</strong>
-    {% for amenity in property.amenities.all %}
-        <span class="badge text-bg-info">{{ amenity.get_amenity_type_display }}</span>
-    {% empty %}
-        Chưa có
-    {% endfor %}
-</p>
+
+<!-- ══ HERO IMAGE ══ -->
+<div class="detail-hero">
+  <div class="detail-hero-image">
+    {% with t=property.get_property_type_display|lower %}
+      {% if "apartment" in t %}🏢
+      {% elif "house" in t %}🏠
+      {% elif "land" in t %}🌿
+      {% elif "villa" in t %}🏡
+      {% else %}🏗️
+      {% endif %}
+    {% endwith %}
+
+    <div class="hero-badge-strip">
+      <span class="badge-gold">{{ property.get_property_type_display }}</span>
+      {% if property.is_featured %}
+      <span class="badge-outline"><i class="bi bi-star-fill me-1" style="font-size:9px"></i>Featured</span>
+      {% endif %}
+      <span style="background:var(--bg-card);backdrop-filter:blur(10px);border:1px solid var(--border);border-radius:999px;padding:4px 12px;font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:6px">
+        <i class="bi bi-eye" style="color:var(--gold)"></i>
+        Listed property
+      </span>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <div class="detail-layout">
+
+    <!-- ══ LEFT: MAIN CONTENT ══ -->
+    <div>
+
+      <!-- Back link -->
+      <a href="{% url 'properties:list' %}" class="btn-geo-secondary d-inline-flex mb-24"
+         style="font-size:13px;padding:8px 16px;margin-bottom:20px">
+        <i class="bi bi-arrow-left"></i> Back to listings
+      </a>
+
+      <!-- Headline card -->
+      <div class="detail-card fade-up">
+        <div class="detail-card-body">
+          <div class="prop-headline">
+            <div class="prop-type-row">
+              <span class="stat-pill">
+                <i class="bi bi-buildings"></i> {{ property.get_property_type_display }}
+              </span>
+              {% if property.area %}
+              <span class="stat-pill">
+                <i class="bi bi-aspect-ratio"></i> {{ property.area }} m²
+              </span>
+              {% endif %}
+            </div>
+            <h1 class="prop-main-title">{{ property.title }}</h1>
+            <div class="prop-address-line">
+              <i class="bi bi-geo-alt-fill"></i>
+              <span>{{ property.address }}</span>
+            </div>
+          </div>
+
+          <!-- Key stats -->
+          <div class="stats-grid">
+            {% if property.area %}
+            <div class="stat-box">
+              <div class="stat-box-icon">📐</div>
+              <div class="stat-box-val">{{ property.area }}</div>
+              <div class="stat-box-label">Area m²</div>
+            </div>
+            {% endif %}
+            {% if property.bedrooms %}
+            <div class="stat-box">
+              <div class="stat-box-icon">🛏</div>
+              <div class="stat-box-val">{{ property.bedrooms }}</div>
+              <div class="stat-box-label">Bedrooms</div>
+            </div>
+            {% endif %}
+            {% if property.bathrooms %}
+            <div class="stat-box">
+              <div class="stat-box-icon">🚿</div>
+              <div class="stat-box-val">{{ property.bathrooms }}</div>
+              <div class="stat-box-label">Bathrooms</div>
+            </div>
+            {% endif %}
+            {% if property.floors %}
+            <div class="stat-box">
+              <div class="stat-box-icon">🏗️</div>
+              <div class="stat-box-val">{{ property.floors }}</div>
+              <div class="stat-box-label">Floors</div>
+            </div>
+            {% endif %}
+            {% if property.year_built %}
+            <div class="stat-box">
+              <div class="stat-box-icon">📅</div>
+              <div class="stat-box-val">{{ property.year_built }}</div>
+              <div class="stat-box-label">Year built</div>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Description -->
+      {% if property.description %}
+      <div class="detail-card fade-up delay-1">
+        <div class="detail-card-header">
+          <div class="detail-card-header-icon">📝</div>
+          <div class="detail-card-title">Description</div>
+        </div>
+        <div class="detail-card-body">
+          <p class="desc-text">{{ property.description }}</p>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Amenities -->
+      <div class="detail-card fade-up delay-2">
+        <div class="detail-card-header">
+          <div class="detail-card-header-icon">⭐</div>
+          <div class="detail-card-title">
+            Nearby Amenities
+            {% with cnt=property.amenities.all|length %}
+              {% if cnt %}<span style="margin-left:8px;font-size:10px;color:var(--text-muted)">({{ cnt }})</span>{% endif %}
+            {% endwith %}
+          </div>
+        </div>
+        <div class="detail-card-body">
+          <div class="amenity-chips">
+            {% for amenity in property.amenities.all %}
+            <div class="amenity-chip">
+              {% with t=amenity.get_amenity_type_display|lower %}
+                {% if "school" in t or "edu" in t %}🏫
+                {% elif "hospital" in t or "clinic" in t %}🏥
+                {% elif "market" in t or "shop" in t %}🛒
+                {% elif "park" in t %}🌳
+                {% elif "restaurant" in t or "food" in t %}🍽️
+                {% elif "bank" in t %}🏦
+                {% elif "gym" in t or "sport" in t %}🏋️
+                {% else %}📍
+                {% endif %}
+              {% endwith %}
+              {{ amenity.get_amenity_type_display }}
+              {% if amenity.name %}<span style="opacity:.6;font-size:11px">· {{ amenity.name }}</span>{% endif %}
+            </div>
+            {% empty %}
+            <p style="color:var(--text-muted);font-size:14px;margin:0">
+              <i class="bi bi-info-circle me-2"></i>No amenities linked yet.
+            </p>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Map location -->
+      {% if property.location %}
+      <div class="detail-card fade-up delay-3">
+        <div class="detail-card-header">
+          <div class="detail-card-header-icon">🗺️</div>
+          <div class="detail-card-title">Location on Map</div>
+        </div>
+        <div class="detail-card-body">
+          <div class="map-embed-wrap">
+            <iframe
+              src="https://www.openstreetmap.org/export/embed.html?bbox={{ property.location.x|add:'-0.015' }},{{ property.location.y|add:'-0.012' }},{{ property.location.x|add:'0.015' }},{{ property.location.y|add:'0.012' }}&layer=mapnik&marker={{ property.location.y }},{{ property.location.x }}"
+              allowfullscreen loading="lazy"
+              title="Property location">
+            </iframe>
+          </div>
+          <div style="margin-top:10px;font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:6px">
+            <i class="bi bi-geo-alt" style="color:var(--gold)"></i>
+            Coordinates: {{ property.location.y|floatformat:6 }}, {{ property.location.x|floatformat:6 }}
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+
+    <!-- ══ RIGHT: SIDEBAR ══ -->
+    <div class="detail-sidebar">
+      <div class="sidebar-sticky">
+
+        <!-- Price card -->
+        <div class="price-card fade-up">
+          <div class="price-card-top">
+            <div class="price-eyebrow">Asking price</div>
+            <div class="price-main">
+              {% if property.price %}
+                {{ property.price|floatformat:0 }}
+                <span style="font-size:1rem;font-weight:400;color:var(--text-muted)"> VND</span>
+              {% else %}
+                <span style="color:var(--text-muted);font-size:1.2rem">Price on request</span>
+              {% endif %}
+            </div>
+            {% if property.price and property.area %}
+            <div class="price-per-m2">
+              <i class="bi bi-calculator" style="color:var(--gold)"></i>
+              {{ property.price|floatformat:0 }} / m²
+            </div>
+            {% endif %}
+          </div>
+
+          <div class="price-card-body">
+            <a href="{% url 'leads:lead_form' %}?property={{ property.pk }}" class="cta-primary">
+              <i class="bi bi-person-lines-fill"></i> Enquire Now
+            </a>
+            <a href="{% url 'properties:nearby_search' %}?lat={{ property.location.y }}&lng={{ property.location.x }}&radius=2" class="cta-secondary">
+              <i class="bi bi-geo-alt"></i> Find nearby properties
+            </a>
+            <div class="action-row">
+              <button class="action-btn" onclick="navigator.share ? navigator.share({title:'{{ property.title }}',url:window.location.href}) : navigator.clipboard.writeText(window.location.href).then(()=>alert('Link copied!'))">
+                <i class="bi bi-share"></i> Share
+              </button>
+              <button class="action-btn" id="btnSave">
+                <i class="bi bi-bookmark"></i> Save
+              </button>
+              <button class="action-btn" onclick="window.print()">
+                <i class="bi bi-printer"></i> Print
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Agent card -->
+        {% if property.agent %}
+        <div class="agent-card fade-up delay-1">
+          <div class="agent-card-label">Listing Agent</div>
+          <div class="agent-row">
+            <div class="agent-avatar">👤</div>
+            <div>
+              <div class="agent-name">{{ property.agent.name }}</div>
+              <div class="agent-role">Real Estate Agent</div>
+              <div class="agent-contacts">
+                {% if property.agent.phone %}
+                <a class="agent-contact-item" href="tel:{{ property.agent.phone }}">
+                  <i class="bi bi-telephone-fill"></i> {{ property.agent.phone }}
+                </a>
+                {% endif %}
+                {% if property.agent.email %}
+                <a class="agent-contact-item" href="mailto:{{ property.agent.email }}">
+                  <i class="bi bi-envelope-fill"></i> {{ property.agent.email }}
+                </a>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Similar properties placeholder -->
+        <div class="detail-card fade-up delay-2" style="margin-bottom:0">
+          <div class="detail-card-header">
+            <div class="detail-card-header-icon">🏘️</div>
+            <div class="detail-card-title">Similar listings</div>
+          </div>
+          <div class="detail-card-body">
+            {% if similar_properties %}
+            <div class="similar-grid">
+              {% for sp in similar_properties %}
+              <a class="similar-card" href="{% url 'properties:detail' sp.pk %}">
+                <div class="similar-thumb">
+                  {% with t=sp.get_property_type_display|lower %}
+                    {% if "apartment" in t %}🏢{% elif "house" in t %}🏠{% elif "land" in t %}🌿{% else %}🏗️{% endif %}
+                  {% endwith %}
+                </div>
+                <div class="similar-body">
+                  <div class="similar-title">{{ sp.title }}</div>
+                  {% if sp.price %}
+                  <div class="similar-price">{{ sp.price|floatformat:0 }} đ</div>
+                  {% endif %}
+                </div>
+              </a>
+              {% endfor %}
+            </div>
+            {% else %}
+            <p style="font-size:13px;color:var(--text-muted);margin:0">
+              <i class="bi bi-info-circle me-2"></i>No similar listings available.
+            </p>
+            {% endif %}
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  /* ── Save / bookmark toggle ── */
+  const saveBtn = document.getElementById('btnSave');
+  const STORAGE_KEY = 'geo_saved_properties';
+  const propId = '{{ property.pk }}';
+
+  function getSaved() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+    catch { return []; }
+  }
+
+  function updateSaveBtn() {
+    if (!saveBtn) return;
+    const saved = getSaved();
+    const isSaved = saved.includes(propId);
+    saveBtn.innerHTML = isSaved
+      ? '<i class="bi bi-bookmark-fill" style="color:var(--gold)"></i> Saved'
+      : '<i class="bi bi-bookmark"></i> Save';
+    saveBtn.style.borderColor = isSaved ? 'var(--gold-border)' : '';
+    saveBtn.style.color       = isSaved ? 'var(--gold)' : '';
+    saveBtn.style.background  = isSaved ? 'var(--gold-dim)' : '';
+  }
+
+  if (saveBtn) {
+    updateSaveBtn();
+    saveBtn.addEventListener('click', () => {
+      let saved = getSaved();
+      const idx = saved.indexOf(propId);
+      if (idx === -1) saved.push(propId);
+      else saved.splice(idx, 1);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
+      updateSaveBtn();
+    });
+  }
+
+})();
+</script>
 {% endblock %}

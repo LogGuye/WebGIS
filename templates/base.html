@@ -1,41 +1,1056 @@
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="en" data-theme="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{% block title %}Real Estate Management{% endblock %}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="{% static 'css/styles.css' %}" rel="stylesheet">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="GeoEstate — Real estate intelligence platform powered by Django + PostGIS." />
+  <meta name="theme-color" content="#0C0F1A" />
+
+  <title>{% block title %}GeoEstate · Real Estate Intelligence{% endblock %}</title>
+
+  <!-- Preconnect for perf -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+  <!-- Typography: Cormorant Garamond (display) + Outfit (body) -->
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <!-- Bootstrap 5.3 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+  <!-- Bootstrap Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+
+  <!-- App CSS -->
+  <link href="{% static 'css/styles.css' %}" rel="stylesheet" />
+
+  <style>
+    /* ════════════════════════════════════════════
+       DESIGN TOKENS
+    ════════════════════════════════════════════ */
+    :root {
+      --gold:           #C8A96E;
+      --gold-light:     #E2C99A;
+      --gold-dim:       rgba(200,169,110,.15);
+      --gold-border:    rgba(200,169,110,.2);
+
+      --bg:             #0C0F1A;
+      --bg-2:           #131724;
+      --bg-3:           #181D2E;
+      --bg-card:        rgba(19,23,36,.9);
+
+      --text:           #EAE8E1;
+      --text-muted:     #6B7280;
+      --text-dim:       #9CA3AF;
+
+      --border:         rgba(255,255,255,.07);
+      --border-hover:   rgba(200,169,110,.3);
+
+      --radius-sm:      8px;
+      --radius-md:      14px;
+      --radius-lg:      20px;
+      --radius-xl:      28px;
+
+      --shadow-glow:    0 0 40px rgba(200,169,110,.08);
+      --shadow-card:    0 8px 32px rgba(0,0,0,.4);
+      --shadow-nav:     0 1px 0 rgba(255,255,255,.05), 0 4px 24px rgba(0,0,0,.5);
+
+      --nav-h:          68px;
+      --transition:     0.22s cubic-bezier(.4,0,.2,1);
+    }
+
+    /* Light theme overrides */
+    [data-theme="light"] {
+      --bg:         #F5F3EE;
+      --bg-2:       #FFFFFF;
+      --bg-3:       #EDE9E0;
+      --bg-card:    rgba(255,255,255,.95);
+
+      --text:       #1A1612;
+      --text-muted: #7C7166;
+      --text-dim:   #A09890;
+
+      --border:     rgba(0,0,0,.08);
+      --shadow-card: 0 8px 32px rgba(0,0,0,.08);
+      --shadow-nav:  0 1px 0 rgba(0,0,0,.06), 0 4px 24px rgba(0,0,0,.06);
+    }
+
+    /* ════════════════════════════════════════════
+       RESET & BASE
+    ════════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 400;
+      line-height: 1.65;
+      min-height: 100vh;
+      transition: background var(--transition), color var(--transition);
+      /* Subtle noise grain */
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.025'/%3E%3C/svg%3E");
+    }
+
+    ::selection { background: var(--gold-dim); color: var(--gold-light); }
+
+    /* ════════════════════════════════════════════
+       NAVBAR
+    ════════════════════════════════════════════ */
+    .navbar {
+      height: var(--nav-h);
+      background: rgba(12,15,26,.85) !important;
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border-bottom: 1px solid var(--border);
+      box-shadow: var(--shadow-nav);
+      transition: background var(--transition);
+      padding: 0;
+    }
+
+    [data-theme="light"] .navbar {
+      background: rgba(245,243,238,.9) !important;
+    }
+
+    .navbar .container {
+      height: 100%;
+      display: flex;
+      align-items: center;
+    }
+
+    /* Logo */
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      flex-shrink: 0;
+    }
+
+    .logo-mark {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--gold) 0%, #9A6F3A 100%);
+      border-radius: var(--radius-sm);
+      display: grid;
+      place-items: center;
+      font-size: 16px;
+      color: #0C0F1A;
+      box-shadow: 0 4px 12px rgba(200,169,110,.35);
+      transition: transform var(--transition), box-shadow var(--transition);
+    }
+
+    .nav-logo:hover .logo-mark {
+      transform: rotate(-6deg) scale(1.05);
+      box-shadow: 0 6px 20px rgba(200,169,110,.45);
+    }
+
+    .logo-name {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.1;
+    }
+
+    .logo-primary {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: .3px;
+    }
+
+    .logo-sub {
+      font-size: 9.5px;
+      font-weight: 500;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+
+    /* Nav links */
+    .navbar-nav { gap: 2px; }
+
+    .nav-link {
+      font-size: 13.5px;
+      font-weight: 500;
+      color: var(--text-dim) !important;
+      padding: 8px 14px !important;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      transition: color var(--transition), background var(--transition);
+      letter-spacing: .1px;
+      white-space: nowrap;
+    }
+
+    .nav-link i { font-size: 14px; opacity: .8; }
+
+    .nav-link:hover {
+      color: var(--text) !important;
+      background: var(--border);
+    }
+
+    .nav-link.active {
+      color: var(--gold) !important;
+      background: var(--gold-dim);
+      font-weight: 600;
+    }
+
+    /* Divider dot in nav */
+    .nav-dot {
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      background: var(--border);
+      margin: 0 6px;
+      flex-shrink: 0;
+    }
+
+    /* Search input */
+    .nav-search-wrap {
+      position: relative;
+    }
+
+    .nav-search-wrap i {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 13px;
+      pointer-events: none;
+    }
+
+    .nav-search {
+      background: var(--bg-3);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 7px 16px 7px 34px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 13px;
+      color: var(--text);
+      width: 220px;
+      transition: border-color var(--transition), width var(--transition), box-shadow var(--transition);
+      outline: none;
+    }
+
+    .nav-search::placeholder { color: var(--text-muted); }
+
+    .nav-search:focus {
+      border-color: var(--gold-border);
+      box-shadow: 0 0 0 3px var(--gold-dim);
+      width: 280px;
+    }
+
+    .kbd-hint {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 10px;
+      color: var(--text-muted);
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 5px;
+      pointer-events: none;
+      transition: opacity var(--transition);
+    }
+
+    .nav-search:focus + .kbd-hint { opacity: 0; }
+
+    /* Icon buttons */
+    .nav-icon-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-sm);
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      display: grid;
+      place-items: center;
+      font-size: 15px;
+      cursor: pointer;
+      transition: all var(--transition);
+      text-decoration: none;
+      flex-shrink: 0;
+    }
+
+    .nav-icon-btn:hover {
+      background: var(--border);
+      color: var(--text);
+      border-color: var(--border-hover);
+    }
+
+    /* Admin button */
+    .btn-admin {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 16px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--bg) !important;
+      background: var(--gold);
+      border: none;
+      border-radius: var(--radius-sm);
+      text-decoration: none;
+      transition: all var(--transition);
+      white-space: nowrap;
+    }
+
+    .btn-admin:hover {
+      background: var(--gold-light);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(200,169,110,.3);
+    }
+
+    /* Navbar toggler */
+    .navbar-toggler {
+      border: 1px solid var(--border) !important;
+      border-radius: var(--radius-sm) !important;
+      padding: 6px 10px !important;
+      color: var(--text-dim) !important;
+    }
+
+    .navbar-toggler:focus { box-shadow: none !important; }
+
+    /* Mobile collapse */
+    @media (max-width: 991px) {
+      .navbar-collapse {
+        background: var(--bg-2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 12px;
+        margin-top: 8px;
+      }
+
+      .nav-search { width: 100%; }
+      .nav-search:focus { width: 100%; }
+      .nav-search-wrap { width: 100%; margin: 8px 0 4px; }
+      .kbd-hint { display: none; }
+    }
+
+    /* ════════════════════════════════════════════
+       BREADCRUMB STRIP (optional, inserted by pages)
+    ════════════════════════════════════════════ */
+    .breadcrumb-strip {
+      background: var(--bg-2);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 0;
+    }
+
+    .breadcrumb {
+      margin: 0;
+      font-size: 12.5px;
+      color: var(--text-muted);
+    }
+
+    .breadcrumb-item + .breadcrumb-item::before { color: var(--text-muted); }
+    .breadcrumb-item a { color: var(--text-dim); text-decoration: none; }
+    .breadcrumb-item a:hover { color: var(--gold); }
+    .breadcrumb-item.active { color: var(--gold); }
+
+    /* ════════════════════════════════════════════
+       PAGE CONTENT SHELL
+    ════════════════════════════════════════════ */
+    main {
+      min-height: calc(100vh - var(--nav-h) - 80px);
+    }
+
+    /* ════════════════════════════════════════════
+       TOAST NOTIFICATIONS
+    ════════════════════════════════════════════ */
+    .toast-container { z-index: 1200; }
+
+    .toast {
+      background: var(--bg-card) !important;
+      border: 1px solid var(--border) !important;
+      backdrop-filter: blur(16px);
+      border-radius: var(--radius-md) !important;
+      box-shadow: var(--shadow-card) !important;
+      min-width: 300px;
+    }
+
+    .toast-header {
+      background: transparent !important;
+      border-bottom: 1px solid var(--border) !important;
+      color: var(--text) !important;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .toast-body {
+      color: var(--text-dim);
+      font-size: 13.5px;
+      padding: 12px 16px;
+    }
+
+    /* Tag-based colors */
+    .toast[data-tag="success"] { border-left: 3px solid #22c55e !important; }
+    .toast[data-tag="error"]   { border-left: 3px solid #ef4444 !important; }
+    .toast[data-tag="warning"] { border-left: 3px solid #f59e0b !important; }
+    .toast[data-tag="info"]    { border-left: 3px solid var(--gold) !important; }
+
+    /* ════════════════════════════════════════════
+       GLOBAL UTILITY CLASSES
+    ════════════════════════════════════════════ */
+
+    /* Cards */
+    .card-geo {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-card);
+      transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition);
+      overflow: hidden;
+    }
+
+    .card-geo:hover {
+      border-color: var(--border-hover);
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-card), var(--shadow-glow);
+    }
+
+    /* Gold accent line */
+    .card-geo.featured::before {
+      content: '';
+      display: block;
+      height: 2px;
+      background: linear-gradient(90deg, var(--gold), var(--gold-light), transparent);
+    }
+
+    /* Stat pill */
+    .stat-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 14px;
+      background: var(--gold-dim);
+      border: 1px solid var(--gold-border);
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--gold);
+      letter-spacing: .5px;
+    }
+
+    /* Section heading */
+    .section-eyebrow {
+      font-size: 10.5px;
+      font-weight: 600;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 8px;
+    }
+
+    .section-heading {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(1.6rem, 3vw, 2.4rem);
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.15;
+    }
+
+    /* Divider */
+    .geo-divider {
+      height: 1px;
+      background: var(--border);
+      border: none;
+      margin: 0;
+    }
+
+    /* Badge */
+    .badge-gold {
+      background: var(--gold);
+      color: #0C0F1A;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 3px 9px;
+      border-radius: 6px;
+    }
+
+    .badge-outline {
+      background: transparent;
+      color: var(--gold);
+      border: 1px solid var(--gold-border);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 3px 9px;
+      border-radius: 6px;
+    }
+
+    /* Buttons */
+    .btn-geo-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 28px;
+      background: var(--gold);
+      color: #0C0F1A;
+      border: none;
+      border-radius: var(--radius-md);
+      font-family: 'Outfit', sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all var(--transition);
+      letter-spacing: .2px;
+    }
+
+    .btn-geo-primary:hover {
+      background: var(--gold-light);
+      color: #0C0F1A;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(200,169,110,.3);
+    }
+
+    .btn-geo-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 24px;
+      background: transparent;
+      color: var(--text-dim);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      font-family: 'Outfit', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+
+    .btn-geo-secondary:hover {
+      color: var(--text);
+      border-color: var(--border-hover);
+      background: var(--bg-3);
+    }
+
+    /* Form controls */
+    .form-geo {
+      background: var(--bg-3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-family: 'Outfit', sans-serif;
+      font-size: 14px;
+      padding: 10px 14px;
+      outline: none;
+      transition: border-color var(--transition), box-shadow var(--transition);
+      width: 100%;
+    }
+
+    .form-geo::placeholder { color: var(--text-muted); }
+
+    .form-geo:focus {
+      border-color: var(--gold-border);
+      box-shadow: 0 0 0 3px var(--gold-dim);
+    }
+
+    .form-geo option { background: var(--bg-2); }
+
+    /* Page loader bar */
+    #page-loader {
+      position: fixed;
+      top: 0; left: 0;
+      height: 2px;
+      width: 0%;
+      background: linear-gradient(90deg, var(--gold), var(--gold-light));
+      z-index: 9999;
+      transition: width .3s ease;
+      box-shadow: 0 0 8px rgba(200,169,110,.5);
+    }
+
+    /* Scroll to top */
+    #scroll-top {
+      position: fixed;
+      bottom: 28px;
+      right: 28px;
+      width: 40px;
+      height: 40px;
+      background: var(--bg-card);
+      border: 1px solid var(--gold-border);
+      border-radius: var(--radius-sm);
+      display: grid;
+      place-items: center;
+      color: var(--gold);
+      font-size: 16px;
+      cursor: pointer;
+      opacity: 0;
+      pointer-events: none;
+      transition: all var(--transition);
+      z-index: 900;
+      backdrop-filter: blur(12px);
+      text-decoration: none;
+    }
+
+    #scroll-top.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    #scroll-top:hover {
+      background: var(--gold-dim);
+      transform: translateY(-3px);
+    }
+
+    /* ════════════════════════════════════════════
+       FOOTER
+    ════════════════════════════════════════════ */
+    footer {
+      background: var(--bg-2);
+      border-top: 1px solid var(--border);
+      padding: 48px 0 32px;
+      margin-top: 80px;
+    }
+
+    .footer-brand {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+
+    .footer-brand span { color: var(--gold); }
+
+    .footer-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.7;
+      max-width: 260px;
+    }
+
+    .footer-heading {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 16px;
+    }
+
+    .footer-links { list-style: none; padding: 0; }
+
+    .footer-links li { margin-bottom: 8px; }
+
+    .footer-links a {
+      font-size: 13.5px;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .footer-links a:hover { color: var(--gold); }
+
+    .footer-links a i { font-size: 13px; }
+
+    .footer-bottom {
+      border-top: 1px solid var(--border);
+      padding-top: 24px;
+      margin-top: 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .footer-bottom p {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      margin: 0;
+    }
+
+    .footer-bottom a { color: var(--gold); text-decoration: none; }
+
+    .tech-stack {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .tech-chip {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-muted);
+      background: var(--bg-3);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 3px 10px;
+    }
+
+    /* ════════════════════════════════════════════
+       ANIMATION UTILITIES
+    ════════════════════════════════════════════ */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+    .fade-up   { animation: fadeUp .5s ease both; }
+    .fade-in   { animation: fadeIn .4s ease both; }
+    .delay-1   { animation-delay: .1s; }
+    .delay-2   { animation-delay: .2s; }
+    .delay-3   { animation-delay: .3s; }
+    .delay-4   { animation-delay: .4s; }
+
+    /* ════════════════════════════════════════════
+       RESPONSIVE TWEAKS
+    ════════════════════════════════════════════ */
+    @media (max-width: 576px) {
+      #scroll-top { bottom: 16px; right: 16px; }
+      footer { padding: 36px 0 24px; }
+    }
+  </style>
+
+  {% block head %}{% endblock %}
 </head>
+
 <body>
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+
+  <!-- Page progress loader -->
+  <div id="page-loader"></div>
+
+  <!-- ════════════════ NAVBAR ════════════════ -->
+  <nav class="navbar navbar-expand-lg sticky-top">
     <div class="container">
-        <a class="navbar-brand" href="{% url 'core:home' %}">RealEstate</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navMenu">
-            <ul class="navbar-nav me-auto">
-                <li class="nav-item"><a class="nav-link" href="{% url 'properties:list' %}">Properties</a></li>
-                <li class="nav-item"><a class="nav-link" href="{% url 'properties:nearby_search' %}">Nearby Search</a></li>
-                <li class="nav-item"><a class="nav-link" href="{% url 'leads:lead_form' %}">Lead Form</a></li>
-                <li class="nav-item"><a class="nav-link" href="{% url 'properties:amenity_search' %}">Amenity Search</a></li>
-                <li class="nav-item"><a class="nav-link" href="/admin/">Admin</a></li>
-            </ul>
+
+      <!-- Logo -->
+      <a class="nav-logo" href="{% url 'core:home' %}">
+        <div class="logo-mark">
+          <i class="bi bi-buildings-fill"></i>
         </div>
+        <div class="logo-name">
+          <span class="logo-primary">GeoEstate</span>
+          <span class="logo-sub">GIS Platform</span>
+        </div>
+      </a>
+
+      <!-- Mobile toggler -->
+      <button class="navbar-toggler ms-auto me-2" type="button"
+              data-bs-toggle="collapse" data-bs-target="#navMenu"
+              aria-controls="navMenu" aria-expanded="false" aria-label="Toggle navigation">
+        <i class="bi bi-list" style="color:var(--text-dim);font-size:20px"></i>
+      </button>
+
+      <!-- Collapse -->
+      <div class="collapse navbar-collapse ms-4" id="navMenu">
+
+        <!-- Left links -->
+        <ul class="navbar-nav me-auto align-items-lg-center">
+          <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.url_name == 'list' %}active{% endif %}"
+               href="{% url 'properties:list' %}">
+              <i class="bi bi-grid-3x3-gap"></i> Properties
+            </a>
+          </li>
+          <li class="d-none d-lg-block nav-dot align-self-center"></li>
+          <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.url_name == 'nearby_search' %}active{% endif %}"
+               href="{% url 'properties:nearby_search' %}">
+              <i class="bi bi-geo-alt"></i> Nearby
+            </a>
+          </li>
+          <li class="d-none d-lg-block nav-dot align-self-center"></li>
+          <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.url_name == 'amenity_search' %}active{% endif %}"
+               href="{% url 'properties:amenity_search' %}">
+              <i class="bi bi-stars"></i> Amenities
+            </a>
+          </li>
+          <li class="d-none d-lg-block nav-dot align-self-center"></li>
+          <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.url_name == 'lead_form' %}active{% endif %}"
+               href="{% url 'leads:lead_form' %}">
+              <i class="bi bi-person-lines-fill"></i> Leads
+            </a>
+          </li>
+        </ul>
+
+        <!-- Right controls -->
+        <div class="d-flex align-items-center gap-2 mt-2 mt-lg-0">
+
+          <!-- Search -->
+          <form class="d-none d-lg-flex" method="get" action="{% url 'properties:list' %}" style="position:relative">
+            <div class="nav-search-wrap">
+              <i class="bi bi-search"></i>
+              <input class="nav-search"
+                     type="search"
+                     name="q"
+                     placeholder="Search properties..."
+                     autocomplete="off"
+                     value="{{ request.GET.q|default:'' }}" />
+              <span class="kbd-hint">⌘K</span>
+            </div>
+          </form>
+
+          <!-- Theme toggle -->
+          <button class="nav-icon-btn" id="themeToggle" title="Toggle theme" aria-label="Toggle theme">
+            <i class="bi bi-moon-stars"></i>
+          </button>
+
+          <!-- Notifications placeholder -->
+          <button class="nav-icon-btn" title="Notifications" aria-label="Notifications" style="position:relative">
+            <i class="bi bi-bell"></i>
+            <span style="position:absolute;top:6px;right:6px;width:7px;height:7px;background:var(--gold);border-radius:50%;border:2px solid var(--bg)"></span>
+          </button>
+
+          <!-- Admin -->
+          <a class="btn-admin" href="/admin/">
+            <i class="bi bi-shield-lock"></i>
+            Admin
+          </a>
+        </div>
+
+      </div>
     </div>
-</nav>
-<main class="container mb-5">
+  </nav>
+
+  <!-- ════════════════ BREADCRUMB ════════════════ -->
+  {% block breadcrumb %}{% endblock %}
+
+  <!-- ════════════════ TOAST STACK ════════════════ -->
+  <div class="toast-container position-fixed top-0 end-0 p-3 mt-5 pt-3">
     {% if messages %}
-        <div class="mt-2">
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-            {% endfor %}
+      {% for message in messages %}
+        <div class="toast"
+             data-tag="{{ message.tags|default:'info' }}"
+             role="alert"
+             aria-live="assertive"
+             aria-atomic="true"
+             data-bs-delay="4500">
+          <div class="toast-header">
+            {% if message.tags == 'success' %}
+              <i class="bi bi-check-circle-fill me-2" style="color:#22c55e"></i>
+            {% elif message.tags == 'error' or message.tags == 'danger' %}
+              <i class="bi bi-x-circle-fill me-2" style="color:#ef4444"></i>
+            {% elif message.tags == 'warning' %}
+              <i class="bi bi-exclamation-triangle-fill me-2" style="color:#f59e0b"></i>
+            {% else %}
+              <i class="bi bi-info-circle-fill me-2" style="color:var(--gold)"></i>
+            {% endif %}
+            <strong class="me-auto">Notification</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"
+                    style="filter: invert({{ request.COOKIES.theme|default:'1' }})"></button>
+          </div>
+          <div class="toast-body">{{ message }}</div>
         </div>
+      {% endfor %}
     {% endif %}
+  </div>
+
+  <!-- ════════════════ MAIN CONTENT ════════════════ -->
+  <main>
     {% block content %}{% endblock %}
-</main>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  </main>
+
+  <!-- ════════════════ FOOTER ════════════════ -->
+  <footer>
+    <div class="container">
+      <div class="row g-5">
+
+        <!-- Brand -->
+        <div class="col-lg-4 col-md-6">
+          <div class="footer-brand">Geo<span>Estate</span></div>
+          <p class="footer-desc">
+            Real estate intelligence platform powered by GeoDjango & PostGIS.
+            Discover, analyze, and manage properties with spatial precision.
+          </p>
+          <div class="tech-stack mt-3">
+            <span class="tech-chip">Django</span>
+            <span class="tech-chip">PostGIS</span>
+            <span class="tech-chip">Leaflet</span>
+            <span class="tech-chip">Bootstrap</span>
+          </div>
+        </div>
+
+        <!-- Platform links -->
+        <div class="col-lg-2 col-md-3 col-6">
+          <div class="footer-heading">Platform</div>
+          <ul class="footer-links">
+            <li><a href="{% url 'properties:list' %}"><i class="bi bi-grid-3x3-gap"></i> Properties</a></li>
+            <li><a href="{% url 'properties:nearby_search' %}"><i class="bi bi-geo-alt"></i> Nearby Search</a></li>
+            <li><a href="{% url 'properties:amenity_search' %}"><i class="bi bi-stars"></i> Amenity Search</a></li>
+            <li><a href="{% url 'leads:lead_form' %}"><i class="bi bi-person-lines-fill"></i> Submit Lead</a></li>
+          </ul>
+        </div>
+
+        <!-- Resources -->
+        <div class="col-lg-2 col-md-3 col-6">
+          <div class="footer-heading">Resources</div>
+          <ul class="footer-links">
+            <li><a href="/admin/"><i class="bi bi-shield-lock"></i> Admin Panel</a></li>
+            <li><a href="#"><i class="bi bi-book"></i> API Docs</a></li>
+            <li><a href="#"><i class="bi bi-question-circle"></i> Help Center</a></li>
+            <li><a href="#"><i class="bi bi-github"></i> GitHub</a></li>
+          </ul>
+        </div>
+
+        <!-- Quick stats -->
+        <div class="col-lg-4 col-md-6">
+          <div class="footer-heading">System Status</div>
+          <div class="d-flex flex-column gap-2">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--bg-3);border:1px solid var(--border);border-radius:var(--radius-sm)">
+              <span style="font-size:13px;color:var(--text-dim)"><i class="bi bi-buildings me-2" style="color:var(--gold)"></i>Properties</span>
+              <span class="badge-gold">{{ property_count|default:"—" }}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--bg-3);border:1px solid var(--border);border-radius:var(--radius-sm)">
+              <span style="font-size:13px;color:var(--text-dim)"><i class="bi bi-person-badge me-2" style="color:var(--gold)"></i>Active Agents</span>
+              <span class="badge-gold">{{ agent_count|default:"—" }}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--bg-3);border:1px solid var(--border);border-radius:var(--radius-sm)">
+              <span style="font-size:13px;color:var(--text-dim)"><i class="bi bi-circle-fill me-2" style="color:#22c55e;font-size:8px"></i>API Status</span>
+              <span style="font-size:12px;color:#22c55e;font-weight:600">Operational</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="footer-bottom">
+        <p>© {% now "Y" %} GeoEstate · Built with Django + PostGIS · All rights reserved.</p>
+        <p>
+          Press
+          <code style="font-size:11px;background:var(--bg-3);border:1px solid var(--border);border-radius:4px;padding:2px 6px;color:var(--gold)">⌘K</code>
+          to focus search ·
+          <a href="#">Privacy</a> · <a href="#">Terms</a>
+        </p>
+      </div>
+
+    </div>
+  </footer>
+
+  <!-- Scroll to top -->
+  <a href="#" id="scroll-top" aria-label="Scroll to top">
+    <i class="bi bi-arrow-up"></i>
+  </a>
+
+  <!-- ════════════════ SCRIPTS ════════════════ -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+  (function () {
+    'use strict';
+
+    /* ── Theme system ── */
+    const root    = document.documentElement;
+    const btn     = document.getElementById('themeToggle');
+    const STORAGE = 'geo_theme';
+
+    function setTheme(t) {
+      root.setAttribute('data-theme', t);
+      if (btn) {
+        btn.innerHTML = (t === 'light')
+          ? '<i class="bi bi-moon-stars"></i>'
+          : '<i class="bi bi-sun"></i>';
+        btn.title = (t === 'light') ? 'Switch to dark mode' : 'Switch to light mode';
+      }
+      localStorage.setItem(STORAGE, t);
+      // Also keep Bootstrap in sync
+      root.setAttribute('data-bs-theme', t);
+    }
+
+    const saved = localStorage.getItem(STORAGE);
+    if (saved) {
+      setTheme(saved);
+    } else {
+      // Respect OS preference
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      setTheme(prefersDark ? 'dark' : 'light');
+    }
+
+    if (btn) {
+      btn.addEventListener('click', () => {
+        const cur = root.getAttribute('data-theme') || 'dark';
+        setTheme(cur === 'dark' ? 'light' : 'dark');
+      });
+    }
+
+    /* ── Keyboard shortcuts ── */
+    window.addEventListener('keydown', (e) => {
+      // ⌘K / Ctrl+K → focus search
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        const input = document.querySelector('.nav-search');
+        if (input) { e.preventDefault(); input.focus(); input.select(); }
+      }
+      // Escape → blur search
+      if (e.key === 'Escape') {
+        const input = document.querySelector('.nav-search:focus');
+        if (input) input.blur();
+      }
+    });
+
+    /* ── Auto-show toasts ── */
+    document.querySelectorAll('.toast').forEach(el => {
+      new bootstrap.Toast(el, { delay: parseInt(el.dataset.bsDelay) || 4500 }).show();
+    });
+
+    /* ── Page loader bar ── */
+    const loader = document.getElementById('page-loader');
+    if (loader) {
+      loader.style.width = '70%';
+      window.addEventListener('load', () => {
+        loader.style.width = '100%';
+        setTimeout(() => { loader.style.opacity = '0'; }, 300);
+      });
+    }
+
+    /* ── Scroll to top ── */
+    const scrollBtn = document.getElementById('scroll-top');
+    if (scrollBtn) {
+      window.addEventListener('scroll', () => {
+        scrollBtn.classList.toggle('visible', window.scrollY > 400);
+      }, { passive: true });
+      scrollBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    }
+
+    /* ── Intersection observer for .fade-up elements ── */
+    if ('IntersectionObserver' in window) {
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.style.animationPlayState = 'running';
+            io.unobserve(entry.target);
+          }
+        });
+      }, { threshold: 0.12 });
+
+      document.querySelectorAll('.fade-up').forEach(el => {
+        el.style.animationPlayState = 'paused';
+        io.observe(el);
+      });
+    }
+
+  })();
+  </script>
+
+  {% block scripts %}{% endblock %}
 </body>
 </html>

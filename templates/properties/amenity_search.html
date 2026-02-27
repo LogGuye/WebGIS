@@ -1,48 +1,720 @@
 {% extends "base.html" %}
-{% block title %}Amenity Search{% endblock %}
-{% block content %}
-<h2>Tìm tiện ích gần vị trí</h2>
-<form method="get" class="row g-2 align-items-end mb-3">
-    <div class="col-md-3">
-        <label class="form-label">Latitude</label>
-        <input type="text" name="lat" class="form-control" value="{{ params.lat }}">
-    </div>
-    <div class="col-md-3">
-        <label class="form-label">Longitude</label>
-        <input type="text" name="lng" class="form-control" value="{{ params.lng }}">
-    </div>
-    <div class="col-md-2">
-        <label class="form-label">Bán kính (km)</label>
-        <input type="number" step="0.1" name="radius" class="form-control" value="{{ params.radius }}">
-    </div>
-    <div class="col-md-2">
-        <label class="form-label">Loại tiện ích</label>
-        <select name="amenity_type" class="form-select">
-            <option value="">Tất cả</option>
-            {% for value,label in amenity_types %}
-                <option value="{{ value }}" {% if params.amenity_type == value %}selected{% endif %}>{{ label }}</option>
-            {% endfor %}
-        </select>
-    </div>
-    <div class="col-md-2">
-        <button class="btn btn-primary w-100">Tìm</button>
-    </div>
-</form>
+{% block title %}Amenity Search | GeoEstate{% endblock %}
 
-{% if results != None %}
-    <p class="text-muted">Tìm thấy {{ results|length }} tiện ích.</p>
-    <div class="list-group">
-        {% for a in results %}
-        <div class="list-group-item d-flex justify-content-between align-items-center">
-            <div>
-                <h6 class="mb-1">{{ a.name }}</h6>
-                <small class="text-muted">{{ a.get_amenity_type_display }}</small>
-            </div>
-            <span class="badge text-bg-info">{{ a.distance.km|floatformat:2 }} km</span>
-        </div>
-        {% empty %}
-        <p>Không có kết quả.</p>
-        {% endfor %}
+{% block breadcrumb %}
+<div class="breadcrumb-strip">
+  <div class="container">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'core:home' %}"><i class="bi bi-house me-1"></i>Home</a></li>
+        <li class="breadcrumb-item active">Amenity Search</li>
+      </ol>
+    </nav>
+  </div>
+</div>
+{% endblock %}
+
+{% block head %}
+<style>
+  /* ══════════════════════════════════════════
+     AMENITY SEARCH — all colors via var() tokens
+  ══════════════════════════════════════════ */
+
+  .page-hero {
+    background: var(--bg-2);
+    border-bottom: 1px solid var(--border);
+    padding: 48px 0 40px;
+  }
+
+  .page-hero-inner {
+    display: flex; align-items: flex-start;
+    justify-content: space-between; flex-wrap: wrap; gap: 16px;
+  }
+
+  .page-icon {
+    width: 52px; height: 52px;
+    background: var(--gold-dim); border: 1px solid var(--gold-border);
+    border-radius: var(--radius-md);
+    display: grid; place-items: center;
+    font-size: 24px; margin-bottom: 16px;
+    flex-shrink: 0;
+  }
+
+  .page-eyebrow {
+    font-size: 10.5px; font-weight: 600; letter-spacing: 3px;
+    text-transform: uppercase; color: var(--gold); margin-bottom: 6px;
+  }
+
+  .page-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(1.6rem, 3vw, 2.2rem);
+    font-weight: 700; color: var(--text); line-height: 1.15;
+    margin-bottom: 6px;
+  }
+
+  .page-desc {
+    color: var(--text-muted); font-size: 14px;
+    font-weight: 300; line-height: 1.7; max-width: 480px;
+  }
+
+  /* ── Search panel ── */
+  .search-panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    padding: 32px;
+    box-shadow: var(--shadow-card);
+    margin: 36px 0;
+  }
+
+  .search-panel-title {
+    font-size: 12px; font-weight: 600; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--gold);
+    margin-bottom: 24px;
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .search-panel-title::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+
+  /* Field groups */
+  .field-label {
+    font-size: 11.5px; font-weight: 600; letter-spacing: .5px;
+    color: var(--text-dim); margin-bottom: 8px; display: block;
+  }
+
+  .field-label i { color: var(--gold); margin-right: 5px; }
+
+  .field-input {
+    background: var(--bg-3); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); color: var(--text);
+    font-family: 'Outfit', sans-serif; font-size: 14px;
+    padding: 10px 14px; outline: none; width: 100%;
+    transition: border-color var(--transition), box-shadow var(--transition);
+  }
+
+  .field-input::placeholder { color: var(--text-muted); }
+
+  .field-input:focus {
+    border-color: var(--gold-border);
+    box-shadow: 0 0 0 3px var(--gold-dim);
+  }
+
+  .field-input option { background: var(--bg-2); }
+
+  /* Coordinate pair hint */
+  .coord-hint {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; color: var(--text-muted); margin-top: 6px;
+  }
+
+  /* Quick location buttons */
+  .quick-locs {
+    display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px;
+  }
+
+  .quick-loc-btn {
+    background: var(--bg-3); border: 1px solid var(--border);
+    border-radius: 999px; padding: 5px 14px;
+    font-size: 12px; font-weight: 500; color: var(--text-dim);
+    cursor: pointer; transition: all var(--transition);
+    font-family: 'Outfit', sans-serif;
+  }
+
+  .quick-loc-btn:hover {
+    border-color: var(--gold-border); color: var(--gold);
+    background: var(--gold-dim);
+  }
+
+  /* Amenity type chips */
+  .type-chips {
+    display: flex; flex-wrap: wrap; gap: 8px;
+  }
+
+  .type-chip {
+    display: flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--bg-3); color: var(--text-dim);
+    font-size: 12.5px; font-weight: 500;
+    cursor: pointer; transition: all var(--transition);
+    font-family: 'Outfit', sans-serif; white-space: nowrap;
+    user-select: none;
+  }
+
+  .type-chip:hover {
+    border-color: var(--gold-border); color: var(--gold);
+    background: var(--gold-dim);
+  }
+
+  .type-chip.active {
+    background: var(--gold-dim); border-color: var(--gold-border);
+    color: var(--gold); font-weight: 600;
+  }
+
+  .type-chip i { font-size: 13px; }
+
+  /* Radius slider */
+  .radius-track {
+    display: flex; align-items: center; gap: 12px; margin-top: 4px;
+  }
+
+  input[type="range"].geo-range {
+    flex: 1; -webkit-appearance: none; appearance: none;
+    height: 4px; border-radius: 2px;
+    background: linear-gradient(to right, var(--gold) 0%, var(--gold) var(--pct, 30%), var(--bg-3) var(--pct, 30%));
+    outline: none; cursor: pointer;
+  }
+
+  input[type="range"].geo-range::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 18px; height: 18px;
+    border-radius: 50%; background: var(--gold);
+    border: 2px solid var(--bg); box-shadow: 0 2px 8px rgba(200,169,110,.4);
+    cursor: pointer; transition: transform var(--transition);
+  }
+
+  input[type="range"].geo-range::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+  .radius-val {
+    min-width: 52px; text-align: center;
+    font-size: 13px; font-weight: 600; color: var(--gold);
+    background: var(--gold-dim); border: 1px solid var(--gold-border);
+    border-radius: var(--radius-sm); padding: 4px 8px;
+  }
+
+  /* Search button */
+  .btn-search-main {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 13px;
+    background: var(--gold); color: #0C0F1A;
+    border: none; border-radius: var(--radius-md);
+    font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 600;
+    cursor: pointer; transition: all var(--transition);
+    letter-spacing: .2px;
+  }
+
+  .btn-search-main:hover {
+    background: var(--gold-light);
+    box-shadow: 0 8px 24px rgba(200,169,110,.35);
+    transform: translateY(-2px);
+  }
+
+  /* ── Results section ── */
+  .results-header {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .results-count {
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  .count-badge {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2rem; font-weight: 700; color: var(--gold); line-height: 1;
+  }
+
+  .count-label { font-size: 13px; color: var(--text-muted); }
+
+  /* View toggle */
+  .view-toggle {
+    display: flex; gap: 4px; background: var(--bg-3);
+    border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 3px;
+  }
+
+  .view-btn {
+    padding: 6px 12px; border-radius: 6px; border: none;
+    background: transparent; color: var(--text-muted);
+    font-size: 14px; cursor: pointer; transition: all var(--transition);
+  }
+
+  .view-btn.active { background: var(--bg-card); color: var(--text); }
+
+  /* ── List view ── */
+  .amenity-list { display: flex; flex-direction: column; gap: 10px; }
+
+  .amenity-item {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius-md); padding: 18px 20px;
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition);
+  }
+
+  .amenity-item:hover {
+    border-color: var(--border-hover);
+    transform: translateX(4px);
+    box-shadow: var(--shadow-card);
+  }
+
+  .amenity-left { display: flex; align-items: center; gap: 14px; min-width: 0; }
+
+  .amenity-type-icon {
+    width: 40px; height: 40px; flex-shrink: 0;
+    background: var(--gold-dim); border: 1px solid var(--gold-border);
+    border-radius: var(--radius-sm);
+    display: grid; place-items: center; font-size: 18px;
+  }
+
+  .amenity-name {
+    font-size: 14.5px; font-weight: 600; color: var(--text);
+    margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  .amenity-type-label {
+    font-size: 12px; color: var(--text-muted); font-weight: 400;
+  }
+
+  .amenity-right { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+
+  .dist-badge {
+    display: flex; flex-direction: column; align-items: center;
+    background: var(--gold-dim); border: 1px solid var(--gold-border);
+    border-radius: var(--radius-sm); padding: 8px 14px; min-width: 72px;
+  }
+
+  .dist-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.2rem; font-weight: 700; color: var(--gold); line-height: 1;
+  }
+
+  .dist-unit { font-size: 10px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; }
+
+  /* Distance bar */
+  .dist-bar-wrap {
+    width: 80px; display: flex; flex-direction: column; gap: 4px;
+  }
+
+  .dist-bar-track {
+    height: 4px; background: var(--bg-3); border-radius: 2px; overflow: hidden;
+  }
+
+  .dist-bar-fill {
+    height: 100%; background: var(--gold); border-radius: 2px;
+    transition: width .6s ease;
+  }
+
+  .dist-bar-label { font-size: 10px; color: var(--text-muted); text-align: right; }
+
+  /* ── Grid view ── */
+  .amenity-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
+  }
+
+  .amenity-card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 22px;
+    transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition);
+    position: relative; overflow: hidden;
+  }
+
+  .amenity-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    opacity: 0; transition: opacity var(--transition);
+  }
+
+  .amenity-card:hover {
+    border-color: var(--border-hover);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-card), var(--shadow-glow);
+  }
+
+  .amenity-card:hover::before { opacity: 1; }
+
+  .card-icon {
+    width: 44px; height: 44px;
+    background: var(--gold-dim); border: 1px solid var(--gold-border);
+    border-radius: var(--radius-sm);
+    display: grid; place-items: center; font-size: 20px; margin-bottom: 14px;
+  }
+
+  .card-name  { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .card-type  { font-size: 12px; color: var(--text-muted); margin-bottom: 14px; }
+
+  .card-dist {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-top: 12px; border-top: 1px solid var(--border);
+  }
+
+  .card-dist-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.3rem; font-weight: 700; color: var(--gold);
+  }
+
+  .card-dist-label { font-size: 11px; color: var(--text-muted); }
+
+  /* ── Empty / no results ── */
+  .empty-state {
+    text-align: center; padding: 64px 24px;
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius-xl); color: var(--text-muted);
+  }
+
+  .empty-state .empty-icon { font-size: 48px; margin-bottom: 16px; opacity: .5; }
+  .empty-state h5 { color: var(--text); font-size: 16px; margin-bottom: 8px; }
+  .empty-state p  { font-size: 14px; max-width: 360px; margin: 0 auto; line-height: 1.7; }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    .search-panel { padding: 20px; }
+    .amenity-item { flex-wrap: wrap; }
+    .dist-bar-wrap { display: none; }
+    .amenity-grid { grid-template-columns: 1fr 1fr; }
+  }
+
+  @media (max-width: 480px) {
+    .amenity-grid { grid-template-columns: 1fr; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ══ PAGE HERO ══ -->
+<div class="page-hero">
+  <div class="container">
+    <div class="page-icon">⭐</div>
+    <p class="page-eyebrow">Spatial Intelligence</p>
+    <h1 class="page-title">Amenity Search</h1>
+    <p class="page-desc">
+      Discover schools, hospitals, supermarkets and more within any radius.
+      Powered by PostGIS spatial queries.
+    </p>
+  </div>
+</div>
+
+<div class="container" style="padding-top:0;padding-bottom:80px">
+
+  <!-- ══ SEARCH PANEL ══ -->
+  <div class="search-panel fade-up">
+    <div class="search-panel-title">
+      <i class="bi bi-sliders me-1"></i> Search Parameters
     </div>
-{% endif %}
+
+    <!-- Quick location presets -->
+    <div style="margin-bottom:20px">
+      <div class="field-label"><i class="bi bi-lightning-charge"></i>Quick locations</div>
+      <div class="quick-locs">
+        <button type="button" class="quick-loc-btn" data-lat="10.7769" data-lng="106.7009">📍 District 1</button>
+        <button type="button" class="quick-loc-btn" data-lat="10.8020" data-lng="106.7330">📍 Thao Dien</button>
+        <button type="button" class="quick-loc-btn" data-lat="10.7299" data-lng="106.6955">📍 District 7</button>
+        <button type="button" class="quick-loc-btn" data-lat="10.8517" data-lng="106.7717">📍 Thu Duc</button>
+        <button type="button" class="quick-loc-btn" id="btnGeolocate">
+          <i class="bi bi-crosshair"></i> Use my location
+        </button>
+      </div>
+    </div>
+
+    <form method="get" id="amenityForm">
+      <div class="row g-3 align-items-start">
+
+        <!-- Lat -->
+        <div class="col-md-3 col-sm-6">
+          <label class="field-label" for="idLat"><i class="bi bi-compass"></i>Latitude</label>
+          <input type="text" id="idLat" name="lat" class="field-input"
+                 placeholder="e.g. 10.7769" value="{{ params.lat }}" required />
+          <div class="coord-hint">
+            <i class="bi bi-info-circle" style="font-size:11px"></i> Decimal degrees (WGS84)
+          </div>
+        </div>
+
+        <!-- Lng -->
+        <div class="col-md-3 col-sm-6">
+          <label class="field-label" for="idLng"><i class="bi bi-compass"></i>Longitude</label>
+          <input type="text" id="idLng" name="lng" class="field-input"
+                 placeholder="e.g. 106.7009" value="{{ params.lng }}" required />
+        </div>
+
+        <!-- Radius -->
+        <div class="col-md-3 col-sm-6">
+          <label class="field-label" for="idRadius"><i class="bi bi-circle"></i>Radius</label>
+          <div class="radius-track">
+            <input type="range" id="idRadiusSlider" class="geo-range"
+                   min="0.1" max="20" step="0.1" value="{{ params.radius|default:'2' }}" />
+            <div class="radius-val" id="radiusDisplay">
+              {{ params.radius|default:"2.0" }} km
+            </div>
+          </div>
+          <!-- Hidden number input keeps form value -->
+          <input type="hidden" id="idRadius" name="radius" value="{{ params.radius|default:'2' }}" />
+        </div>
+
+        <!-- Amenity type -->
+        <div class="col-md-3 col-sm-6">
+          <label class="field-label" for="idAmenityType"><i class="bi bi-tag"></i>Amenity type</label>
+          <select id="idAmenityType" name="amenity_type" class="field-input">
+            <option value="">All types</option>
+            {% for value, label in amenity_types %}
+              <option value="{{ value }}" {% if params.amenity_type == value %}selected{% endif %}>
+                {{ label }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <!-- Amenity type visual chips (synced to select) -->
+        <div class="col-12">
+          <label class="field-label"><i class="bi bi-grid"></i>Filter by category</label>
+          <div class="type-chips" id="typeChips">
+            <div class="type-chip {% if not params.amenity_type %}active{% endif %}" data-val="">
+              <i class="bi bi-asterisk"></i> All
+            </div>
+            {% for value, label in amenity_types %}
+            <div class="type-chip {% if params.amenity_type == value %}active{% endif %}" data-val="{{ value }}">
+              {{ label }}
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Submit -->
+        <div class="col-12 col-md-4 col-lg-3 ms-auto">
+          <button type="submit" class="btn-search-main">
+            <i class="bi bi-search"></i> Search Amenities
+          </button>
+        </div>
+
+      </div>
+    </form>
+  </div>
+
+  <!-- ══ RESULTS ══ -->
+  {% if results != None %}
+
+  <div class="results-header fade-up">
+    <div class="results-count">
+      <span class="count-badge">{{ results|length }}</span>
+      <span class="count-label">
+        amenit{{ results|length|pluralize:"y,ies" }} found
+        {% if params.radius %} within {{ params.radius }} km{% endif %}
+      </span>
+    </div>
+
+    <div class="d-flex align-items-center gap-2">
+      <div class="view-toggle">
+        <button class="view-btn active" id="btnListView" title="List view">
+          <i class="bi bi-list-ul"></i>
+        </button>
+        <button class="view-btn" id="btnGridView" title="Grid view">
+          <i class="bi bi-grid-3x3-gap"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  {% if results %}
+
+    {% with max_dist=results.0.distance.km %}
+
+    <!-- List view -->
+    <div class="amenity-list fade-up" id="listView">
+      {% for a in results %}
+      <div class="amenity-item">
+        <div class="amenity-left">
+          <div class="amenity-type-icon">
+            {% with t=a.get_amenity_type_display %}
+              {% if "school" in t|lower or "edu" in t|lower %}🏫
+              {% elif "hospital" in t|lower or "clinic" in t|lower %}🏥
+              {% elif "market" in t|lower or "shop" in t|lower %}🛒
+              {% elif "park" in t|lower %}🌳
+              {% elif "restaurant" in t|lower or "food" in t|lower %}🍽️
+              {% elif "bank" in t|lower %}🏦
+              {% elif "gym" in t|lower or "sport" in t|lower %}🏋️
+              {% else %}📍
+              {% endif %}
+            {% endwith %}
+          </div>
+          <div>
+            <div class="amenity-name">{{ a.name }}</div>
+            <div class="amenity-type-label">{{ a.get_amenity_type_display }}</div>
+          </div>
+        </div>
+
+        <div class="amenity-right">
+          <div class="dist-bar-wrap">
+            <div class="dist-bar-track">
+              <div class="dist-bar-fill"
+                   style="width:{% widthratio a.distance.km max_dist 100 %}%"></div>
+            </div>
+            <div class="dist-bar-label">relative distance</div>
+          </div>
+          <div class="dist-badge">
+            <span class="dist-num">{{ a.distance.km|floatformat:2 }}</span>
+            <span class="dist-unit">km</span>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <!-- Grid view (hidden by default) -->
+    <div class="amenity-grid fade-up" id="gridView" style="display:none">
+      {% for a in results %}
+      <div class="amenity-card">
+        <div class="card-icon">
+          {% with t=a.get_amenity_type_display %}
+            {% if "school" in t|lower or "edu" in t|lower %}🏫
+            {% elif "hospital" in t|lower or "clinic" in t|lower %}🏥
+            {% elif "market" in t|lower or "shop" in t|lower %}🛒
+            {% elif "park" in t|lower %}🌳
+            {% elif "restaurant" in t|lower or "food" in t|lower %}🍽️
+            {% elif "bank" in t|lower %}🏦
+            {% elif "gym" in t|lower or "sport" in t|lower %}🏋️
+            {% else %}📍
+            {% endif %}
+          {% endwith %}
+        </div>
+        <div class="card-name">{{ a.name }}</div>
+        <div class="card-type">{{ a.get_amenity_type_display }}</div>
+        <div class="card-dist">
+          <div>
+            <div class="card-dist-num">{{ a.distance.km|floatformat:2 }} <span style="font-size:.9rem">km</span></div>
+            <div class="card-dist-label">from search point</div>
+          </div>
+          <i class="bi bi-arrow-right" style="color:var(--gold);opacity:.6"></i>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+
+    {% endwith %}
+
+  {% else %}
+    <!-- Empty state -->
+    <div class="empty-state fade-up">
+      <div class="empty-icon">🔍</div>
+      <h5>No amenities found</h5>
+      <p>Try increasing the search radius or selecting a different amenity type. Make sure your coordinates are within the mapped area.</p>
+    </div>
+  {% endif %}
+
+  {% endif %}
+
+</div><!-- /container -->
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+  /* ── Radius slider ── */
+  const slider   = document.getElementById('idRadiusSlider');
+  const display  = document.getElementById('radiusDisplay');
+  const hiddenR  = document.getElementById('idRadius');
+
+  function updateSlider(val) {
+    const min = parseFloat(slider.min), max = parseFloat(slider.max);
+    const pct = ((val - min) / (max - min) * 100).toFixed(1) + '%';
+    slider.style.setProperty('--pct', pct);
+    display.textContent = parseFloat(val).toFixed(1) + ' km';
+    hiddenR.value = val;
+  }
+
+  if (slider) {
+    updateSlider(slider.value);
+    slider.addEventListener('input', () => updateSlider(slider.value));
+  }
+
+  /* ── Type chips ── */
+  const chips  = document.querySelectorAll('.type-chip');
+  const select = document.getElementById('idAmenityType');
+
+  chips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      chips.forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      if (select) select.value = chip.dataset.val;
+    });
+  });
+
+  // Keep chips in sync when select changes directly
+  if (select) {
+    select.addEventListener('change', () => {
+      chips.forEach(c => {
+        c.classList.toggle('active', c.dataset.val === select.value);
+      });
+    });
+  }
+
+  /* ── Quick location presets ── */
+  document.querySelectorAll('.quick-loc-btn[data-lat]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const latEl = document.getElementById('idLat');
+      const lngEl = document.getElementById('idLng');
+      if (latEl) latEl.value = btn.dataset.lat;
+      if (lngEl) lngEl.value = btn.dataset.lng;
+    });
+  });
+
+  /* ── Geolocation ── */
+  const geoBtn = document.getElementById('btnGeolocate');
+  if (geoBtn) {
+    geoBtn.addEventListener('click', () => {
+      if (!navigator.geolocation) {
+        alert('Geolocation is not supported by your browser.');
+        return;
+      }
+      geoBtn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Locating...';
+      geoBtn.disabled = true;
+
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          document.getElementById('idLat').value = pos.coords.latitude.toFixed(6);
+          document.getElementById('idLng').value = pos.coords.longitude.toFixed(6);
+          geoBtn.innerHTML = '<i class="bi bi-check-circle"></i> Location set';
+          setTimeout(() => {
+            geoBtn.innerHTML = '<i class="bi bi-crosshair"></i> Use my location';
+            geoBtn.disabled = false;
+          }, 2000);
+        },
+        () => {
+          alert('Unable to retrieve your location.');
+          geoBtn.innerHTML = '<i class="bi bi-crosshair"></i> Use my location';
+          geoBtn.disabled = false;
+        }
+      );
+    });
+  }
+
+  /* ── List / Grid view toggle ── */
+  const listView = document.getElementById('listView');
+  const gridView = document.getElementById('gridView');
+  const btnList  = document.getElementById('btnListView');
+  const btnGrid  = document.getElementById('btnGridView');
+
+  if (btnList && btnGrid) {
+    btnList.addEventListener('click', () => {
+      listView.style.display = 'flex';
+      gridView.style.display = 'none';
+      btnList.classList.add('active');
+      btnGrid.classList.remove('active');
+    });
+
+    btnGrid.addEventListener('click', () => {
+      gridView.style.display = 'grid';
+      listView.style.display = 'none';
+      btnGrid.classList.add('active');
+      btnList.classList.remove('active');
+    });
+  }
+
+  /* ── Animate distance bars on load ── */
+  setTimeout(() => {
+    document.querySelectorAll('.dist-bar-fill').forEach(bar => {
+      const target = bar.style.width;
+      bar.style.width = '0%';
+      requestAnimationFrame(() => { bar.style.width = target; });
+    });
+  }, 100);
+
+})();
+</script>
+
+<style>
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spin { display: inline-block; animation: spin .7s linear infinite; }
+</style>
 {% endblock %}

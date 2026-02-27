@@ -1,48 +1,970 @@
 {% extends "base.html" %}
-{% block title %}Lead Form{% endblock %}
+{% block title %}Submit a Lead | GeoEstate{% endblock %}
+
+{% block breadcrumb %}
+<div class="breadcrumb-strip">
+  <div class="container">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'core:home' %}"><i class="bi bi-house me-1"></i>Home</a></li>
+        <li class="breadcrumb-item active">Lead Form</li>
+      </ol>
+    </nav>
+  </div>
+</div>
+{% endblock %}
+
+{% block head %}
+<style>
+  /* ══════════════════════════════════════════
+     LEAD FORM — all colors via var() tokens
+  ══════════════════════════════════════════ */
+
+  /* ── Page hero ── */
+  .page-hero {
+    background: var(--bg-2);
+    border-bottom: 1px solid var(--border);
+    padding: 44px 0 36px;
+  }
+
+  .page-eyebrow {
+    font-size: 10.5px; font-weight: 600; letter-spacing: 3px;
+    text-transform: uppercase; color: var(--gold); margin-bottom: 6px;
+  }
+
+  .page-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(1.6rem, 3vw, 2.2rem);
+    font-weight: 700; color: var(--text); line-height: 1.15; margin-bottom: 6px;
+  }
+
+  .page-desc { color: var(--text-muted); font-size: 14px; font-weight: 300; max-width: 520px; line-height: 1.7; }
+
+  /* ── Main layout ── */
+  .lead-layout {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 28px;
+    align-items: start;
+    padding: 40px 0 80px;
+  }
+
+  @media (max-width: 1024px) {
+    .lead-layout { grid-template-columns: 1fr; }
+    .lead-sidebar { order: -1; }
+  }
+
+  /* ── Form card ── */
+  .form-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    box-shadow: var(--shadow-card);
+  }
+
+  .form-card-header {
+    padding: 20px 28px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 12px;
+    position: relative; overflow: hidden;
+  }
+
+  .form-card-header::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+
+  .form-card-header-icon {
+    width: 38px; height: 38px;
+    background: var(--gold-dim); border: 1px solid var(--gold-border);
+    border-radius: var(--radius-sm);
+    display: grid; place-items: center; font-size: 18px; flex-shrink: 0;
+  }
+
+  .form-card-title {
+    font-size: 11px; font-weight: 600; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--gold);
+  }
+
+  .form-card-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 1px; }
+
+  .form-card-body { padding: 28px; }
+
+  /* ── Step indicator ── */
+  .steps-row {
+    display: flex; align-items: center; gap: 0;
+    margin-bottom: 32px;
+  }
+
+  .step {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    flex: 1; position: relative;
+  }
+
+  .step + .step::before {
+    content: '';
+    position: absolute; top: 14px; right: 50%; left: -50%;
+    height: 2px; background: var(--border);
+    z-index: 0;
+  }
+
+  .step.done + .step::before { background: var(--gold); }
+
+  .step-dot {
+    width: 28px; height: 28px; border-radius: 50%;
+    border: 2px solid var(--border); background: var(--bg-3);
+    display: grid; place-items: center;
+    font-size: 12px; font-weight: 700; color: var(--text-muted);
+    position: relative; z-index: 1;
+    transition: all var(--transition);
+  }
+
+  .step.active .step-dot {
+    border-color: var(--gold); background: var(--gold-dim); color: var(--gold);
+  }
+
+  .step.done .step-dot {
+    border-color: var(--gold); background: var(--gold); color: #0C0F1A;
+  }
+
+  .step-label {
+    font-size: 10.5px; font-weight: 600; letter-spacing: .5px;
+    color: var(--text-muted); text-transform: uppercase; white-space: nowrap;
+  }
+
+  .step.active .step-label { color: var(--gold); }
+
+  /* ── Field groups ── */
+  .field-group { margin-bottom: 20px; }
+
+  .field-label {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11.5px; font-weight: 600; letter-spacing: .4px;
+    color: var(--text-dim); margin-bottom: 8px;
+  }
+
+  .field-label i { color: var(--gold); font-size: 13px; }
+
+  .field-required {
+    font-size: 10px; color: #ef4444; margin-left: 2px;
+  }
+
+  .field-input {
+    background: var(--bg-3); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); color: var(--text);
+    font-family: 'Outfit', sans-serif; font-size: 14px;
+    padding: 11px 14px; outline: none; width: 100%;
+    transition: border-color var(--transition), box-shadow var(--transition);
+  }
+
+  .field-input::placeholder { color: var(--text-muted); }
+
+  .field-input:focus {
+    border-color: var(--gold-border);
+    box-shadow: 0 0 0 3px var(--gold-dim);
+  }
+
+  .field-input.is-valid { border-color: #22c55e; }
+  .field-input.is-invalid { border-color: #ef4444; }
+
+  .field-hint {
+    font-size: 11px; color: var(--text-muted); margin-top: 5px;
+    display: flex; align-items: center; gap: 5px;
+  }
+
+  .field-hint i { font-size: 11px; color: var(--gold); }
+
+  /* Input with icon prefix */
+  .input-icon-wrap { position: relative; }
+
+  .input-icon-wrap i {
+    position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+    color: var(--text-muted); font-size: 14px; pointer-events: none;
+    transition: color var(--transition);
+  }
+
+  .input-icon-wrap .field-input { padding-left: 36px; }
+  .input-icon-wrap:focus-within i { color: var(--gold); }
+
+  /* Budget presets */
+  .budget-presets { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+
+  .budget-chip {
+    padding: 4px 12px; border-radius: 999px;
+    border: 1px solid var(--border); background: var(--bg-3);
+    color: var(--text-dim); font-size: 11.5px; font-weight: 500;
+    cursor: pointer; transition: all var(--transition);
+    font-family: 'Outfit', sans-serif;
+  }
+
+  .budget-chip:hover {
+    border-color: var(--gold-border); color: var(--gold); background: var(--gold-dim);
+  }
+
+  /* Section divider */
+  .form-section-title {
+    font-size: 11px; font-weight: 600; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--gold);
+    display: flex; align-items: center; gap: 8px;
+    margin: 24px 0 18px;
+  }
+
+  .form-section-title::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+
+  /* Coordinate pair */
+  .coord-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  /* Quick location preset */
+  .quick-locs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+
+  .quick-loc-btn {
+    background: var(--bg-3); border: 1px solid var(--border);
+    border-radius: 999px; padding: 5px 12px;
+    font-size: 11.5px; font-weight: 500; color: var(--text-dim);
+    cursor: pointer; transition: all var(--transition);
+    font-family: 'Outfit', sans-serif;
+  }
+
+  .quick-loc-btn:hover {
+    border-color: var(--gold-border); color: var(--gold); background: var(--gold-dim);
+  }
+
+  /* Property interest chips */
+  .interest-chips { display: flex; flex-wrap: wrap; gap: 7px; }
+
+  .interest-chip {
+    display: flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: 999px;
+    border: 1px solid var(--border); background: var(--bg-3);
+    color: var(--text-dim); font-size: 12.5px; font-weight: 500;
+    cursor: pointer; transition: all var(--transition); user-select: none;
+    font-family: 'Outfit', sans-serif;
+  }
+
+  .interest-chip:hover { border-color: var(--gold-border); color: var(--gold); background: var(--gold-dim); }
+  .interest-chip.active { border-color: var(--gold-border); background: var(--gold-dim); color: var(--gold); font-weight: 600; }
+
+  /* Hidden inputs for interests */
+  .interest-hidden { display: none; }
+
+  /* Submit button */
+  .btn-submit {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 14px;
+    background: var(--gold); color: #0C0F1A;
+    border: none; border-radius: var(--radius-md);
+    font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 600;
+    cursor: pointer; transition: all var(--transition); letter-spacing: .2px;
+    margin-top: 8px;
+  }
+
+  .btn-submit:hover {
+    background: var(--gold-light);
+    box-shadow: 0 10px 28px rgba(200,169,110,.35);
+    transform: translateY(-2px);
+  }
+
+  .btn-submit:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+  /* ── Assignment result ── */
+  .assignment-result {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius-xl); overflow: hidden;
+    margin-top: 24px; box-shadow: var(--shadow-card);
+    animation: fadeUp .5s ease both;
+  }
+
+  .assignment-result-header {
+    padding: 16px 24px; background: rgba(34,197,94,.08);
+    border-bottom: 1px solid rgba(34,197,94,.15);
+    display: flex; align-items: center; gap: 12px;
+  }
+
+  .assignment-success-icon {
+    width: 38px; height: 38px; border-radius: 50%;
+    background: rgba(34,197,94,.15); border: 1px solid rgba(34,197,94,.3);
+    display: grid; place-items: center; font-size: 18px; flex-shrink: 0;
+  }
+
+  .assignment-result-title {
+    font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 2px;
+  }
+
+  .assignment-result-sub { font-size: 12.5px; color: var(--text-muted); }
+
+  .assignment-result-body { padding: 20px 24px; }
+
+  .agent-row {
+    display: flex; align-items: center; gap: 16px;
+    padding: 16px; background: var(--bg-3);
+    border: 1px solid var(--border); border-radius: var(--radius-md);
+    margin-bottom: 12px;
+  }
+
+  .agent-avatar {
+    width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;
+    background: linear-gradient(135deg, var(--gold-dim), var(--bg-3));
+    border: 2px solid var(--gold-border);
+    display: grid; place-items: center; font-size: 20px;
+  }
+
+  .agent-name { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+  .agent-role { font-size: 12px; color: var(--text-muted); margin-bottom: 6px; }
+
+  .agent-dist-badge {
+    margin-left: auto; flex-shrink: 0;
+    display: flex; flex-direction: column; align-items: center;
+    background: var(--gold-dim); border: 1px solid var(--gold-border);
+    border-radius: var(--radius-sm); padding: 8px 14px;
+  }
+
+  .agent-dist-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.3rem; font-weight: 700; color: var(--gold); line-height: 1;
+  }
+
+  .agent-dist-label { font-size: 10px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase; }
+
+  /* ── Lead summary card ── */
+  .lead-summary {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius-xl); overflow: hidden;
+    margin-top: 16px; box-shadow: var(--shadow-card);
+    animation: fadeUp .5s ease .1s both;
+  }
+
+  .lead-summary-header {
+    padding: 14px 20px; border-bottom: 1px solid var(--border);
+    font-size: 11px; font-weight: 600; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--gold);
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .lead-summary-body { padding: 18px 20px; }
+
+  .lead-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 9px 0; border-bottom: 1px solid var(--border);
+  }
+
+  .lead-row:last-child { border-bottom: none; }
+
+  .lead-row-key { font-size: 12px; color: var(--text-muted); }
+
+  .lead-row-val { font-size: 13px; font-weight: 600; color: var(--text); }
+
+  /* ── Sidebar ── */
+  .sidebar-sticky { position: sticky; top: calc(var(--nav-h) + 16px); }
+
+  .info-card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius-xl); overflow: hidden;
+    box-shadow: var(--shadow-card); margin-bottom: 16px;
+  }
+
+  .info-card-header {
+    padding: 14px 20px; border-bottom: 1px solid var(--border);
+    position: relative; overflow: hidden;
+  }
+
+  .info-card-header::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+
+  .info-card-title {
+    font-size: 11px; font-weight: 600; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--gold);
+    display: flex; align-items: center; gap: 8px;
+  }
+
+  .info-card-body { padding: 18px 20px; }
+
+  .how-step {
+    display: flex; align-items: flex-start; gap: 12px; padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .how-step:last-child { border-bottom: none; }
+
+  .how-step-num {
+    width: 28px; height: 28px; flex-shrink: 0; border-radius: 50%;
+    background: var(--gold-dim); border: 1px solid var(--gold-border);
+    display: grid; place-items: center;
+    font-size: 12px; font-weight: 700; color: var(--gold);
+  }
+
+  .how-step-text { font-size: 13px; color: var(--text-dim); line-height: 1.6; }
+  .how-step-text strong { color: var(--text); font-weight: 600; }
+
+  /* Trust badges */
+  .trust-badges { display: flex; flex-direction: column; gap: 8px; }
+
+  .trust-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px; background: var(--bg-3);
+    border: 1px solid var(--border); border-radius: var(--radius-sm);
+  }
+
+  .trust-icon { font-size: 18px; flex-shrink: 0; }
+  .trust-text { font-size: 12.5px; color: var(--text-dim); }
+  .trust-text strong { color: var(--text); font-weight: 600; display: block; font-size: 13px; }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    .form-card-body { padding: 20px; }
+    .coord-pair { grid-template-columns: 1fr; }
+    .steps-row { display: none; }
+  }
+
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(20px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<h2>Lead Form - Phân phối agent gần nhất</h2>
-<form method="post" class="row g-2">
-    {% csrf_token %}
-    <div class="col-md-4">
-        <label class="form-label">Tên khách</label>
-        <input type="text" name="name" class="form-control" required>
-    </div>
-    <div class="col-md-4">
-        <label class="form-label">Số điện thoại</label>
-        <input type="text" name="phone" class="form-control" required>
-    </div>
-    <div class="col-md-4">
-        <label class="form-label">Budget (VND)</label>
-        <input type="number" name="budget" class="form-control" required>
-    </div>
-    <div class="col-md-4">
-        <label class="form-label">Latitude mong muốn</label>
-        <input type="text" name="lat" class="form-control" required>
-    </div>
-    <div class="col-md-4">
-        <label class="form-label">Longitude mong muốn</label>
-        <input type="text" name="lng" class="form-control" required>
-    </div>
-    <div class="col-md-4 d-grid">
-        <button class="btn btn-primary mt-4">Gửi lead</button>
-    </div>
-</form>
 
-{% if assignment %}
-    <div class="alert alert-success mt-3">
-        Lead đã gán cho agent: <strong>{{ assignment.agent.name }}</strong>
-        (cách {{ assignment.distance }} km)
-    </div>
-{% endif %}
+<!-- ══ PAGE HERO ══ -->
+<div class="page-hero">
+  <div class="container">
+    <p class="page-eyebrow">Client Acquisition</p>
+    <h1 class="page-title">Submit a Lead</h1>
+    <p class="page-desc">
+      Tell us about your property needs. We'll automatically match and assign
+      the nearest available agent to follow up with you.
+    </p>
+  </div>
+</div>
 
-{% if lead %}
-    <div class="card mt-3">
-        <div class="card-body">
-            <h6 class="text-muted mb-1">Lead mới tạo</h6>
-            <p class="mb-0">{{ lead.name }} - {{ lead.phone }}</p>
-            <small>Budget: {{ lead.budget }} VND</small>
+<div class="container">
+  <div class="lead-layout">
+
+    <!-- ══ FORM ══ -->
+    <div>
+
+      <!-- Assignment result (shown after POST) -->
+      {% if assignment %}
+      <div class="assignment-result">
+        <div class="assignment-result-header">
+          <div class="assignment-success-icon">✅</div>
+          <div>
+            <div class="assignment-result-title">Lead submitted successfully!</div>
+            <div class="assignment-result-sub">Nearest agent has been assigned automatically.</div>
+          </div>
         </div>
+        <div class="assignment-result-body">
+          <div class="agent-row">
+            <div class="agent-avatar">👤</div>
+            <div>
+              <div class="agent-name">{{ assignment.agent.name }}</div>
+              <div class="agent-role">Assigned Agent</div>
+              {% if assignment.agent.phone %}
+              <a href="tel:{{ assignment.agent.phone }}"
+                 style="font-size:12.5px;color:var(--gold);text-decoration:none;display:flex;align-items:center;gap:5px">
+                <i class="bi bi-telephone-fill"></i> {{ assignment.agent.phone }}
+              </a>
+              {% endif %}
+            </div>
+            <div class="agent-dist-badge">
+              <span class="agent-dist-num">{{ assignment.distance }}</span>
+              <span class="agent-dist-label">km away</span>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <a href="{% url 'properties:list' %}" class="btn-geo-primary" style="font-size:13.5px;padding:10px 20px">
+              <i class="bi bi-grid-3x3-gap"></i> Browse Properties
+            </a>
+            <a href="{% url 'core:home' %}" class="btn-geo-secondary" style="font-size:13.5px;padding:10px 20px">
+              <i class="bi bi-house"></i> Back to Home
+            </a>
+          </div>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Lead summary (shown after POST) -->
+      {% if lead %}
+      <div class="lead-summary">
+        <div class="lead-summary-header">
+          <i class="bi bi-person-check-fill"></i> Lead Created
+        </div>
+        <div class="lead-summary-body">
+          <div class="lead-row">
+            <span class="lead-row-key"><i class="bi bi-person me-2" style="color:var(--gold)"></i>Name</span>
+            <span class="lead-row-val">{{ lead.name }}</span>
+          </div>
+          <div class="lead-row">
+            <span class="lead-row-key"><i class="bi bi-telephone me-2" style="color:var(--gold)"></i>Phone</span>
+            <span class="lead-row-val">{{ lead.phone }}</span>
+          </div>
+          <div class="lead-row">
+            <span class="lead-row-key"><i class="bi bi-cash-coin me-2" style="color:var(--gold)"></i>Budget</span>
+            <span class="lead-row-val">{{ lead.budget|floatformat:0 }} VND</span>
+          </div>
+          {% if lead.created_at %}
+          <div class="lead-row">
+            <span class="lead-row-key"><i class="bi bi-clock me-2" style="color:var(--gold)"></i>Submitted</span>
+            <span class="lead-row-val">{{ lead.created_at|date:"d M Y, H:i" }}</span>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- The form itself -->
+      {% if not assignment %}
+      <div class="form-card fade-up">
+        <div class="form-card-header">
+          <div class="form-card-header-icon">📋</div>
+          <div>
+            <div class="form-card-title">Client Information</div>
+            <div class="form-card-subtitle">Fill in your details and preferred location</div>
+          </div>
+        </div>
+
+        <div class="form-card-body">
+
+          <!-- Step indicator -->
+          <div class="steps-row">
+            <div class="step active">
+              <div class="step-dot">1</div>
+              <div class="step-label">Contact</div>
+            </div>
+            <div class="step">
+              <div class="step-dot">2</div>
+              <div class="step-label">Budget</div>
+            </div>
+            <div class="step">
+              <div class="step-dot">3</div>
+              <div class="step-label">Location</div>
+            </div>
+            <div class="step">
+              <div class="step-dot">4</div>
+              <div class="step-label">Submit</div>
+            </div>
+          </div>
+
+          <form method="post" id="leadForm" novalidate>
+            {% csrf_token %}
+
+            <!-- Section 1: Contact info -->
+            <div class="form-section-title"><i class="bi bi-person"></i> Contact Details</div>
+
+            <div class="row g-3">
+              <div class="col-md-6">
+                <div class="field-group">
+                  <label class="field-label" for="idName">
+                    <i class="bi bi-person-fill"></i> Full Name <span class="field-required">*</span>
+                  </label>
+                  <div class="input-icon-wrap">
+                    <i class="bi bi-person"></i>
+                    <input type="text" id="idName" name="name" class="field-input"
+                           placeholder="e.g. Nguyen Van A" required autocomplete="name" />
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <div class="field-group">
+                  <label class="field-label" for="idPhone">
+                    <i class="bi bi-telephone-fill"></i> Phone Number <span class="field-required">*</span>
+                  </label>
+                  <div class="input-icon-wrap">
+                    <i class="bi bi-telephone"></i>
+                    <input type="tel" id="idPhone" name="phone" class="field-input"
+                           placeholder="e.g. 0901 234 567" required autocomplete="tel" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Section 2: Budget -->
+            <div class="form-section-title"><i class="bi bi-cash-coin"></i> Budget</div>
+
+            <div class="field-group">
+              <label class="field-label" for="idBudget">
+                <i class="bi bi-cash-stack"></i> Budget (VND) <span class="field-required">*</span>
+              </label>
+              <div class="input-icon-wrap">
+                <i class="bi bi-currency-dollar"></i>
+                <input type="number" id="idBudget" name="budget" class="field-input"
+                       placeholder="e.g. 3000000000" step="500000000" required />
+              </div>
+              <div class="budget-presets">
+                <button type="button" class="budget-chip" data-val="1000000000">1 Billion</button>
+                <button type="button" class="budget-chip" data-val="2000000000">2 Billion</button>
+                <button type="button" class="budget-chip" data-val="5000000000">5 Billion</button>
+                <button type="button" class="budget-chip" data-val="10000000000">10 Billion</button>
+                <button type="button" class="budget-chip" data-val="20000000000">20 Billion+</button>
+              </div>
+              <div class="field-hint">
+                <i class="bi bi-info-circle"></i>
+                <span id="budgetDisplay" style="color:var(--gold);font-weight:500"></span>
+              </div>
+            </div>
+
+            <!-- Property type interest -->
+            <div class="field-group">
+              <label class="field-label">
+                <i class="bi bi-buildings"></i> Interested in
+              </label>
+              <div class="interest-chips" id="interestChips">
+                <div class="interest-chip" data-val="apartment">🏢 Apartment</div>
+                <div class="interest-chip" data-val="house">🏠 House</div>
+                <div class="interest-chip" data-val="land">🌿 Land</div>
+                <div class="interest-chip" data-val="villa">🏡 Villa</div>
+              </div>
+              <input type="hidden" name="property_interest" id="propertyInterest" />
+            </div>
+
+            <!-- Section 3: Location -->
+            <div class="form-section-title"><i class="bi bi-geo-alt"></i> Desired Location</div>
+
+            <!-- Quick location presets -->
+            <div class="field-group">
+              <label class="field-label"><i class="bi bi-lightning-charge"></i> Quick select</label>
+              <div class="quick-locs">
+                <button type="button" class="quick-loc-btn" data-lat="10.7769" data-lng="106.7009">📍 District 1</button>
+                <button type="button" class="quick-loc-btn" data-lat="10.8020" data-lng="106.7330">📍 Thao Dien</button>
+                <button type="button" class="quick-loc-btn" data-lat="10.7299" data-lng="106.6955">📍 District 7</button>
+                <button type="button" class="quick-loc-btn" data-lat="10.8517" data-lng="106.7717">📍 Thu Duc</button>
+                <button type="button" class="quick-loc-btn" data-lat="10.7626" data-lng="106.6602">📍 Binh Thanh</button>
+                <button type="button" class="quick-loc-btn" id="btnGeolocate">
+                  <i class="bi bi-crosshair"></i> My location
+                </button>
+              </div>
+            </div>
+
+            <div class="coord-pair">
+              <div class="field-group">
+                <label class="field-label" for="idLat">
+                  <i class="bi bi-compass"></i> Latitude <span class="field-required">*</span>
+                </label>
+                <div class="input-icon-wrap">
+                  <i class="bi bi-compass"></i>
+                  <input type="text" id="idLat" name="lat" class="field-input"
+                         placeholder="e.g. 10.7769" required />
+                </div>
+                <div class="field-hint">
+                  <i class="bi bi-info-circle"></i> Decimal degrees (WGS84)
+                </div>
+              </div>
+
+              <div class="field-group">
+                <label class="field-label" for="idLng">
+                  <i class="bi bi-compass"></i> Longitude <span class="field-required">*</span>
+                </label>
+                <div class="input-icon-wrap">
+                  <i class="bi bi-compass"></i>
+                  <input type="text" id="idLng" name="lng" class="field-input"
+                         placeholder="e.g. 106.7009" required />
+                </div>
+              </div>
+            </div>
+
+            <!-- Mini map preview -->
+            <div id="miniMapWrap" style="display:none;margin-bottom:20px">
+              <div style="height:180px;border-radius:var(--radius-md);overflow:hidden;border:1px solid var(--border)">
+                <iframe id="miniMap" src="" width="100%" height="100%" style="border:none;filter:brightness(.82) saturate(.55) hue-rotate(185deg)"></iframe>
+              </div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:6px;display:flex;align-items:center;gap:5px">
+                <i class="bi bi-geo-alt" style="color:var(--gold)"></i>
+                <span id="coordDisplay"></span>
+              </div>
+            </div>
+
+            <!-- Notes -->
+            <div class="field-group">
+              <label class="field-label" for="idNotes">
+                <i class="bi bi-chat-left-text"></i> Additional notes
+              </label>
+              <textarea id="idNotes" name="notes" class="field-input" rows="3"
+                        placeholder="Any specific requirements, preferred districts, move-in date…"
+                        style="resize:vertical"></textarea>
+            </div>
+
+            <!-- Submit -->
+            <button type="submit" class="btn-submit" id="submitBtn">
+              <i class="bi bi-send-fill"></i> Submit Lead & Assign Agent
+            </button>
+
+            <p style="text-align:center;font-size:11.5px;color:var(--text-muted);margin-top:12px">
+              <i class="bi bi-shield-check me-1" style="color:var(--gold)"></i>
+              Your information is kept private and only shared with your assigned agent.
+            </p>
+
+          </form>
+        </div>
+      </div>
+      {% endif %}
     </div>
-{% endif %}
+
+    <!-- ══ SIDEBAR ══ -->
+    <div class="lead-sidebar">
+      <div class="sidebar-sticky">
+
+        <!-- How it works -->
+        <div class="info-card fade-up">
+          <div class="info-card-header">
+            <div class="info-card-title"><i class="bi bi-info-circle"></i> How It Works</div>
+          </div>
+          <div class="info-card-body">
+            <div class="how-step">
+              <div class="how-step-num">1</div>
+              <div class="how-step-text"><strong>Fill in your details</strong> — contact info, budget, and desired location.</div>
+            </div>
+            <div class="how-step">
+              <div class="how-step-num">2</div>
+              <div class="how-step-text"><strong>Spatial matching</strong> — our PostGIS engine finds the nearest available agent to your location.</div>
+            </div>
+            <div class="how-step">
+              <div class="how-step-num">3</div>
+              <div class="how-step-text"><strong>Instant assignment</strong> — the agent receives your lead immediately and will contact you.</div>
+            </div>
+            <div class="how-step">
+              <div class="how-step-num">4</div>
+              <div class="how-step-text"><strong>Property matching</strong> — your agent presents listings that fit your budget and preferences.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Trust badges -->
+        <div class="info-card fade-up delay-1">
+          <div class="info-card-header">
+            <div class="info-card-title"><i class="bi bi-patch-check"></i> Why Trust Us</div>
+          </div>
+          <div class="info-card-body">
+            <div class="trust-badges">
+              <div class="trust-item">
+                <div class="trust-icon">🔒</div>
+                <div class="trust-text">
+                  <strong>Data Privacy</strong>
+                  Your info is never shared without consent.
+                </div>
+              </div>
+              <div class="trust-item">
+                <div class="trust-icon">⚡</div>
+                <div class="trust-text">
+                  <strong>Instant Matching</strong>
+                  Agent assigned in under 1 second.
+                </div>
+              </div>
+              <div class="trust-item">
+                <div class="trust-icon">📍</div>
+                <div class="trust-text">
+                  <strong>GIS-Powered</strong>
+                  PostGIS spatial distance matching.
+                </div>
+              </div>
+              <div class="trust-item">
+                <div class="trust-icon">🤝</div>
+                <div class="trust-text">
+                  <strong>No Obligation</strong>
+                  Free consultation, no commitment.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Contact alternative -->
+        <div class="info-card fade-up delay-2" style="margin-bottom:0">
+          <div class="info-card-header">
+            <div class="info-card-title"><i class="bi bi-headset"></i> Need Help?</div>
+          </div>
+          <div class="info-card-body">
+            <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;line-height:1.6">
+              Prefer to speak to someone directly? Our team is available Mon–Sat, 8am–6pm.
+            </p>
+            <a href="tel:+84901234567" class="btn-geo-secondary"
+               style="font-size:13px;padding:10px;width:100%;margin-bottom:8px">
+              <i class="bi bi-telephone-fill"></i> +84 901 234 567
+            </a>
+            <a href="mailto:hello@geoestate.vn" class="btn-geo-secondary"
+               style="font-size:13px;padding:10px;width:100%">
+              <i class="bi bi-envelope-fill"></i> hello@geoestate.vn
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+(function () {
+
+  /* ── Budget presets ── */
+  const budgetInput   = document.getElementById('idBudget');
+  const budgetDisplay = document.getElementById('budgetDisplay');
+
+  function formatBudget(val) {
+    const n = parseFloat(val);
+    if (!val || isNaN(n)) return '';
+    if (n >= 1e9)  return '≈ ' + (n / 1e9).toFixed(1)  + ' Billion VND';
+    if (n >= 1e6)  return '≈ ' + (n / 1e6).toFixed(0)  + ' Million VND';
+    return n.toLocaleString() + ' VND';
+  }
+
+  budgetInput && budgetInput.addEventListener('input', () => {
+    if (budgetDisplay) budgetDisplay.textContent = formatBudget(budgetInput.value);
+  });
+
+  document.querySelectorAll('.budget-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      if (budgetInput) {
+        budgetInput.value = chip.dataset.val;
+        budgetInput.dispatchEvent(new Event('input'));
+      }
+    });
+  });
+
+  /* ── Interest chips (multi-select) ── */
+  const selectedInterests = new Set();
+  const interestHidden    = document.getElementById('propertyInterest');
+
+  document.querySelectorAll('#interestChips .interest-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const val = chip.dataset.val;
+      if (selectedInterests.has(val)) { selectedInterests.delete(val); chip.classList.remove('active'); }
+      else { selectedInterests.add(val); chip.classList.add('active'); }
+      if (interestHidden) interestHidden.value = [...selectedInterests].join(',');
+    });
+  });
+
+  /* ── Quick location presets ── */
+  document.querySelectorAll('.quick-loc-btn[data-lat]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const lat = btn.dataset.lat, lng = btn.dataset.lng;
+      document.getElementById('idLat').value = lat;
+      document.getElementById('idLng').value = lng;
+      updateMiniMap(lat, lng);
+    });
+  });
+
+  /* ── Geolocation ── */
+  const geoBtn = document.getElementById('btnGeolocate');
+  geoBtn && geoBtn.addEventListener('click', () => {
+    if (!navigator.geolocation) { alert('Geolocation not supported.'); return; }
+    geoBtn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Locating…';
+    geoBtn.disabled = true;
+
+    navigator.geolocation.getCurrentPosition(pos => {
+      const lat = pos.coords.latitude.toFixed(6);
+      const lng = pos.coords.longitude.toFixed(6);
+      document.getElementById('idLat').value = lat;
+      document.getElementById('idLng').value = lng;
+      updateMiniMap(lat, lng);
+      geoBtn.innerHTML = '<i class="bi bi-check-circle"></i> Set';
+      setTimeout(() => {
+        geoBtn.innerHTML = '<i class="bi bi-crosshair"></i> My location';
+        geoBtn.disabled = false;
+      }, 2000);
+    }, () => {
+      alert('Could not get location.');
+      geoBtn.innerHTML = '<i class="bi bi-crosshair"></i> My location';
+      geoBtn.disabled = false;
+    });
+  });
+
+  /* ── Mini map preview ── */
+  function updateMiniMap(lat, lng) {
+    const wrap    = document.getElementById('miniMapWrap');
+    const iframe  = document.getElementById('miniMap');
+    const display = document.getElementById('coordDisplay');
+    if (!wrap || !iframe) return;
+
+    const latF = parseFloat(lat), lngF = parseFloat(lng);
+    if (isNaN(latF) || isNaN(lngF)) return;
+
+    const bbox = [lngF-.015, latF-.012, lngF+.015, latF+.012].join(',');
+    iframe.src = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${latF},${lngF}`;
+    wrap.style.display = 'block';
+    if (display) display.textContent = `${latF.toFixed(6)}, ${lngF.toFixed(6)}`;
+  }
+
+  // Update map when coords typed manually
+  ['idLat','idLng'].forEach(id => {
+    const el = document.getElementById(id);
+    el && el.addEventListener('change', () => {
+      const lat = document.getElementById('idLat').value;
+      const lng = document.getElementById('idLng').value;
+      if (lat && lng) updateMiniMap(lat, lng);
+    });
+  });
+
+  /* ── Form validation & step progress ── */
+  const form      = document.getElementById('leadForm');
+  const submitBtn = document.getElementById('submitBtn');
+  const steps     = document.querySelectorAll('.step');
+
+  function getFilledStep() {
+    const name   = document.getElementById('idName')?.value.trim();
+    const phone  = document.getElementById('idPhone')?.value.trim();
+    const budget = document.getElementById('idBudget')?.value.trim();
+    const lat    = document.getElementById('idLat')?.value.trim();
+    const lng    = document.getElementById('idLng')?.value.trim();
+
+    if (lat && lng) return 3;
+    if (budget)     return 2;
+    if (name || phone) return 1;
+    return 0;
+  }
+
+  function updateSteps() {
+    const filled = getFilledStep();
+    steps.forEach((step, i) => {
+      step.classList.remove('active', 'done');
+      if (i < filled)      step.classList.add('done');
+      else if (i === filled) step.classList.add('active');
+    });
+  }
+
+  form && form.querySelectorAll('.field-input').forEach(input => {
+    input.addEventListener('input', updateSteps);
+    // Live validation feedback
+    input.addEventListener('blur', () => {
+      if (input.required) {
+        const ok = input.value.trim().length > 0;
+        input.classList.toggle('is-valid',   ok);
+        input.classList.toggle('is-invalid', !ok);
+      }
+    });
+  });
+
+  // Prevent double submit
+  form && form.addEventListener('submit', (e) => {
+    const requiredFields = form.querySelectorAll('[required]');
+    let valid = true;
+    requiredFields.forEach(f => {
+      if (!f.value.trim()) {
+        f.classList.add('is-invalid'); valid = false;
+      }
+    });
+    if (!valid) { e.preventDefault(); return; }
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="bi bi-hourglass-split spin"></i> Submitting…';
+    }
+  });
+
+})();
+</script>
+
+<style>
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .spin { display: inline-block; animation: spin .7s linear infinite; }
+</style>
 {% endblock %}

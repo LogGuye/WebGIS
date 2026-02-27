@@ -105,6 +105,10 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # GeoDjango settings
 SRID_DEFAULT = 4326
 
-
-GDAL_LIBRARY_PATH = os.environ.get('GDAL_LIBRARY_PATH')
-GEOS_LIBRARY_PATH = os.environ.get('GEOS_LIBRARY_PATH')
+if os.name == 'nt':  # Windows
+    OSGEO4W_BIN = r'C:\OSGeo4W\bin'  # ← paste your path here from "where gdal.exe"
+    GDAL_LIBRARY_PATH = os.path.join(OSGEO4W_BIN, 'gdal312.dll')
+    GEOS_LIBRARY_PATH = os.path.join(OSGEO4W_BIN, 'geos_c.dll')
+else:
+    GDAL_LIBRARY_PATH = os.environ.get('GDAL_LIBRARY_PATH')
+    GEOS_LIBRARY_PATH = os.environ.get('GEOS_LIBRARY_PATH')

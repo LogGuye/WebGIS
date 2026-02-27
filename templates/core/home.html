@@ -1,46 +1,543 @@
 {% extends "base.html" %}
-{% block title %}Home | Real Estate{% endblock %}
+{% block title %}Home | GeoEstate{% endblock %}
+
+{% block head %}
+<style>
+  /* ══════════════════════════════════════════
+     HOME PAGE — uses tokens from base.html
+     NO hardcoded colors: everything via var()
+  ══════════════════════════════════════════ */
+
+  /* ── Hero ── */
+  .hero {
+    position: relative;
+    min-height: 90vh;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    padding: 80px 0 60px;
+  }
+
+  .hero-bg {
+    position: absolute; inset: 0; z-index: 0;
+    background:
+      radial-gradient(ellipse 60% 70% at 70% 50%, rgba(200,169,110,.07) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 40% at 20% 80%,  rgba(200,169,110,.04) 0%, transparent 60%),
+      var(--bg);
+  }
+
+  .hero-bg::after {
+    content: '';
+    position: absolute; inset: 0;
+    background-image: radial-gradient(circle, rgba(200,169,110,.07) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+
+  .hero-content { position: relative; z-index: 1; }
+
+  .hero-eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 10.5px; font-weight: 600; letter-spacing: 3px;
+    text-transform: uppercase; color: var(--gold);
+    border: 1px solid var(--gold-border);
+    background: var(--gold-dim);
+    padding: 6px 16px; border-radius: 999px;
+    margin-bottom: 24px;
+    animation: fadeUp .6s ease both;
+  }
+
+  .hero-eyebrow::before {
+    content: ''; width: 6px; height: 6px;
+    background: var(--gold); border-radius: 50%;
+    animation: heroPulse 2s infinite;
+  }
+
+  @keyframes heroPulse {
+    0%,100% { opacity:1; transform:scale(1); }
+    50%      { opacity:.3; transform:scale(.6); }
+  }
+
+  .hero-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2.8rem, 6vw, 5rem);
+    font-weight: 700; line-height: 1.08;
+    color: var(--text);
+    margin-bottom: 16px;
+    animation: fadeUp .7s ease .1s both;
+  }
+
+  .hero-title .accent { color: var(--gold); font-style: italic; }
+
+  .hero-subtitle {
+    font-size: clamp(.95rem, 2vw, 1.15rem);
+    color: var(--text-muted);
+    font-weight: 300; max-width: 480px; line-height: 1.75;
+    margin-bottom: 36px;
+    animation: fadeUp .7s ease .2s both;
+  }
+
+  /* ── Hero search ── */
+  .hero-search {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 8px 8px 8px 18px;
+    max-width: 580px;
+    box-shadow: var(--shadow-card);
+    animation: fadeUp .7s ease .3s both;
+    margin-bottom: 28px;
+    transition: border-color var(--transition), box-shadow var(--transition);
+  }
+
+  .hero-search:focus-within {
+    border-color: var(--gold-border);
+    box-shadow: var(--shadow-card), 0 0 0 3px var(--gold-dim);
+  }
+
+  .hero-search input {
+    flex: 1; background: transparent; border: none; outline: none;
+    color: var(--text); font-family: 'Outfit', sans-serif; font-size: 14px;
+  }
+
+  .hero-search input::placeholder { color: var(--text-muted); }
+
+  .hero-search select {
+    background: var(--bg-3); border: 1px solid var(--border);
+    color: var(--text); padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    font-family: 'Outfit', sans-serif; font-size: 13px; outline: none;
+    transition: border-color var(--transition);
+  }
+
+  .hero-search select:focus { border-color: var(--gold-border); }
+  .hero-search select option { background: var(--bg-2); }
+
+  .btn-hero-search {
+    background: var(--gold); color: #0C0F1A;
+    border: none; border-radius: var(--radius-sm);
+    padding: 10px 22px; font-weight: 600;
+    font-family: 'Outfit', sans-serif; font-size: 14px;
+    cursor: pointer; white-space: nowrap;
+    display: flex; align-items: center; gap: 7px;
+    transition: all var(--transition);
+  }
+
+  .btn-hero-search:hover {
+    background: var(--gold-light);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(200,169,110,.3);
+  }
+
+  .hero-actions {
+    display: flex; gap: 12px; flex-wrap: wrap;
+    animation: fadeUp .7s ease .4s both;
+  }
+
+  /* ── Stats strip ── */
+  .stats-strip {
+    display: grid; grid-template-columns: repeat(4,1fr);
+    gap: 1px; background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg); overflow: hidden;
+    margin-top: 56px;
+    animation: fadeUp .7s ease .5s both;
+  }
+
+  .stat-cell {
+    background: var(--bg-card); padding: 24px 20px; text-align: center;
+    transition: background var(--transition);
+  }
+
+  .stat-cell:hover { background: var(--bg-3); }
+
+  .stat-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2.2rem; font-weight: 700;
+    color: var(--gold); line-height: 1; margin-bottom: 5px;
+  }
+
+  .stat-lbl {
+    font-size: 10px; font-weight: 600;
+    letter-spacing: 2.5px; text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  /* ── Map frame ── */
+  .map-frame {
+    position: relative; border-radius: var(--radius-xl);
+    overflow: hidden; height: 430px;
+    border: 1px solid var(--border); background: var(--bg-2);
+    animation: fadeUp .7s ease .3s both;
+    box-shadow: var(--shadow-card);
+  }
+
+  .map-frame iframe {
+    width: 100%; height: 100%; border: none;
+    filter: brightness(.82) saturate(.55) hue-rotate(185deg);
+    transition: filter var(--transition);
+  }
+
+  [data-theme="light"] .map-frame iframe {
+    filter: brightness(.95) saturate(.75);
+  }
+
+  .map-frame-overlay {
+    position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(to bottom, transparent 55%, var(--bg) 100%);
+  }
+
+  .map-chip {
+    position: absolute; top: 14px; left: 14px;
+    background: var(--bg-card); backdrop-filter: blur(12px);
+    border: 1px solid var(--gold-border);
+    border-radius: var(--radius-sm); padding: 9px 14px;
+    font-size: 11px; font-weight: 600; color: var(--gold);
+    letter-spacing: 1px; display: flex; align-items: center; gap: 7px;
+  }
+
+  .map-chip::before {
+    content: ''; width: 7px; height: 7px;
+    background: #22c55e; border-radius: 50%;
+    animation: heroPulse 2s infinite;
+  }
+
+  /* ── Shared layout ── */
+  .h-rule { height: 1px; background: var(--border); border: none; margin: 0; }
+  .home-section { padding: 80px 0; }
+
+  /* ── Feature grid ── */
+  .feat-grid {
+    display: grid; grid-template-columns: repeat(3,1fr);
+    gap: 20px; margin-top: 48px;
+  }
+
+  .feat-card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 30px 28px;
+    position: relative; overflow: hidden;
+    transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition);
+  }
+
+  .feat-card::after {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    opacity: 0; transition: opacity var(--transition);
+  }
+
+  .feat-card:hover {
+    border-color: var(--border-hover);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-card), var(--shadow-glow);
+  }
+
+  .feat-card:hover::after { opacity: 1; }
+
+  .feat-icon {
+    width: 46px; height: 46px; background: var(--gold-dim);
+    border: 1px solid var(--gold-border); border-radius: var(--radius-sm);
+    display: grid; place-items: center; font-size: 20px; margin-bottom: 18px;
+  }
+
+  .feat-card h5 { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+  .feat-card p  { color: var(--text-muted); font-size: 13.5px; line-height: 1.7; font-weight: 300; }
+
+  /* ── Property cards ── */
+  .prop-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 20px; margin-top: 36px; }
+
+  .prop-card {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); overflow: hidden;
+    transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition);
+  }
+
+  .prop-card:hover {
+    border-color: var(--border-hover);
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-card), var(--shadow-glow);
+  }
+
+  .prop-thumb {
+    height: 190px;
+    background: linear-gradient(135deg, var(--bg-2) 0%, var(--bg-3) 100%);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 44px; position: relative;
+  }
+
+  .prop-body { padding: 18px 20px; }
+
+  .prop-price {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.45rem; font-weight: 700; color: var(--gold); margin-bottom: 4px;
+  }
+
+  .prop-name  { font-size: 14.5px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+  .prop-loc   { font-size: 12.5px; color: var(--text-muted); margin-bottom: 14px; }
+
+  .prop-meta {
+    display: flex; gap: 14px;
+    padding-top: 14px; border-top: 1px solid var(--border);
+  }
+
+  .prop-meta span   { font-size: 12px; color: var(--text-muted); }
+  .prop-meta strong { color: var(--text); }
+
+  /* ── CTA banner ── */
+  .cta-banner {
+    background: var(--bg-2); border: 1px solid var(--border);
+    border-radius: var(--radius-xl); padding: 64px 48px;
+    text-align: center; position: relative; overflow: hidden;
+  }
+
+  .cta-banner::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(ellipse 70% 80% at 50% 0%, var(--gold-dim) 0%, transparent 65%);
+    pointer-events: none;
+  }
+
+  .cta-banner::after {
+    content: ''; position: absolute; top: 0; left: 10%; right: 10%; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+
+  .cta-banner > * { position: relative; }
+
+  .cta-banner h2 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(1.8rem, 3vw, 2.6rem); font-weight: 700;
+    color: var(--text); margin-bottom: 14px;
+  }
+
+  .cta-banner p {
+    color: var(--text-muted); font-size: 15px;
+    max-width: 460px; margin: 0 auto 32px; line-height: 1.75;
+  }
+
+  .cta-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    .stats-strip { grid-template-columns: repeat(2,1fr); }
+    .feat-grid   { grid-template-columns: 1fr; }
+    .prop-grid   { grid-template-columns: 1fr; }
+    .map-frame   { height: 260px; }
+    .hero-search { flex-wrap: wrap; }
+    .cta-banner  { padding: 40px 24px; }
+    .home-section{ padding: 56px 0; }
+  }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="row">
-    <div class="col-12 mb-3">
-        <h1>Hệ thống Quản lý &amp; Phân phối BĐS</h1>
-        <p class="text-muted">Django + PostGIS demo with GeoDjango.</p>
-    </div>
-    <div class="col-md-3 col-6">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <h6 class="text-uppercase text-muted">Properties</h6>
-                <h3>{{ property_count }}</h3>
-            </div>
+
+<!-- ══ HERO ══ -->
+<div class="hero">
+  <div class="hero-bg"></div>
+  <div class="container">
+    <div class="row align-items-center g-5">
+
+      <div class="col-lg-6 hero-content">
+
+        <div class="hero-eyebrow">Leading GIS Real Estate Platform</div>
+
+        <h1 class="hero-title">
+          Smarter way to<br>find <span class="accent">real estate</span>
+        </h1>
+
+        <p class="hero-subtitle">
+          Explore thousands of properties on an interactive map powered by PostGIS.
+          Analyze location, nearby amenities, and market prices in real time.
+        </p>
+
+        <form class="hero-search" method="get" action="{% url 'properties:list' %}">
+          <i class="bi bi-search" style="color:var(--text-muted);font-size:14px;flex-shrink:0"></i>
+          <input type="text" name="q" placeholder="Search by address, district, area..."
+                 value="{{ request.GET.q|default:'' }}" autocomplete="off" />
+          <select name="type">
+            <option value="">All Types</option>
+            <option value="buy">Buy</option>
+            <option value="rent">Rent</option>
+          </select>
+          <button type="submit" class="btn-hero-search">
+            <i class="bi bi-search"></i> Search
+          </button>
+        </form>
+
+        <div class="hero-actions">
+          <a href="{% url 'properties:list' %}" class="btn-geo-primary">
+            <i class="bi bi-grid-3x3-gap"></i> Browse Properties
+          </a>
+          <a href="{% url 'properties:nearby_search' %}" class="btn-geo-secondary">
+            <i class="bi bi-geo-alt"></i> Nearby Search
+          </a>
         </div>
-    </div>
-    <div class="col-md-3 col-6">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <h6 class="text-uppercase text-muted">Agents</h6>
-                <h3>{{ agent_count }}</h3>
-            </div>
+
+        <div class="stats-strip">
+          <div class="stat-cell">
+            <div class="stat-num">{{ property_count }}</div>
+            <div class="stat-lbl">Properties</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-num">{{ agent_count }}</div>
+            <div class="stat-lbl">Agents</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-num">{{ lead_count }}</div>
+            <div class="stat-lbl">Leads</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-num">{{ amenity_count }}</div>
+            <div class="stat-lbl">Amenities</div>
+          </div>
         </div>
-    </div>
-    <div class="col-md-3 col-6">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <h6 class="text-uppercase text-muted">Leads</h6>
-                <h3>{{ lead_count }}</h3>
-            </div>
+
+      </div>
+
+      <div class="col-lg-6">
+        <div class="map-frame">
+          <iframe
+            src="https://www.openstreetmap.org/export/embed.html?bbox=106.5,10.65,106.85,10.9&layer=mapnik"
+            allowfullscreen loading="lazy" title="Property map — Ho Chi Minh City">
+          </iframe>
+          <div class="map-frame-overlay"></div>
+          <div class="map-chip">LIVE MAP · HO CHI MINH CITY</div>
         </div>
+      </div>
+
     </div>
-    <div class="col-md-3 col-6">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <h6 class="text-uppercase text-muted">Amenities</h6>
-                <h3>{{ amenity_count }}</h3>
-            </div>
-        </div>
-    </div>
+  </div>
 </div>
-<div class="mt-4">
-    <a class="btn btn-primary me-2" href="{% url 'properties:list' %}">Xem danh sách BĐS</a>
-    <a class="btn btn-outline-primary" href="{% url 'properties:nearby_search' %}">Nearby Search</a>
+
+<hr class="h-rule">
+
+<!-- ══ FEATURES ══ -->
+<div class="home-section">
+  <div class="container">
+    <div class="row align-items-end g-4">
+      <div class="col-md-6">
+        <p class="section-eyebrow">Why choose us</p>
+        <h2 class="section-heading">Next-generation<br>GIS platform</h2>
+      </div>
+      <div class="col-md-6">
+        <p style="color:var(--text-muted);font-size:15px;line-height:1.75;font-weight:300;max-width:440px">
+          Combining real geographic data with intelligent tooling to help you make
+          sharper investment decisions, faster.
+        </p>
+      </div>
+    </div>
+
+    <div class="feat-grid">
+      <div class="feat-card fade-up delay-1">
+        <div class="feat-icon">🗺️</div>
+        <h5>Interactive PostGIS Map</h5>
+        <p>Render thousands of property markers in real time with cluster support and polygon-based search areas.</p>
+      </div>
+      <div class="feat-card fade-up delay-2">
+        <div class="feat-icon">📍</div>
+        <h5>Smart Nearby Search</h5>
+        <p>Find properties within a custom radius. Calculate distances to schools, hospitals, and supermarkets.</p>
+      </div>
+      <div class="feat-card fade-up delay-3">
+        <div class="feat-icon">📊</div>
+        <h5>Market Price Analytics</h5>
+        <p>Price trend charts by district. Compare individual listings against the broader neighborhood average.</p>
+      </div>
+      <div class="feat-card fade-up delay-1">
+        <div class="feat-icon">🤝</div>
+        <h5>Leads &amp; Agent CRM</h5>
+        <p>Track prospective clients, assign agents, set follow-up reminders — all in one integrated workflow.</p>
+      </div>
+      <div class="feat-card fade-up delay-2">
+        <div class="feat-icon">🔒</div>
+        <h5>Role-based Access</h5>
+        <p>Admin, Agent, Owner, and Client roles — each with their own dashboard and permission boundaries.</p>
+      </div>
+      <div class="feat-card fade-up delay-3">
+        <div class="feat-icon">⚡</div>
+        <h5>REST API &amp; Integrations</h5>
+        <p>Full REST API for easy integration with external CRM, ERP systems, or your own mobile app.</p>
+      </div>
+    </div>
+  </div>
 </div>
+
+<hr class="h-rule">
+
+<!-- ══ FEATURED PROPERTIES ══ -->
+<div class="home-section">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-end flex-wrap gap-3 mb-2">
+      <div>
+        <p class="section-eyebrow">Featured</p>
+        <h2 class="section-heading" style="margin-bottom:0">Highlighted listings</h2>
+      </div>
+      <a href="{% url 'properties:list' %}" class="btn-geo-secondary" style="font-size:13px;padding:9px 20px">
+        View all <i class="bi bi-arrow-right ms-1"></i>
+      </a>
+    </div>
+
+    <div class="prop-grid">
+      <div class="prop-card fade-up delay-1">
+        <div class="prop-thumb">🏢
+          <span class="badge-gold" style="position:absolute;top:12px;left:12px">For Sale</span>
+        </div>
+        <div class="prop-body">
+          <div class="prop-price">8.5 Billion VND</div>
+          <div class="prop-name">Premium Apartment — District 1</div>
+          <div class="prop-loc"><i class="bi bi-geo-alt me-1"></i>Nguyen Hue, D.1, HCMC</div>
+          <div class="prop-meta">
+            <span><strong>3</strong> bed</span>
+            <span><strong>2</strong> bath</span>
+            <span><strong>120</strong> m²</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="prop-card fade-up delay-2">
+        <div class="prop-thumb">🏠
+          <span class="badge-gold" style="position:absolute;top:12px;left:12px">For Rent</span>
+        </div>
+        <div class="prop-body">
+          <div class="prop-price">25M VND / month</div>
+          <div class="prop-name">Townhouse — Thao Dien</div>
+          <div class="prop-loc"><i class="bi bi-geo-alt me-1"></i>Thao Dien, D.2, HCMC</div>
+          <div class="prop-meta">
+            <span><strong>4</strong> bed</span>
+            <span><strong>3</strong> bath</span>
+            <span><strong>200</strong> m²</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="prop-card fade-up delay-3">
+        <div class="prop-thumb">🏗️
+          <span class="badge-outline" style="position:absolute;top:12px;left:12px">New</span>
+        </div>
+        <div class="prop-body">
+          <div class="prop-price">3.2 Billion VND</div>
+          <div class="prop-name">Apartment — Binh Chanh</div>
+          <div class="prop-loc"><i class="bi bi-geo-alt me-1"></i>Ten Lua, Binh Chanh, HCMC</div>
+          <div class="prop-meta">
+            <span><strong>2</strong> bed</span>
+            <span><strong>1</strong> bath</span>
+            <span><strong>72</strong> m²</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CTA ══ -->
+<div class="container" style="padding-bottom:80px">
+  <div class="cta-banner fade-up">
+    <h2>Start exploring today</h2>
+    <p>Thousands of properties are waiting on the map. Search by location, amenity, and budget — all in one place.</p>
+    <div class="cta-actions">
+      <a href="{% url 'properties:list' %}"          class="btn-geo-primary"><i class="bi bi-grid-3x3-gap"></i> Browse Properties</a>
+      <a href="{% url 'properties:nearby_search' %}" class="btn-geo-secondary"><i class="bi bi-geo-alt"></i> Find Nearby</a>
+    </div>
+  </div>
+</div>
+
 {% endblock %}
