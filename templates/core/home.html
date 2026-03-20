@@ -355,8 +355,9 @@
                  value="{{ request.GET.q|default:'' }}" autocomplete="off" />
           <select name="type">
             <option value="">All Types</option>
-            <option value="buy">Buy</option>
-            <option value="rent">Rent</option>
+            <option value="apartment">Apartment</option>
+            <option value="house">House</option>
+            <option value="land">Land</option>
           </select>
           <button type="submit" class="btn-hero-search">
             <i class="bi bi-search"></i> Search
@@ -477,53 +478,29 @@
     </div>
 
     <div class="prop-grid">
-      <div class="prop-card fade-up delay-1">
-        <div class="prop-thumb">🏢
-          <span class="badge-gold" style="position:absolute;top:12px;left:12px">For Sale</span>
+      {% for p in featured_properties %}
+      <a class="prop-card fade-up delay-{{ forloop.counter }}" href="{% url 'properties:detail' p.pk %}" style="text-decoration:none">
+        <div class="prop-thumb">
+          {% if p.property_type == 'apartment' %}🏢{% elif p.property_type == 'house' %}🏠{% elif p.property_type == 'land' %}🌿{% else %}🏗️{% endif %}
+          <span class="badge-gold" style="position:absolute;top:12px;left:12px">{{ p.get_listing_status_display }}</span>
         </div>
         <div class="prop-body">
-          <div class="prop-price">8.5 Billion VND</div>
-          <div class="prop-name">Premium Apartment — District 1</div>
-          <div class="prop-loc"><i class="bi bi-geo-alt me-1"></i>Nguyen Hue, D.1, HCMC</div>
+          <div class="prop-price">{{ p.price|floatformat:0 }} VND</div>
+          <div class="prop-name">{{ p.title }}</div>
+          <div class="prop-loc"><i class="bi bi-geo-alt me-1"></i>{{ p.address }}</div>
           <div class="prop-meta">
-            <span><strong>3</strong> bed</span>
-            <span><strong>2</strong> bath</span>
-            <span><strong>120</strong> m²</span>
+            <span><strong>{{ p.area }}</strong> m²</span>
+            <span><strong>{{ p.get_property_type_display }}</strong></span>
+            <span><strong>{% if p.agent %}{{ p.agent.name }}{% else %}No agent{% endif %}</strong></span>
           </div>
         </div>
+      </a>
+      {% empty %}
+      <div class="card-geo p-5 text-center" style="grid-column:1/-1">
+        <h4 style="color:var(--text)">Chưa có featured property</h4>
+        <p style="color:var(--text-muted)">Bật <code>is_featured</code> trong admin để hiện ở đây.</p>
       </div>
-
-      <div class="prop-card fade-up delay-2">
-        <div class="prop-thumb">🏠
-          <span class="badge-gold" style="position:absolute;top:12px;left:12px">For Rent</span>
-        </div>
-        <div class="prop-body">
-          <div class="prop-price">25M VND / month</div>
-          <div class="prop-name">Townhouse — Thao Dien</div>
-          <div class="prop-loc"><i class="bi bi-geo-alt me-1"></i>Thao Dien, D.2, HCMC</div>
-          <div class="prop-meta">
-            <span><strong>4</strong> bed</span>
-            <span><strong>3</strong> bath</span>
-            <span><strong>200</strong> m²</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="prop-card fade-up delay-3">
-        <div class="prop-thumb">🏗️
-          <span class="badge-outline" style="position:absolute;top:12px;left:12px">New</span>
-        </div>
-        <div class="prop-body">
-          <div class="prop-price">3.2 Billion VND</div>
-          <div class="prop-name">Apartment — Binh Chanh</div>
-          <div class="prop-loc"><i class="bi bi-geo-alt me-1"></i>Ten Lua, Binh Chanh, HCMC</div>
-          <div class="prop-meta">
-            <span><strong>2</strong> bed</span>
-            <span><strong>1</strong> bath</span>
-            <span><strong>72</strong> m²</span>
-          </div>
-        </div>
-      </div>
+      {% endfor %}
     </div>
   </div>
 </div>

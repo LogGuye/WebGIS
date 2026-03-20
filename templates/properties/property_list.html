@@ -15,6 +15,9 @@
 {% endblock %}
 
 {% block head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
 <style>
   /* ══════════════════════════════════════════
      PROPERTY LIST — all colors via var() tokens
@@ -47,6 +50,45 @@
     gap: 28px;
     align-items: start;
     padding: 36px 0 80px;
+  }
+
+  .results-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .map-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    box-shadow: var(--shadow-card);
+  }
+
+  .map-card-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .map-card-title {
+    font-size: 11px; font-weight: 600; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--gold);
+  }
+
+  .map-card-note {
+    font-size: 12px; color: var(--text-muted);
+  }
+
+  #propertyMap {
+    height: 420px;
+    width: 100%;
+    background: var(--bg-3);
   }
 
   @media (max-width: 1024px) {
@@ -475,6 +517,16 @@
               </div>
             </div>
 
+            <!-- Listing status -->
+            <div class="filter-section">
+              <div class="filter-section-label"><i class="bi bi-check2-square"></i> Listing Status</div>
+              <select name="status" class="field-input">
+                {% for value, label in listing_statuses %}
+                <option value="{{ value }}" {% if filters.status == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
             <!-- Price range -->
             <div class="filter-section">
               <div class="filter-section-label"><i class="bi bi-cash-coin"></i> Price Range (VND)</div>
@@ -526,6 +578,7 @@
               <div class="filter-section-label"><i class="bi bi-search"></i> Keyword</div>
               <input type="text" name="q" class="field-input"
                      placeholder="Title, address…" value="{{ filters.q|default:'' }}" />
+              <input type="hidden" name="bbox" id="bboxInput" value="{{ filters.bbox|default:'' }}" />
             </div>
 
             <!-- Apply -->
@@ -541,14 +594,35 @@
     </aside>
 
     <!-- ══ RESULTS ══ -->
-    <div>
+    <div class="results-stack">
+
+      <section class="map-card fade-up">
+        <div class="map-card-header">
+          <div>
+            <div class="map-card-title"><i class="bi bi-map me-1"></i> Map Explorer</div>
+            <div class="map-card-note">Di chuyển hoặc zoom map rồi bấm “Search this area” để lọc theo vùng.</div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button type="button" class="btn-card-view" id="btnSearchArea">
+              <i class="bi bi-bounding-box"></i> Search this area
+            </button>
+            <button type="button" class="btn-card-view" id="btnToggleHeatmap">
+              <i class="bi bi-fire"></i> Heatmap
+            </button>
+            <button type="button" class="btn-card-view" id="btnResetMapFilter">
+              <i class="bi bi-arrow-counterclockwise"></i> Reset map
+            </button>
+          </div>
+        </div>
+        <div id="propertyMap"></div>
+      </section>
 
       <!-- Results topbar -->
       <div class="results-topbar fade-up">
         <div class="results-count-row">
-          <span class="results-num">{{ properties|length }}</span>
+          <span class="results-num">{{ total_count }}</span>
           <span class="results-label">
-            propert{{ properties|length|pluralize:"y,ies" }} found
+            propert{{ total_count|pluralize:"y,ies" }} found
           </span>
           <!-- Mobile filter toggle -->
           <button class="mobile-filter-btn" id="mobileFilterToggle">
@@ -557,12 +631,13 @@
         </div>
 
         <div class="topbar-right">
-          <select class="sort-select" id="sortSelect">
-            <option value="default">Sort: Default</option>
-            <option value="price_asc">Price: Low → High</option>
-            <option value="price_desc">Price: High → Low</option>
-            <option value="area_desc">Area: Largest first</option>
-            <option value="area_asc">Area: Smallest first</option>
+          <select class="sort-select" id="sortSelect" name="sort" form="filterForm">
+            <option value="default" {% if filters.sort == 'default' %}selected{% endif %}>Sort: Default</option>
+            <option value="newest" {% if filters.sort == 'newest' %}selected{% endif %}>Newest</option>
+            <option value="price_asc" {% if filters.sort == 'price_asc' %}selected{% endif %}>Price: Low → High</option>
+            <option value="price_desc" {% if filters.sort == 'price_desc' %}selected{% endif %}>Price: High → Low</option>
+            <option value="area_desc" {% if filters.sort == 'area_desc' %}selected{% endif %}>Area: Largest first</option>
+            <option value="area_asc" {% if filters.sort == 'area_asc' %}selected{% endif %}>Area: Smallest first</option>
           </select>
 
           <div class="view-toggle">
@@ -693,7 +768,7 @@
       {% if is_paginated %}
       <div class="pagination-row">
         {% if page_obj.has_previous %}
-        <a class="page-btn" href="?page={{ page_obj.previous_page_number }}{% if filters.type %}&type={{ filters.type }}{% endif %}">
+        <a class="page-btn" href="?{% if filters.type %}type={{ filters.type|urlencode }}&{% endif %}{% if filters.status %}status={{ filters.status|urlencode }}&{% endif %}{% if filters.price_min %}price_min={{ filters.price_min|urlencode }}&{% endif %}{% if filters.price_max %}price_max={{ filters.price_max|urlencode }}&{% endif %}{% if filters.area_min %}area_min={{ filters.area_min|urlencode }}&{% endif %}{% if filters.area_max %}area_max={{ filters.area_max|urlencode }}&{% endif %}{% if filters.q %}q={{ filters.q|urlencode }}&{% endif %}{% if filters.sort %}sort={{ filters.sort|urlencode }}&{% endif %}{% if filters.bbox %}bbox={{ filters.bbox|urlencode }}&{% endif %}page={{ page_obj.previous_page_number }}">
           <i class="bi bi-chevron-left"></i>
         </a>
         {% endif %}
@@ -702,12 +777,12 @@
           {% if page_obj.number == num %}
           <span class="page-btn active">{{ num }}</span>
           {% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}
-          <a class="page-btn" href="?page={{ num }}{% if filters.type %}&type={{ filters.type }}{% endif %}">{{ num }}</a>
+          <a class="page-btn" href="?{% if filters.type %}type={{ filters.type|urlencode }}&{% endif %}{% if filters.status %}status={{ filters.status|urlencode }}&{% endif %}{% if filters.price_min %}price_min={{ filters.price_min|urlencode }}&{% endif %}{% if filters.price_max %}price_max={{ filters.price_max|urlencode }}&{% endif %}{% if filters.area_min %}area_min={{ filters.area_min|urlencode }}&{% endif %}{% if filters.area_max %}area_max={{ filters.area_max|urlencode }}&{% endif %}{% if filters.q %}q={{ filters.q|urlencode }}&{% endif %}{% if filters.sort %}sort={{ filters.sort|urlencode }}&{% endif %}{% if filters.bbox %}bbox={{ filters.bbox|urlencode }}&{% endif %}page={{ num }}">{{ num }}</a>
           {% endif %}
         {% endfor %}
 
         {% if page_obj.has_next %}
-        <a class="page-btn" href="?page={{ page_obj.next_page_number }}{% if filters.type %}&type={{ filters.type }}{% endif %}">
+        <a class="page-btn" href="?{% if filters.type %}type={{ filters.type|urlencode }}&{% endif %}{% if filters.status %}status={{ filters.status|urlencode }}&{% endif %}{% if filters.price_min %}price_min={{ filters.price_min|urlencode }}&{% endif %}{% if filters.price_max %}price_max={{ filters.price_max|urlencode }}&{% endif %}{% if filters.area_min %}area_min={{ filters.area_min|urlencode }}&{% endif %}{% if filters.area_max %}area_max={{ filters.area_max|urlencode }}&{% endif %}{% if filters.q %}q={{ filters.q|urlencode }}&{% endif %}{% if filters.sort %}sort={{ filters.sort|urlencode }}&{% endif %}{% if filters.bbox %}bbox={{ filters.bbox|urlencode }}&{% endif %}page={{ page_obj.next_page_number }}">
           <i class="bi bi-chevron-right"></i>
         </a>
         {% endif %}
@@ -721,6 +796,9 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
 <script>
 (function () {
 
@@ -771,28 +849,12 @@
     window.location.href = window.location.pathname;
   });
 
-  /* ── Client-side sort ── */
+  /* ── Server-side sort ── */
   const sortSelect = document.getElementById('sortSelect');
-
-  function sortCards(key) {
-    [gridView, listView].forEach(container => {
-      if (!container) return;
-      const selector = container === gridView ? '.prop-card' : '.prop-list-item';
-      const items = [...container.querySelectorAll(selector)];
-      items.sort((a, b) => {
-        const ap = parseFloat(a.dataset.price), bp = parseFloat(b.dataset.price);
-        const aa = parseFloat(a.dataset.area),  ba = parseFloat(b.dataset.area);
-        if (key === 'price_asc')  return ap - bp;
-        if (key === 'price_desc') return bp - ap;
-        if (key === 'area_desc')  return ba - aa;
-        if (key === 'area_asc')   return aa - ba;
-        return 0;
-      });
-      items.forEach(item => container.appendChild(item));
-    });
-  }
-
-  sortSelect && sortSelect.addEventListener('change', () => sortCards(sortSelect.value));
+  sortSelect && sortSelect.addEventListener('change', () => {
+    const form = document.getElementById('filterForm');
+    form.requestSubmit();
+  });
 
   /* ── Mobile filter sidebar toggle ── */
   const mobileToggle = document.getElementById('mobileFilterToggle');
@@ -812,7 +874,8 @@
     if (!bar) return;
 
     const labels = {
-      type:      v => ({ label: `Type: ${v}` }),
+      type:      v => ({ label: `Type: ${v.charAt(0).toUpperCase() + v.slice(1)}` }),
+      status:    v => ({ label: `Status: ${v.charAt(0).toUpperCase() + v.slice(1)}` }),
       price_min: v => ({ label: `Min: ${Number(v).toLocaleString()} đ` }),
       price_max: v => ({ label: `Max: ${Number(v).toLocaleString()} đ` }),
       area_min:  v => ({ label: `Area ≥ ${v} m²` }),
@@ -843,6 +906,101 @@
     params.delete(key);
     window.location.search = params.toString();
   };
+
+  /* ── Map + cluster + area search ── */
+  const mapEl = document.getElementById('propertyMap');
+  if (mapEl && window.L) {
+    const map = L.map(mapEl);
+    const defaultCenter = [10.7769, 106.7009];
+    const markerLayer = L.markerClusterGroup();
+    let heatLayer = null;
+    const heatPoints = {{ heatmap_points|safe }};
+    const bboxInput = document.getElementById('bboxInput');
+    const btnSearchArea = document.getElementById('btnSearchArea');
+    const btnToggleHeatmap = document.getElementById('btnToggleHeatmap');
+    const btnResetMapFilter = document.getElementById('btnResetMapFilter');
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    function formatPrice(price) {
+      if (price === null || price === undefined || Number.isNaN(price)) return 'On request';
+      return `${Math.round(price).toLocaleString()} đ`;
+    }
+
+    async function loadMarkers() {
+      const url = `{% url 'properties:map_data' %}?${new URLSearchParams(window.location.search).toString()}`;
+      const response = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+      const data = await response.json();
+      markerLayer.clearLayers();
+      const bounds = [];
+
+      data.results.forEach(item => {
+        if (typeof item.lat !== 'number' || typeof item.lng !== 'number') return;
+        const marker = L.marker([item.lat, item.lng]);
+        marker.bindPopup(`
+          <div style="min-width:220px">
+            <strong>${item.title}</strong><br>
+            <div style="font-size:12px;color:#666;margin:6px 0">${item.address}</div>
+            <div style="font-size:12px;margin-bottom:6px">${item.property_type} · ${item.area || 'N/A'} m²</div>
+            <div style="font-weight:700;color:#b5892f;margin-bottom:8px">${formatPrice(item.price)}</div>
+            <a href="${item.detail_url}" style="font-size:12px">View detail</a>
+          </div>
+        `);
+        markerLayer.addLayer(marker);
+        bounds.push([item.lat, item.lng]);
+      });
+
+      if (!map.hasLayer(markerLayer)) map.addLayer(markerLayer);
+      if (bounds.length) {
+        map.fitBounds(bounds, { padding: [30, 30] });
+      } else {
+        map.setView(defaultCenter, 12);
+      }
+
+      if (bboxInput && bboxInput.value) {
+        const parts = bboxInput.value.split(',').map(Number);
+        if (parts.length === 4 && parts.every(v => !Number.isNaN(v))) {
+          map.fitBounds([[parts[1], parts[0]], [parts[3], parts[2]]], { padding: [30, 30] });
+        }
+      }
+    }
+
+    btnSearchArea && btnSearchArea.addEventListener('click', () => {
+      const bounds = map.getBounds();
+      if (bboxInput) {
+        bboxInput.value = [
+          bounds.getWest().toFixed(6),
+          bounds.getSouth().toFixed(6),
+          bounds.getEast().toFixed(6),
+          bounds.getNorth().toFixed(6)
+        ].join(',');
+      }
+      document.getElementById('filterForm').requestSubmit();
+    });
+
+    btnToggleHeatmap && btnToggleHeatmap.addEventListener('click', () => {
+      if (!window.L.heatLayer) return;
+      if (!heatLayer) {
+        const normalized = heatPoints.map(([lat, lng, price]) => [lat, lng, Math.max(0.2, Math.min(1, price / 30000000000))]);
+        heatLayer = L.heatLayer(normalized, { radius: 25, blur: 18, maxZoom: 16 });
+      }
+      if (map.hasLayer(heatLayer)) {
+        map.removeLayer(heatLayer);
+      } else {
+        map.addLayer(heatLayer);
+      }
+    });
+
+    btnResetMapFilter && btnResetMapFilter.addEventListener('click', () => {
+      if (bboxInput) bboxInput.value = '';
+      document.getElementById('filterForm').requestSubmit();
+    });
+
+    loadMarkers();
+  }
 
 })();
 </script>

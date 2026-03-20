@@ -10,6 +10,9 @@ class Lead(models.Model):
     phone = models.CharField(max_length=20)
     budget = models.DecimalField(max_digits=14, decimal_places=2)
     desired_location = models.PointField(geography=True, srid=4326)
+    property_interest = models.CharField(max_length=255, blank=True)
+    notes = models.TextField(blank=True)
+    alert_enabled = models.BooleanField(default=False)
     assigned_agent = models.ForeignKey(Agent, on_delete=models.SET_NULL, null=True, blank=True, related_name="leads")
     created_at = models.DateTimeField(auto_now_add=True)
 

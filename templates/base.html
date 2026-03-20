@@ -784,6 +784,27 @@
           </li>
           <li class="d-none d-lg-block nav-dot align-self-center"></li>
           <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.url_name == 'wishlist' %}active{% endif %}"
+               href="{% url 'properties:wishlist' %}">
+              <i class="bi bi-bookmark-heart"></i> Wishlist
+            </a>
+          </li>
+          <li class="d-none d-lg-block nav-dot align-self-center"></li>
+          <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.url_name == 'compare' %}active{% endif %}"
+               href="{% url 'properties:compare' %}">
+              <i class="bi bi-columns-gap"></i> Compare
+            </a>
+          </li>
+          <li class="d-none d-lg-block nav-dot align-self-center"></li>
+          <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
+               href="{% url 'leads:dashboard' %}">
+              <i class="bi bi-bar-chart"></i> Dashboard
+            </a>
+          </li>
+          <li class="d-none d-lg-block nav-dot align-self-center"></li>
+          <li class="nav-item">
             <a class="nav-link {% if request.resolver_match.url_name == 'lead_form' %}active{% endif %}"
                href="{% url 'leads:lead_form' %}">
               <i class="bi bi-person-lines-fill"></i> Leads
@@ -813,17 +834,38 @@
             <i class="bi bi-moon-stars"></i>
           </button>
 
-          <!-- Notifications placeholder -->
-          <button class="nav-icon-btn" title="Notifications" aria-label="Notifications" style="position:relative">
-            <i class="bi bi-bell"></i>
-            <span style="position:absolute;top:6px;right:6px;width:7px;height:7px;background:var(--gold);border-radius:50%;border:2px solid var(--bg)"></span>
-          </button>
-
-          <!-- Admin -->
-          <a class="btn-admin" href="/admin/">
-            <i class="bi bi-shield-lock"></i>
-            Admin
+          <a class="nav-icon-btn" title="Wishlist" aria-label="Wishlist" href="{% url 'properties:wishlist' %}" style="position:relative">
+            <i class="bi bi-bookmark-heart"></i>
+            {% if wishlist_count %}<span style="position:absolute;top:4px;right:4px;min-width:16px;height:16px;background:var(--gold);border-radius:999px;color:#0C0F1A;border:2px solid var(--bg);font-size:9px;font-weight:700;display:grid;place-items:center;padding:0 3px">{{ wishlist_count }}</span>{% endif %}
           </a>
+
+          <a class="nav-icon-btn" title="Compare" aria-label="Compare" href="{% url 'properties:compare' %}" style="position:relative">
+            <i class="bi bi-columns-gap"></i>
+            {% if compare_count %}<span style="position:absolute;top:4px;right:4px;min-width:16px;height:16px;background:var(--gold);border-radius:999px;color:#0C0F1A;border:2px solid var(--bg);font-size:9px;font-weight:700;display:grid;place-items:center;padding:0 3px">{{ compare_count }}</span>{% endif %}
+          </a>
+
+          {% if request.user.is_authenticated %}
+            <a class="nav-icon-btn" title="Profile" aria-label="Profile" href="{% url 'accounts:profile' %}">
+              <i class="bi bi-person-circle"></i>
+            </a>
+            {% if request.user.is_staff or request.user.is_superuser %}
+            <a class="btn-admin" href="/admin/">
+              <i class="bi bi-shield-lock"></i>
+              Admin
+            </a>
+            {% endif %}
+            <a class="btn-geo-secondary" href="{% url 'accounts:logout' %}" style="padding:8px 16px;font-size:13px">
+              <i class="bi bi-box-arrow-right"></i> Logout
+            </a>
+          {% else %}
+            <a class="btn-geo-secondary" href="{% url 'accounts:login' %}" style="padding:8px 16px;font-size:13px">
+              <i class="bi bi-box-arrow-in-right"></i> Login
+            </a>
+            <a class="btn-admin" href="{% url 'accounts:register' %}">
+              <i class="bi bi-person-plus"></i>
+              Register
+            </a>
+          {% endif %}
         </div>
 
       </div>

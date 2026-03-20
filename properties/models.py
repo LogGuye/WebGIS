@@ -32,10 +32,17 @@ class Property(models.Model):
         HOUSE = "house", _("House")
         LAND = "land", _("Land")
 
+    class ListingStatus(models.TextChoices):
+        ACTIVE = "active", _("Active")
+        SOLD = "sold", _("Sold")
+        HIDDEN = "hidden", _("Hidden")
+
     agent = models.ForeignKey(Agent, on_delete=models.SET_NULL, null=True, blank=True, related_name="properties")
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     property_type = models.CharField(max_length=20, choices=PropertyType.choices)
+    listing_status = models.CharField(max_length=20, choices=ListingStatus.choices, default=ListingStatus.ACTIVE)
+    is_featured = models.BooleanField(default=False)
     price = models.DecimalField(max_digits=14, decimal_places=2)
     area = models.FloatField(help_text="Area in square meters")
     address = models.CharField(max_length=255)
@@ -49,3 +56,16 @@ class Property(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class PropertyChangeLog(models.Model):
+    property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name="change_logs")
+    action = models.CharField(max_length=32)
+    summary = models.CharField(max_length=255, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.property.title} - {self.action}"

@@ -1,13 +1,12 @@
 from django.contrib import admin
-from django.contrib.gis.admin import GISModelAdmin
 from .models import Appointment, Lead
 
 
 @admin.register(Lead)
-class LeadAdmin(GISModelAdmin):
-    list_display = ("name", "phone", "budget", "assigned_agent", "created_at")
-    search_fields = ("name", "phone")
-    list_filter = ("assigned_agent",)
+class LeadAdmin(admin.ModelAdmin):
+    list_display = ("name", "phone", "budget", "property_interest", "alert_enabled", "assigned_agent", "created_at")
+    search_fields = ("name", "phone", "property_interest")
+    list_filter = ("assigned_agent", "alert_enabled", "created_at")
 
 
 @admin.register(Appointment)

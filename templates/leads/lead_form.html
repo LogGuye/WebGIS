@@ -621,7 +621,7 @@
                 <div class="interest-chip" data-val="land">🌿 Land</div>
                 <div class="interest-chip" data-val="villa">🏡 Villa</div>
               </div>
-              <input type="hidden" name="property_interest" id="propertyInterest" />
+              <input type="hidden" name="property_interest" id="propertyInterest" value="{{ request.GET.property|default:'' }}" />
             </div>
 
             <!-- Section 3: Location -->
@@ -678,6 +678,16 @@
                 <i class="bi bi-geo-alt" style="color:var(--gold)"></i>
                 <span id="coordDisplay"></span>
               </div>
+            </div>
+
+            <div class="field-group">
+              <label class="field-label" for="idAlertEnabled">
+                <i class="bi bi-bell"></i> Saved alert
+              </label>
+              <label style="display:flex;align-items:center;gap:10px;color:var(--text-dim);font-size:13px">
+                <input type="checkbox" id="idAlertEnabled" name="alert_enabled" />
+                Notify me later when matching properties appear
+              </label>
             </div>
 
             <!-- Notes -->

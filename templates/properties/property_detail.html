@@ -465,6 +465,11 @@
               <div class="stat-box-label">Year built</div>
             </div>
             {% endif %}
+            <div class="stat-box">
+              <div class="stat-box-icon">📍</div>
+              <div class="stat-box-val">{{ location_score }}</div>
+              <div class="stat-box-label">Location score</div>
+            </div>
           </div>
         </div>
       </div>
@@ -580,9 +585,12 @@
               <button class="action-btn" onclick="navigator.share ? navigator.share({title:'{{ property.title }}',url:window.location.href}) : navigator.clipboard.writeText(window.location.href).then(()=>alert('Link copied!'))">
                 <i class="bi bi-share"></i> Share
               </button>
-              <button class="action-btn" id="btnSave">
-                <i class="bi bi-bookmark"></i> Save
-              </button>
+              <a class="action-btn" id="btnSave" href="{% url 'properties:wishlist_toggle' property.pk %}">
+                <i class="bi {% if is_in_wishlist %}bi-bookmark-fill{% else %}bi-bookmark{% endif %}"></i> {% if is_in_wishlist %}Saved{% else %}Save{% endif %}
+              </a>
+              <a class="action-btn" href="{% url 'properties:compare_toggle' property.pk %}">
+                <i class="bi bi-columns-gap"></i> {% if is_in_compare %}Comparing{% else %}Compare{% endif %}
+              </a>
               <button class="action-btn" onclick="window.print()">
                 <i class="bi bi-printer"></i> Print
               </button>
@@ -657,43 +665,4 @@
 
 {% endblock %}
 
-{% block scripts %}
-<script>
-(function () {
-  /* ── Save / bookmark toggle ── */
-  const saveBtn = document.getElementById('btnSave');
-  const STORAGE_KEY = 'geo_saved_properties';
-  const propId = '{{ property.pk }}';
-
-  function getSaved() {
-    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
-    catch { return []; }
-  }
-
-  function updateSaveBtn() {
-    if (!saveBtn) return;
-    const saved = getSaved();
-    const isSaved = saved.includes(propId);
-    saveBtn.innerHTML = isSaved
-      ? '<i class="bi bi-bookmark-fill" style="color:var(--gold)"></i> Saved'
-      : '<i class="bi bi-bookmark"></i> Save';
-    saveBtn.style.borderColor = isSaved ? 'var(--gold-border)' : '';
-    saveBtn.style.color       = isSaved ? 'var(--gold)' : '';
-    saveBtn.style.background  = isSaved ? 'var(--gold-dim)' : '';
-  }
-
-  if (saveBtn) {
-    updateSaveBtn();
-    saveBtn.addEventListener('click', () => {
-      let saved = getSaved();
-      const idx = saved.indexOf(propId);
-      if (idx === -1) saved.push(propId);
-      else saved.splice(idx, 1);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
-      updateSaveBtn();
-    });
-  }
-
-})();
-</script>
-{% endblock %}
+{% block scripts %}{% endblock %}
