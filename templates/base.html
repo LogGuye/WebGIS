@@ -4,30 +4,30 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <meta name="description" content="GeoEstate — Real estate intelligence platform powered by Django + PostGIS." />
+  <meta name="description" content="GeoEstate — nền tảng bất động sản thông minh chạy trên Django + PostGIS." />
   <meta name="theme-color" content="#0C0F1A" />
 
-  <title>{% block title %}GeoEstate · Real Estate Intelligence{% endblock %}</title>
+  <title>{% block title %}GeoEstate · Nền Tảng Bất Động Sản Thông Minh{% endblock %}</title>
 
-  <!-- Preconnect for perf -->
+  <!-- Kết nối trước để tăng hiệu suất -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
-  <!-- Typography: Cormorant Garamond (display) + Outfit (body) -->
+  <!-- Font chữ: Cormorant Garamond (tiêu đề) + Outfit (nội dung) -->
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet" />
 
   <!-- Bootstrap 5.3 -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
 
-  <!-- Bootstrap Icons -->
+  <!-- Biểu tượng Bootstrap -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
 
-  <!-- App CSS -->
+  <!-- CSS ứng dụng -->
   <link href="{% static 'css/styles.css' %}" rel="stylesheet" />
 
   <style>
     /* ════════════════════════════════════════════
-       DESIGN TOKENS
+       BIẾN THIẾT KẾ
     ════════════════════════════════════════════ */
     :root {
       --gold:           #C8A96E;
@@ -60,7 +60,7 @@
       --transition:     0.22s cubic-bezier(.4,0,.2,1);
     }
 
-    /* Light theme overrides */
+    /* Ghi đè giao diện sáng */
     [data-theme="light"] {
       --bg:         #F5F3EE;
       --bg-2:       #FFFFFF;
@@ -77,7 +77,7 @@
     }
 
     /* ════════════════════════════════════════════
-       RESET & BASE
+       RESET & CƠ BẢN
     ════════════════════════════════════════════ */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -92,14 +92,14 @@
       line-height: 1.65;
       min-height: 100vh;
       transition: background var(--transition), color var(--transition);
-      /* Subtle noise grain */
+      /* Hiệu ứng hạt nhẹ */
       background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.025'/%3E%3C/svg%3E");
     }
 
     ::selection { background: var(--gold-dim); color: var(--gold-light); }
 
     /* ════════════════════════════════════════════
-       NAVBAR
+       THANH ĐIỀU HƯỚNG
     ════════════════════════════════════════════ */
     .navbar {
       height: var(--nav-h);
@@ -171,7 +171,7 @@
       color: var(--gold);
     }
 
-    /* Nav links */
+    /* Liên kết điều hướng */
     .navbar-nav { gap: 2px; }
 
     .nav-link {
@@ -201,7 +201,7 @@
       font-weight: 600;
     }
 
-    /* Divider dot in nav */
+    /* Dấu phân cách trong nav */
     .nav-dot {
       width: 3px;
       height: 3px;
@@ -211,7 +211,7 @@
       flex-shrink: 0;
     }
 
-    /* Search input */
+    /* Ô tìm kiếm */
     .nav-search-wrap {
       position: relative;
     }
@@ -264,7 +264,7 @@
 
     .nav-search:focus + .kbd-hint { opacity: 0; }
 
-    /* Icon buttons */
+    /* Nút biểu tượng */
     .nav-icon-btn {
       width: 36px;
       height: 36px;
@@ -287,7 +287,7 @@
       border-color: var(--border-hover);
     }
 
-    /* Admin button */
+    /* Nút quản trị */
     .btn-admin {
       display: flex;
       align-items: center;
@@ -311,7 +311,7 @@
       box-shadow: 0 6px 18px rgba(200,169,110,.3);
     }
 
-    /* Navbar toggler */
+    /* Nút toggler điều hướng */
     .navbar-toggler {
       border: 1px solid var(--border) !important;
       border-radius: var(--radius-sm) !important;
@@ -321,7 +321,7 @@
 
     .navbar-toggler:focus { box-shadow: none !important; }
 
-    /* Mobile collapse */
+    /* Thu gọn trên di động */
     @media (max-width: 991px) {
       .navbar-collapse {
         background: var(--bg-2);
@@ -338,7 +338,7 @@
     }
 
     /* ════════════════════════════════════════════
-       BREADCRUMB STRIP (optional, inserted by pages)
+       DẢI ĐƯỜNG DẪN (tùy chọn, được chèn bởi các trang)
     ════════════════════════════════════════════ */
     .breadcrumb-strip {
       background: var(--bg-2);
@@ -358,14 +358,14 @@
     .breadcrumb-item.active { color: var(--gold); }
 
     /* ════════════════════════════════════════════
-       PAGE CONTENT SHELL
+       KHUNG NỘI DUNG TRANG
     ════════════════════════════════════════════ */
     main {
       min-height: calc(100vh - var(--nav-h) - 80px);
     }
 
     /* ════════════════════════════════════════════
-       TOAST NOTIFICATIONS
+       THÔNG BÁO TOAST
     ════════════════════════════════════════════ */
     .toast-container { z-index: 1200; }
 
@@ -392,17 +392,17 @@
       padding: 12px 16px;
     }
 
-    /* Tag-based colors */
+    /* Màu theo loại thông báo */
     .toast[data-tag="success"] { border-left: 3px solid #22c55e !important; }
     .toast[data-tag="error"]   { border-left: 3px solid #ef4444 !important; }
     .toast[data-tag="warning"] { border-left: 3px solid #f59e0b !important; }
     .toast[data-tag="info"]    { border-left: 3px solid var(--gold) !important; }
 
     /* ════════════════════════════════════════════
-       GLOBAL UTILITY CLASSES
+       LỚP TIỆN ÍCH TOÀN CỤC
     ════════════════════════════════════════════ */
 
-    /* Cards */
+    /* Thẻ */
     .card-geo {
       background: var(--bg-card);
       border: 1px solid var(--border);
@@ -418,7 +418,7 @@
       box-shadow: var(--shadow-card), var(--shadow-glow);
     }
 
-    /* Gold accent line */
+    /* Đường nhấn màu vàng */
     .card-geo.featured::before {
       content: '';
       display: block;
@@ -426,7 +426,7 @@
       background: linear-gradient(90deg, var(--gold), var(--gold-light), transparent);
     }
 
-    /* Stat pill */
+    /* Viên thống kê */
     .stat-pill {
       display: inline-flex;
       align-items: center;
@@ -441,7 +441,7 @@
       letter-spacing: .5px;
     }
 
-    /* Section heading */
+    /* Tiêu đề phần */
     .section-eyebrow {
       font-size: 10.5px;
       font-weight: 600;
@@ -459,7 +459,7 @@
       line-height: 1.15;
     }
 
-    /* Divider */
+    /* Đường phân cách */
     .geo-divider {
       height: 1px;
       background: var(--border);
@@ -467,7 +467,7 @@
       margin: 0;
     }
 
-    /* Badge */
+    /* Huy hiệu */
     .badge-gold {
       background: var(--gold);
       color: #0C0F1A;
@@ -491,7 +491,7 @@
       border-radius: 6px;
     }
 
-    /* Buttons */
+    /* Nút bấm */
     .btn-geo-primary {
       display: inline-flex;
       align-items: center;
@@ -540,7 +540,7 @@
       background: var(--bg-3);
     }
 
-    /* Form controls */
+    /* Điều khiển biểu mẫu */
     .form-geo {
       background: var(--bg-3);
       border: 1px solid var(--border);
@@ -563,7 +563,7 @@
 
     .form-geo option { background: var(--bg-2); }
 
-    /* Page loader bar */
+    /* Thanh tải trang */
     #page-loader {
       position: fixed;
       top: 0; left: 0;
@@ -575,7 +575,7 @@
       box-shadow: 0 0 8px rgba(200,169,110,.5);
     }
 
-    /* Scroll to top */
+    /* Nút cuộn lên đầu trang */
     #scroll-top {
       position: fixed;
       bottom: 28px;
@@ -609,7 +609,7 @@
     }
 
     /* ════════════════════════════════════════════
-       FOOTER
+       CHÂN TRANG
     ════════════════════════════════════════════ */
     footer {
       background: var(--bg-2);
@@ -699,7 +699,7 @@
     }
 
     /* ════════════════════════════════════════════
-       ANIMATION UTILITIES
+       TIỆN ÍCH HOẠT ĐỘNG
     ════════════════════════════════════════════ */
     @keyframes fadeUp {
       from { opacity: 0; transform: translateY(20px); }
@@ -719,7 +719,7 @@
     .delay-4   { animation-delay: .4s; }
 
     /* ════════════════════════════════════════════
-       RESPONSIVE TWEAKS
+       ĐIỀU CHỈNH RESPONSIVE
     ════════════════════════════════════════════ */
     @media (max-width: 576px) {
       #scroll-top { bottom: 16px; right: 16px; }
@@ -732,10 +732,10 @@
 
 <body>
 
-  <!-- Page progress loader -->
+  <!-- Thanh tải trang -->
   <div id="page-loader"></div>
 
-  <!-- ════════════════ NAVBAR ════════════════ -->
+  <!-- ════════════════ THANH ĐIỀU HƯỚNG ════════════════ -->
   <nav class="navbar navbar-expand-lg sticky-top">
     <div class="container">
 
@@ -746,124 +746,130 @@
         </div>
         <div class="logo-name">
           <span class="logo-primary">GeoEstate</span>
-          <span class="logo-sub">GIS Platform</span>
+          <span class="logo-sub">Nền Tảng GIS</span>
         </div>
       </a>
 
-      <!-- Mobile toggler -->
+      <!-- Nút mở menu di động -->
       <button class="navbar-toggler ms-auto me-2" type="button"
               data-bs-toggle="collapse" data-bs-target="#navMenu"
-              aria-controls="navMenu" aria-expanded="false" aria-label="Toggle navigation">
+              aria-controls="navMenu" aria-expanded="false" aria-label="Chuyển đổi điều hướng">
         <i class="bi bi-list" style="color:var(--text-dim);font-size:20px"></i>
       </button>
 
-      <!-- Collapse -->
+      <!-- Thu gọn -->
       <div class="collapse navbar-collapse ms-4" id="navMenu">
 
-        <!-- Left links -->
+        <!-- Liên kết bên trái -->
         <ul class="navbar-nav me-auto align-items-lg-center">
           <li class="nav-item">
             <a class="nav-link {% if request.resolver_match.url_name == 'list' %}active{% endif %}"
                href="{% url 'properties:list' %}">
-              <i class="bi bi-grid-3x3-gap"></i> Properties
+              <i class="bi bi-grid-3x3-gap"></i> Bất động sản
             </a>
           </li>
           <li class="d-none d-lg-block nav-dot align-self-center"></li>
           <li class="nav-item">
             <a class="nav-link {% if request.resolver_match.url_name == 'nearby_search' %}active{% endif %}"
                href="{% url 'properties:nearby_search' %}">
-              <i class="bi bi-geo-alt"></i> Nearby
+              <i class="bi bi-geo-alt"></i> Lân Cận
             </a>
           </li>
           <li class="d-none d-lg-block nav-dot align-self-center"></li>
           <li class="nav-item">
             <a class="nav-link {% if request.resolver_match.url_name == 'amenity_search' %}active{% endif %}"
                href="{% url 'properties:amenity_search' %}">
-              <i class="bi bi-stars"></i> Amenities
+              <i class="bi bi-stars"></i> Tiện Ích
             </a>
           </li>
+          {% if request.user.is_authenticated %}
           <li class="d-none d-lg-block nav-dot align-self-center"></li>
           <li class="nav-item">
             <a class="nav-link {% if request.resolver_match.url_name == 'wishlist' %}active{% endif %}"
                href="{% url 'properties:wishlist' %}">
-              <i class="bi bi-bookmark-heart"></i> Wishlist
+              <i class="bi bi-bookmark-heart"></i> Yêu Thích
             </a>
           </li>
           <li class="d-none d-lg-block nav-dot align-self-center"></li>
           <li class="nav-item">
             <a class="nav-link {% if request.resolver_match.url_name == 'compare' %}active{% endif %}"
                href="{% url 'properties:compare' %}">
-              <i class="bi bi-columns-gap"></i> Compare
+              <i class="bi bi-columns-gap"></i> So sánh
             </a>
           </li>
           <li class="d-none d-lg-block nav-dot align-self-center"></li>
+          {% if is_agent_role or is_admin_role %}
           <li class="nav-item">
             <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}"
                href="{% url 'leads:dashboard' %}">
-              <i class="bi bi-bar-chart"></i> Dashboard
+              <i class="bi bi-bar-chart"></i> Bảng Điều Khiển
             </a>
           </li>
           <li class="d-none d-lg-block nav-dot align-self-center"></li>
+          {% endif %}
           <li class="nav-item">
             <a class="nav-link {% if request.resolver_match.url_name == 'lead_form' %}active{% endif %}"
                href="{% url 'leads:lead_form' %}">
-              <i class="bi bi-person-lines-fill"></i> Leads
+              <i class="bi bi-person-lines-fill"></i> Khách Hàng
             </a>
           </li>
+          {% endif %}
         </ul>
 
-        <!-- Right controls -->
+        <!-- Điều khiển bên phải -->
         <div class="d-flex align-items-center gap-2 mt-2 mt-lg-0">
 
-          <!-- Search -->
+          <!-- Tìm kiếm -->
           <form class="d-none d-lg-flex" method="get" action="{% url 'properties:list' %}" style="position:relative">
             <div class="nav-search-wrap">
               <i class="bi bi-search"></i>
               <input class="nav-search"
                      type="search"
                      name="q"
-                     placeholder="Search properties..."
+                     placeholder="Tìm bất động sản..."
                      autocomplete="off"
                      value="{{ request.GET.q|default:'' }}" />
               <span class="kbd-hint">⌘K</span>
             </div>
           </form>
 
-          <!-- Theme toggle -->
-          <button class="nav-icon-btn" id="themeToggle" title="Toggle theme" aria-label="Toggle theme">
+          <!-- Chuyển giao diện -->
+          <button class="nav-icon-btn" id="themeToggle" title="Chuyển giao diện" aria-label="Chuyển giao diện">
             <i class="bi bi-moon-stars"></i>
           </button>
 
-          <a class="nav-icon-btn" title="Wishlist" aria-label="Wishlist" href="{% url 'properties:wishlist' %}" style="position:relative">
+          {% if request.user.is_authenticated %}
+          <a class="nav-icon-btn" title="Đã lưu" aria-label="Đã lưu" href="{% url 'properties:wishlist' %}" style="position:relative">
             <i class="bi bi-bookmark-heart"></i>
             {% if wishlist_count %}<span style="position:absolute;top:4px;right:4px;min-width:16px;height:16px;background:var(--gold);border-radius:999px;color:#0C0F1A;border:2px solid var(--bg);font-size:9px;font-weight:700;display:grid;place-items:center;padding:0 3px">{{ wishlist_count }}</span>{% endif %}
           </a>
 
-          <a class="nav-icon-btn" title="Compare" aria-label="Compare" href="{% url 'properties:compare' %}" style="position:relative">
+          <a class="nav-icon-btn" title="So sánh" aria-label="So sánh" href="{% url 'properties:compare' %}" style="position:relative">
             <i class="bi bi-columns-gap"></i>
             {% if compare_count %}<span style="position:absolute;top:4px;right:4px;min-width:16px;height:16px;background:var(--gold);border-radius:999px;color:#0C0F1A;border:2px solid var(--bg);font-size:9px;font-weight:700;display:grid;place-items:center;padding:0 3px">{{ compare_count }}</span>{% endif %}
           </a>
+          {% endif %}
 
           {% if request.user.is_authenticated %}
-            <a class="nav-icon-btn" title="Profile" aria-label="Profile" href="{% url 'accounts:profile' %}">
+            <a class="nav-icon-btn" title="Hồ sơ" aria-label="Hồ sơ" href="{% url 'accounts:profile' %}">
               <i class="bi bi-person-circle"></i>
             </a>
             {% if request.user.is_staff or request.user.is_superuser %}
             <a class="btn-admin" href="/admin/">
               <i class="bi bi-shield-lock"></i>
-              Admin
+              Quản Trị
             </a>
             {% endif %}
             <a class="btn-geo-secondary" href="{% url 'accounts:logout' %}" style="padding:8px 16px;font-size:13px">
-              <i class="bi bi-box-arrow-right"></i> Logout
+              <i class="bi bi-box-arrow-right"></i> Đăng xuất
             </a>
           {% else %}
             <a class="btn-geo-secondary" href="{% url 'accounts:login' %}" style="padding:8px 16px;font-size:13px">
-              <i class="bi bi-box-arrow-in-right"></i> Login
+              <i class="bi bi-box-arrow-in-right"></i> Đăng nhập
             </a>
             <a class="btn-admin" href="{% url 'accounts:register' %}">
               <i class="bi bi-person-plus"></i>
-              Register
+              Đăng ký
             </a>
           {% endif %}
         </div>
@@ -872,10 +878,10 @@
     </div>
   </nav>
 
-  <!-- ════════════════ BREADCRUMB ════════════════ -->
+  <!-- ════════════════ ĐƯỜNG DẪN ════════════════ -->
   {% block breadcrumb %}{% endblock %}
 
-  <!-- ════════════════ TOAST STACK ════════════════ -->
+  <!-- ════════════════ THÔNG BÁO ════════════════ -->
   <div class="toast-container position-fixed top-0 end-0 p-3 mt-5 pt-3">
     {% if messages %}
       {% for message in messages %}
@@ -895,7 +901,7 @@
             {% else %}
               <i class="bi bi-info-circle-fill me-2" style="color:var(--gold)"></i>
             {% endif %}
-            <strong class="me-auto">Notification</strong>
+            <strong class="me-auto">Thông báo</strong>
             <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"
                     style="filter: invert({{ request.COOKIES.theme|default:'1' }})"></button>
           </div>
@@ -905,22 +911,22 @@
     {% endif %}
   </div>
 
-  <!-- ════════════════ MAIN CONTENT ════════════════ -->
+  <!-- ════════════════ NỘI DUNG CHÍNH ════════════════ -->
   <main>
     {% block content %}{% endblock %}
   </main>
 
-  <!-- ════════════════ FOOTER ════════════════ -->
+  <!-- ════════════════ CHÂN TRANG ════════════════ -->
   <footer>
     <div class="container">
       <div class="row g-5">
 
-        <!-- Brand -->
+        <!-- Thương hiệu -->
         <div class="col-lg-4 col-md-6">
           <div class="footer-brand">Geo<span>Estate</span></div>
           <p class="footer-desc">
-            Real estate intelligence platform powered by GeoDjango & PostGIS.
-            Discover, analyze, and manage properties with spatial precision.
+            Nền tảng bất động sản thông minh chạy trên GeoDjango & PostGIS.
+            Khám phá, phân tích và quản lý bất động sản với dữ liệu không gian chính xác.
           </p>
           <div class="tech-stack mt-3">
             <span class="tech-chip">Django</span>
@@ -930,43 +936,43 @@
           </div>
         </div>
 
-        <!-- Platform links -->
+        <!-- Liên kết nền tảng -->
         <div class="col-lg-2 col-md-3 col-6">
-          <div class="footer-heading">Platform</div>
+          <div class="footer-heading">Nền Tảng</div>
           <ul class="footer-links">
-            <li><a href="{% url 'properties:list' %}"><i class="bi bi-grid-3x3-gap"></i> Properties</a></li>
-            <li><a href="{% url 'properties:nearby_search' %}"><i class="bi bi-geo-alt"></i> Nearby Search</a></li>
-            <li><a href="{% url 'properties:amenity_search' %}"><i class="bi bi-stars"></i> Amenity Search</a></li>
-            <li><a href="{% url 'leads:lead_form' %}"><i class="bi bi-person-lines-fill"></i> Submit Lead</a></li>
+            <li><a href="{% url 'properties:list' %}"><i class="bi bi-grid-3x3-gap"></i> Bất Động Sản</a></li>
+            <li><a href="{% url 'properties:nearby_search' %}"><i class="bi bi-geo-alt"></i> Tìm Kiếm Lân Cận</a></li>
+            <li><a href="{% url 'properties:amenity_search' %}"><i class="bi bi-stars"></i> Tìm Kiếm Tiện Ích</a></li>
+            <li><a href="{% url 'leads:lead_form' %}"><i class="bi bi-person-lines-fill"></i> Tạo khách hàng</a></li>
           </ul>
         </div>
 
-        <!-- Resources -->
+        <!-- Tài nguyên -->
         <div class="col-lg-2 col-md-3 col-6">
-          <div class="footer-heading">Resources</div>
+          <div class="footer-heading">Tài nguyên</div>
           <ul class="footer-links">
-            <li><a href="/admin/"><i class="bi bi-shield-lock"></i> Admin Panel</a></li>
-            <li><a href="#"><i class="bi bi-book"></i> API Docs</a></li>
-            <li><a href="#"><i class="bi bi-question-circle"></i> Help Center</a></li>
+            <li><a href="/admin/"><i class="bi bi-shield-lock"></i> Bảng quản trị</a></li>
+            <li><a href="#"><i class="bi bi-book"></i> Tài liệu API</a></li>
+            <li><a href="#"><i class="bi bi-question-circle"></i> Trung tâm trợ giúp</a></li>
             <li><a href="#"><i class="bi bi-github"></i> GitHub</a></li>
           </ul>
         </div>
 
-        <!-- Quick stats -->
+        <!-- Thống kê nhanh -->
         <div class="col-lg-4 col-md-6">
-          <div class="footer-heading">System Status</div>
+          <div class="footer-heading">Trạng Thái Hệ Thống</div>
           <div class="d-flex flex-column gap-2">
             <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--bg-3);border:1px solid var(--border);border-radius:var(--radius-sm)">
-              <span style="font-size:13px;color:var(--text-dim)"><i class="bi bi-buildings me-2" style="color:var(--gold)"></i>Properties</span>
+              <span style="font-size:13px;color:var(--text-dim)"><i class="bi bi-buildings me-2" style="color:var(--gold)"></i>Bất Động Sản</span>
               <span class="badge-gold">{{ property_count|default:"—" }}</span>
             </div>
             <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--bg-3);border:1px solid var(--border);border-radius:var(--radius-sm)">
-              <span style="font-size:13px;color:var(--text-dim)"><i class="bi bi-person-badge me-2" style="color:var(--gold)"></i>Active Agents</span>
+              <span style="font-size:13px;color:var(--text-dim)"><i class="bi bi-person-badge me-2" style="color:var(--gold)"></i>Môi Giới Hoạt Động</span>
               <span class="badge-gold">{{ agent_count|default:"—" }}</span>
             </div>
             <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--bg-3);border:1px solid var(--border);border-radius:var(--radius-sm)">
-              <span style="font-size:13px;color:var(--text-dim)"><i class="bi bi-circle-fill me-2" style="color:#22c55e;font-size:8px"></i>API Status</span>
-              <span style="font-size:12px;color:#22c55e;font-weight:600">Operational</span>
+              <span style="font-size:13px;color:var(--text-dim)"><i class="bi bi-circle-fill me-2" style="color:#22c55e;font-size:8px"></i>Trạng Thái API</span>
+              <span style="font-size:12px;color:#22c55e;font-weight:600">Hoạt Động</span>
             </div>
           </div>
         </div>
@@ -974,20 +980,20 @@
       </div>
 
       <div class="footer-bottom">
-        <p>© {% now "Y" %} GeoEstate · Built with Django + PostGIS · All rights reserved.</p>
+        <p>© {% now "Y" %} GeoEstate · Xây dựng với Django + PostGIS · Bảo lưu mọi quyền.</p>
         <p>
-          Press
+          Nhấn
           <code style="font-size:11px;background:var(--bg-3);border:1px solid var(--border);border-radius:4px;padding:2px 6px;color:var(--gold)">⌘K</code>
-          to focus search ·
-          <a href="#">Privacy</a> · <a href="#">Terms</a>
+          để tìm kiếm ·
+          <a href="#">Bảo mật</a> · <a href="#">Điều khoản</a>
         </p>
       </div>
 
     </div>
   </footer>
 
-  <!-- Scroll to top -->
-  <a href="#" id="scroll-top" aria-label="Scroll to top">
+  <!-- Cuộn lên đầu trang -->
+  <a href="#" id="scroll-top" aria-label="Cuộn lên đầu trang">
     <i class="bi bi-arrow-up"></i>
   </a>
 
@@ -998,7 +1004,7 @@
   (function () {
     'use strict';
 
-    /* ── Theme system ── */
+    /* ── Hệ thống giao diện ── */
     const root    = document.documentElement;
     const btn     = document.getElementById('themeToggle');
     const STORAGE = 'geo_theme';
@@ -1009,10 +1015,10 @@
         btn.innerHTML = (t === 'light')
           ? '<i class="bi bi-moon-stars"></i>'
           : '<i class="bi bi-sun"></i>';
-        btn.title = (t === 'light') ? 'Switch to dark mode' : 'Switch to light mode';
+        btn.title = (t === 'light') ? 'Chuyển sang chế độ tối' : 'Chuyển sang chế độ sáng';
       }
       localStorage.setItem(STORAGE, t);
-      // Also keep Bootstrap in sync
+      // Đồng bộ Bootstrap
       root.setAttribute('data-bs-theme', t);
     }
 
@@ -1020,7 +1026,7 @@
     if (saved) {
       setTheme(saved);
     } else {
-      // Respect OS preference
+      // Theo tùy chọn hệ điều hành
       const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
       setTheme(prefersDark ? 'dark' : 'light');
     }
@@ -1032,26 +1038,26 @@
       });
     }
 
-    /* ── Keyboard shortcuts ── */
+    /* ── Phím tắt ── */
     window.addEventListener('keydown', (e) => {
-      // ⌘K / Ctrl+K → focus search
+      // ⌘K / Ctrl+K → focus ô tìm kiếm
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         const input = document.querySelector('.nav-search');
         if (input) { e.preventDefault(); input.focus(); input.select(); }
       }
-      // Escape → blur search
+      // Escape → bỏ focus ô tìm kiếm
       if (e.key === 'Escape') {
         const input = document.querySelector('.nav-search:focus');
         if (input) input.blur();
       }
     });
 
-    /* ── Auto-show toasts ── */
+    /* ── Tự động hiện thông báo ── */
     document.querySelectorAll('.toast').forEach(el => {
       new bootstrap.Toast(el, { delay: parseInt(el.dataset.bsDelay) || 4500 }).show();
     });
 
-    /* ── Page loader bar ── */
+    /* ── Thanh tải trang ── */
     const loader = document.getElementById('page-loader');
     if (loader) {
       loader.style.width = '70%';
@@ -1061,7 +1067,7 @@
       });
     }
 
-    /* ── Scroll to top ── */
+    /* ── Cuộn lên đầu trang ── */
     const scrollBtn = document.getElementById('scroll-top');
     if (scrollBtn) {
       window.addEventListener('scroll', () => {
@@ -1073,7 +1079,7 @@
       });
     }
 
-    /* ── Intersection observer for .fade-up elements ── */
+    /* ── Intersection observer cho các phần tử .fade-up ── */
     if ('IntersectionObserver' in window) {
       const io = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
@@ -1096,3 +1102,18 @@
   {% block scripts %}{% endblock %}
 </body>
 </html>
+
+/html>
+
+>
+
+>
+
+>
+
+
+
+>
+
+
+

@@ -1,15 +1,17 @@
 {% extends "base.html" %}
-{% block title %}Compare Properties | GeoEstate{% endblock %}
+{% block title %}So sánh bất động sản | GeoEstate{% endblock %}
 {% block content %}
 <div class="container py-5">
   <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
     <div>
-      <p class="section-eyebrow">Comparison Workspace</p>
-      <h1 class="section-heading mb-0">Compare Properties</h1>
+      <p class="section-eyebrow">Khu vực so sánh</p>
+      <h1 class="section-heading mb-0">So sánh bất động sản</h1>
     </div>
     <div class="d-flex gap-2 flex-wrap align-items-center">
-      <span class="stat-pill">Max 3 properties</span>
-      <a href="{% url 'properties:list' %}" class="btn-geo-secondary"><i class="bi bi-arrow-left"></i> Back to properties</a>
+      <span class="stat-pill">Tối đa 3 bất động sản</span>
+      <a href="{% url 'properties:list' %}" class="btn-geo-secondary">
+        <i class="bi bi-arrow-left"></i> Quay lại danh sách bất động sản
+      </a>
     </div>
   </div>
 
@@ -18,26 +20,72 @@
     <table class="table align-middle" style="color:var(--text)">
       <thead>
         <tr>
-          <th>Field</th>
+          <th>Thuộc tính</th>
           {% for p in properties %}
           <th>{{ p.title }}</th>
           {% endfor %}
         </tr>
       </thead>
       <tbody>
-        <tr><th>Type</th>{% for p in properties %}<td>{{ p.get_property_type_display }}</td>{% endfor %}</tr>
-        <tr><th>Status</th>{% for p in properties %}<td>{{ p.get_listing_status_display }}</td>{% endfor %}</tr>
-        <tr><th>Price</th>{% for p in properties %}<td>{{ p.price|floatformat:0 }} đ</td>{% endfor %}</tr>
-        <tr><th>Area</th>{% for p in properties %}<td>{{ p.area }} m²</td>{% endfor %}</tr>
-        <tr><th>Address</th>{% for p in properties %}<td>{{ p.address }}</td>{% endfor %}</tr>
-        <tr><th>Agent</th>{% for p in properties %}<td>{% if p.agent %}{{ p.agent.name }}{% else %}-{% endif %}</td>{% endfor %}</tr>
-        <tr><th>Amenities</th>{% for p in properties %}<td>{{ p.amenities.count }}</td>{% endfor %}</tr>
         <tr>
-          <th>Actions</th>
+          <th>Loại</th>
+          {% for p in properties %}
+          <td>{{ p.get_property_type_display }}</td>
+          {% endfor %}
+        </tr>
+
+        <tr>
+          <th>Trạng thái</th>
+          {% for p in properties %}
+          <td>{{ p.get_listing_status_display }}</td>
+          {% endfor %}
+        </tr>
+
+        <tr>
+          <th>Giá</th>
+          {% for p in properties %}
+          <td>{{ p.price|floatformat:0 }} đ</td>
+          {% endfor %}
+        </tr>
+
+        <tr>
+          <th>Diện tích</th>
+          {% for p in properties %}
+          <td>{{ p.area }} m²</td>
+          {% endfor %}
+        </tr>
+
+        <tr>
+          <th>Địa chỉ</th>
+          {% for p in properties %}
+          <td>{{ p.address }}</td>
+          {% endfor %}
+        </tr>
+
+        <tr>
+          <th>Môi giới</th>
+          {% for p in properties %}
+          <td>{% if p.agent %}{{ p.agent.name }}{% else %}-{% endif %}</td>
+          {% endfor %}
+        </tr>
+
+        <tr>
+          <th>Số tiện ích</th>
+          {% for p in properties %}
+          <td>{{ p.amenities.count }}</td>
+          {% endfor %}
+        </tr>
+
+        <tr>
+          <th>Thao tác</th>
           {% for p in properties %}
           <td class="d-flex gap-2 flex-wrap">
-            <a href="{% url 'properties:detail' p.pk %}" class="btn-geo-primary" style="padding:7px 12px;font-size:12px">View</a>
-            <a href="{% url 'properties:compare_toggle' p.pk %}" class="btn-geo-secondary" style="padding:7px 12px;font-size:12px">Remove</a>
+            <a href="{% url 'properties:detail' p.pk %}" class="btn-geo-primary" style="padding:7px 12px;font-size:12px">
+              Xem
+            </a>
+            <a href="{% url 'properties:compare_toggle' p.pk %}" class="btn-geo-secondary" style="padding:7px 12px;font-size:12px">
+              Bỏ khỏi so sánh
+            </a>
           </td>
           {% endfor %}
         </tr>
@@ -46,8 +94,8 @@
   </div>
   {% else %}
   <div class="card-geo p-5 text-center">
-    <h4 style="color:var(--text)">Chưa có property nào để compare</h4>
-    <p style="color:var(--text-muted)">Thêm tối đa 3 property từ trang detail hoặc wishlist.</p>
+    <h4 style="color:var(--text)">Chưa có bất động sản nào để so sánh</h4>
+    <p style="color:var(--text-muted)">Hãy thêm tối đa 3 bất động sản từ trang chi tiết hoặc danh sách yêu thích.</p>
   </div>
   {% endif %}
 </div>

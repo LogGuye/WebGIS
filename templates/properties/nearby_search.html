@@ -1,13 +1,13 @@
 {% extends "base.html" %}
-{% block title %}Nearby Search | GeoEstate{% endblock %}
+{% block title %}Tìm kiếm lân cận | GeoEstate{% endblock %}
 
 {% block breadcrumb %}
 <div class="breadcrumb-strip">
   <div class="container">
     <nav aria-label="breadcrumb">
       <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{% url 'core:home' %}"><i class="bi bi-house me-1"></i>Home</a></li>
-        <li class="breadcrumb-item active">Nearby Search</li>
+        <li class="breadcrumb-item"><a href="{% url 'core:home' %}"><i class="bi bi-house me-1"></i>Trang chủ</a></li>
+        <li class="breadcrumb-item active">Tìm lân cận</li>
       </ol>
     </nav>
   </div>
@@ -17,10 +17,10 @@
 {% block head %}
 <style>
   /* ══════════════════════════════════════════
-     NEARBY SEARCH — all colors via var() tokens
+     TÌM KIẾM LÂN CẬN — toàn bộ màu dùng var() tokens
   ══════════════════════════════════════════ */
 
-  /* ── Page hero ── */
+  /* ── Hero trang ── */
   .page-hero {
     background: var(--bg-2);
     border-bottom: 1px solid var(--border);
@@ -51,7 +51,7 @@
     font-weight: 300; line-height: 1.7; max-width: 480px;
   }
 
-  /* ── Search panel ── */
+  /* ── Bảng tìm kiếm ── */
   .search-panel {
     background: var(--bg-card);
     border: 1px solid var(--border);
@@ -101,7 +101,35 @@
     font-size: 11px; color: var(--text-muted); margin-top: 6px;
   }
 
-  /* Quick presets */
+  .location-mode-card {
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+  }
+
+  .location-actions {
+    display: flex; flex-wrap: wrap; gap: 10px;
+  }
+
+  .soft-btn {
+    background: var(--bg-3); border: 1px solid var(--border);
+    border-radius: 999px; padding: 8px 14px;
+    font-size: 12.5px; font-weight: 500; color: var(--text-dim);
+    cursor: pointer; transition: all var(--transition);
+    font-family: 'Outfit', sans-serif;
+  }
+
+  .soft-btn:hover {
+    border-color: var(--gold-border); color: var(--gold);
+    background: var(--gold-dim);
+  }
+
+  .location-status {
+    margin-top: 10px; font-size: 12px; color: var(--text-muted);
+  }
+
+  /* Vị trí nhanh */
   .quick-locs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
 
   .quick-loc-btn {
@@ -116,7 +144,7 @@
     border-color: var(--gold-border); color: var(--gold); background: var(--gold-dim);
   }
 
-  /* Radius slider */
+  /* Thanh trượt bán kính */
   .radius-track { display: flex; align-items: center; gap: 12px; margin-top: 4px; }
 
   input[type="range"].geo-range {
@@ -142,7 +170,7 @@
     border-radius: var(--radius-sm); padding: 4px 8px;
   }
 
-  /* Property type chips */
+  /* Chip loại bất động sản */
   .type-chips { display: flex; flex-wrap: wrap; gap: 8px; }
 
   .type-chip {
@@ -157,7 +185,7 @@
   .type-chip:hover { border-color: var(--gold-border); color: var(--gold); background: var(--gold-dim); }
   .type-chip.active { background: var(--gold-dim); border-color: var(--gold-border); color: var(--gold); font-weight: 600; }
 
-  /* Search button */
+  /* Nút tìm kiếm */
   .btn-search-main {
     display: flex; align-items: center; justify-content: center; gap: 8px;
     width: 100%; padding: 13px;
@@ -173,7 +201,7 @@
     transform: translateY(-2px);
   }
 
-  /* ── Two-column layout ── */
+  /* ── Bố cục 2 cột ── */
   .results-layout {
     display: grid;
     grid-template-columns: 1fr 380px;
@@ -186,7 +214,7 @@
     .map-sticky { position: static !important; }
   }
 
-  /* ── Results header ── */
+  /* ── Tiêu đề kết quả ── */
   .results-header {
     display: flex; align-items: center; justify-content: space-between;
     flex-wrap: wrap; gap: 12px; margin-bottom: 16px;
@@ -201,7 +229,7 @@
 
   .count-label { font-size: 13px; color: var(--text-muted); }
 
-  /* Sort select */
+  /* Select sắp xếp */
   .sort-select {
     background: var(--bg-3); border: 1px solid var(--border);
     color: var(--text); border-radius: var(--radius-sm);
@@ -213,7 +241,7 @@
   .sort-select:focus { border-color: var(--gold-border); }
   .sort-select option { background: var(--bg-2); }
 
-  /* ── Property cards ── */
+  /* ── Card bất động sản ── */
   .prop-list { display: flex; flex-direction: column; gap: 12px; }
 
   .prop-item {
@@ -229,7 +257,7 @@
     box-shadow: var(--shadow-card), var(--shadow-glow);
   }
 
-  /* Thumb */
+  /* Ảnh */
   .prop-thumb {
     background: linear-gradient(135deg, var(--bg-2) 0%, var(--bg-3) 100%);
     display: flex; align-items: center; justify-content: center;
@@ -240,7 +268,7 @@
     position: absolute; bottom: 8px; left: 8px;
   }
 
-  /* Body */
+  /* Nội dung */
   .prop-body { padding: 16px 18px; min-width: 0; }
 
   .prop-title {
@@ -268,7 +296,7 @@
     font-size: 1.2rem; font-weight: 700; color: var(--gold);
   }
 
-  /* Right side */
+  /* Bên phải */
   .prop-right {
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
@@ -304,7 +332,7 @@
     border-color: var(--gold-border); color: var(--gold); background: var(--gold-dim);
   }
 
-  /* ── Map sidebar ── */
+  /* ── Sidebar bản đồ ── */
   .map-sticky {
     position: sticky; top: calc(var(--nav-h) + 16px);
   }
@@ -347,7 +375,7 @@
 
   [data-theme="light"] .map-iframe-wrap iframe { filter: brightness(.95) saturate(.75); }
 
-  /* radius circle overlay hint */
+  /* Gợi ý overlay vòng bán kính */
   .map-iframe-wrap::after {
     content: ''; position: absolute; inset: 0; pointer-events: none;
     background: radial-gradient(circle at 50% 50%, rgba(200,169,110,.06) 0%, transparent 65%);
@@ -359,7 +387,7 @@
     display: flex; align-items: center; gap: 6px;
   }
 
-  /* ── Empty state ── */
+  /* ── Trạng thái rỗng ── */
   .empty-state {
     text-align: center; padding: 64px 24px;
     background: var(--bg-card); border: 1px solid var(--border);
@@ -389,38 +417,38 @@
 
 {% block content %}
 
-<!-- ══ PAGE HERO ══ -->
+<!-- ══ HERO TRANG ══ -->
 <div class="page-hero">
   <div class="container">
     <div class="page-icon">📍</div>
-    <p class="page-eyebrow">Spatial Search</p>
-    <h1 class="page-title">Nearby Properties</h1>
+    <p class="page-eyebrow">Tìm kiếm không gian</p>
+    <h1 class="page-title">Bất động sản lân cận</h1>
     <p class="page-desc">
-      Find properties within any radius of a location using PostGIS spatial queries.
-      Filter by property type and sort by distance.
+      Tìm bất động sản trong bất kỳ bán kính nào quanh một vị trí bằng truy vấn không gian PostGIS.
+      Lọc theo loại bất động sản và sắp xếp theo khoảng cách.
     </p>
   </div>
 </div>
 
 <div class="container" style="padding-bottom:80px">
 
-  <!-- ══ SEARCH PANEL ══ -->
+  <!-- ══ BẢNG TÌM KIẾM ══ -->
   <div class="search-panel fade-up">
     <div class="panel-section-label">
-      <i class="bi bi-sliders me-1"></i> Search Parameters
+      <i class="bi bi-sliders me-1"></i> Tham số tìm kiếm
     </div>
 
-    <!-- Quick presets -->
+    <!-- Vị trí nhanh -->
     <div style="margin-bottom:20px">
-      <div class="field-label"><i class="bi bi-lightning-charge"></i>Quick locations</div>
+      <div class="field-label"><i class="bi bi-lightning-charge"></i>Vị trí nhanh</div>
       <div class="quick-locs">
-        <button type="button" class="quick-loc-btn" data-lat="10.7769" data-lng="106.7009">📍 District 1</button>
-        <button type="button" class="quick-loc-btn" data-lat="10.8020" data-lng="106.7330">📍 Thao Dien</button>
-        <button type="button" class="quick-loc-btn" data-lat="10.7299" data-lng="106.6955">📍 District 7</button>
-        <button type="button" class="quick-loc-btn" data-lat="10.8517" data-lng="106.7717">📍 Thu Duc</button>
-        <button type="button" class="quick-loc-btn" data-lat="10.7626" data-lng="106.6602">📍 Binh Thanh</button>
+        <button type="button" class="quick-loc-btn" data-lat="10.7769" data-lng="106.7009">📍 Quận 1</button>
+        <button type="button" class="quick-loc-btn" data-lat="10.8020" data-lng="106.7330">📍 Thảo Điền</button>
+        <button type="button" class="quick-loc-btn" data-lat="10.7299" data-lng="106.6955">📍 Quận 7</button>
+        <button type="button" class="quick-loc-btn" data-lat="10.8517" data-lng="106.7717">📍 Thủ Đức</button>
+        <button type="button" class="quick-loc-btn" data-lat="10.7626" data-lng="106.6602">📍 Bình Thạnh</button>
         <button type="button" class="quick-loc-btn" id="btnGeolocate">
-          <i class="bi bi-crosshair"></i> My location
+          <i class="bi bi-crosshair"></i> Vị trí của tôi
         </button>
       </div>
     </div>
@@ -428,26 +456,33 @@
     <form method="get" id="nearbyForm">
       <div class="row g-3 align-items-start">
 
-        <!-- Lat -->
-        <div class="col-md-3 col-sm-6">
-          <label class="field-label" for="idLat"><i class="bi bi-compass"></i>Latitude</label>
-          <input type="text" id="idLat" name="lat" class="field-input"
-                 placeholder="e.g. 10.7769" value="{{ params.lat }}" required />
-          <div class="coord-hint">
-            <i class="bi bi-info-circle" style="font-size:11px"></i> Decimal degrees (WGS84)
+        <div class="col-12">
+          <div class="location-mode-card">
+            <div class="row g-3 align-items-end">
+              <div class="col-lg-7">
+                <label class="field-label" for="idLocationQuery"><i class="bi bi-geo-alt"></i>Địa điểm cụ thể</label>
+                <input type="text" id="idLocationQuery" class="field-input" placeholder="VD: Quận 1, TP.HCM hoặc Thảo Điền" value="{{ params.location_query|default:'' }}" />
+                <div class="coord-hint">
+                  <i class="bi bi-info-circle" style="font-size:11px"></i> Nhập tên khu vực/địa chỉ, hệ thống sẽ tự lấy vị trí.
+                </div>
+              </div>
+              <div class="col-lg-5">
+                <div class="location-actions">
+                  <button type="button" class="soft-btn" id="btnResolveLocation"><i class="bi bi-search"></i> Dùng địa điểm này</button>
+                  <button type="button" class="soft-btn" id="btnGeolocate"><i class="bi bi-crosshair"></i> Vị trí hiện tại</button>
+                </div>
+                <div class="location-status" id="locationStatus">Chưa chọn vị trí.</div>
+              </div>
+            </div>
+            <input type="hidden" id="idLat" name="lat" value="{{ params.lat }}" />
+            <input type="hidden" id="idLng" name="lng" value="{{ params.lng }}" />
+            <input type="hidden" id="idLocationName" name="location_query" value="{{ params.location_query|default:'' }}" />
           </div>
         </div>
 
-        <!-- Lng -->
-        <div class="col-md-3 col-sm-6">
-          <label class="field-label" for="idLng"><i class="bi bi-compass"></i>Longitude</label>
-          <input type="text" id="idLng" name="lng" class="field-input"
-                 placeholder="e.g. 106.7009" value="{{ params.lng }}" required />
-        </div>
-
-        <!-- Radius slider -->
-        <div class="col-md-3 col-sm-6">
-          <label class="field-label" for="idRadiusSlider"><i class="bi bi-circle"></i>Radius</label>
+        <!-- Thanh trượt bán kính -->
+        <div class="col-md-6 col-sm-6">
+          <label class="field-label" for="idRadiusSlider"><i class="bi bi-circle"></i>Bán kính</label>
           <div class="radius-track">
             <input type="range" id="idRadiusSlider" class="geo-range"
                    min="0.1" max="20" step="0.1" value="{{ params.radius|default:'2' }}" />
@@ -456,32 +491,32 @@
           <input type="hidden" id="idRadius" name="radius" value="{{ params.radius|default:'2' }}" />
         </div>
 
-        <!-- Property type select (hidden, driven by chips) -->
+        <!-- Select loại BĐS -->
         <div class="col-md-3 col-sm-6">
-          <label class="field-label" for="idType"><i class="bi bi-buildings"></i>Property type</label>
+          <label class="field-label" for="idType"><i class="bi bi-buildings"></i>Loại bất động sản</label>
           <select id="idType" name="type" class="field-input">
-            <option value="">All types</option>
-            <option value="apartment" {% if params.type == "apartment" %}selected{% endif %}>Apartment</option>
-            <option value="house"     {% if params.type == "house"     %}selected{% endif %}>House</option>
-            <option value="land"      {% if params.type == "land"      %}selected{% endif %}>Land</option>
+            <option value="">Tất cả loại</option>
+            <option value="apartment" {% if params.type == "apartment" %}selected{% endif %}>Căn hộ</option>
+            <option value="house"     {% if params.type == "house"     %}selected{% endif %}>Nhà</option>
+            <option value="land"      {% if params.type == "land"      %}selected{% endif %}>Đất</option>
           </select>
         </div>
 
-        <!-- Type chips (visual, synced to select) -->
+        <!-- Chip loại -->
         <div class="col-12">
-          <label class="field-label"><i class="bi bi-grid"></i>Filter by type</label>
+          <label class="field-label"><i class="bi bi-grid"></i>Lọc theo loại</label>
           <div class="type-chips" id="typeChips">
             <div class="type-chip {% if not params.type %}active{% endif %}" data-val="">
-              <i class="bi bi-asterisk"></i> All
+              <i class="bi bi-asterisk"></i> Tất cả
             </div>
             <div class="type-chip {% if params.type == 'apartment' %}active{% endif %}" data-val="apartment">
-              🏢 Apartment
+              🏢 Căn hộ
             </div>
             <div class="type-chip {% if params.type == 'house' %}active{% endif %}" data-val="house">
-              🏠 House
+              🏠 Nhà
             </div>
             <div class="type-chip {% if params.type == 'land' %}active{% endif %}" data-val="land">
-              🌿 Land
+              🌿 Đất
             </div>
           </div>
         </div>
@@ -489,7 +524,7 @@
         <!-- Submit -->
         <div class="col-12 col-md-4 col-lg-3 ms-auto">
           <button type="submit" class="btn-search-main">
-            <i class="bi bi-search"></i> Search Nearby
+            <i class="bi bi-search"></i> Tìm kiếm lân cận
           </button>
         </div>
 
@@ -497,29 +532,29 @@
     </form>
   </div>
 
-  <!-- ══ RESULTS ══ -->
+  <!-- ══ KẾT QUẢ ══ -->
   {% if results != None %}
 
   <div class="results-layout">
 
-    <!-- Left: property list -->
+    <!-- Trái: danh sách bất động sản -->
     <div>
       <div class="results-header fade-up">
         <div class="results-count">
           <span class="count-badge">{{ results|length }}</span>
           <span class="count-label">
-            propert{{ results|length|pluralize:"y,ies" }} found
-            {% if params.radius %} within {{ params.radius }} km{% endif %}
+            tìm thấy {{ results|length }} bất động sản
+            {% if params.radius %} trong bán kính {{ params.radius }} km{% endif %}
           </span>
         </div>
 
         <div class="d-flex align-items-center gap-2">
-          <label class="field-label mb-0" style="white-space:nowrap">Sort by</label>
+          <label class="field-label mb-0" style="white-space:nowrap">Sắp xếp theo</label>
           <select class="sort-select" id="sortSelect">
-            <option value="distance">Distance ↑</option>
-            <option value="price_asc">Price ↑</option>
-            <option value="price_desc">Price ↓</option>
-            <option value="area">Area ↓</option>
+            <option value="distance">Khoảng cách ↑</option>
+            <option value="price_asc">Giá ↑</option>
+            <option value="price_desc">Giá ↓</option>
+            <option value="area">Diện tích ↓</option>
           </select>
         </div>
       </div>
@@ -532,7 +567,7 @@
              data-price="{{ p.price|default:0 }}"
              data-area="{{ p.area|default:0 }}">
 
-          <!-- Thumb -->
+          <!-- Ảnh -->
           <div class="prop-thumb">
             {% with t=p.get_property_type_display|lower %}
               {% if "apartment" in t %}🏢
@@ -547,7 +582,7 @@
             </div>
           </div>
 
-          <!-- Body -->
+          <!-- Nội dung -->
           <div class="prop-body">
             <div class="prop-title">{{ p.title }}</div>
             <div class="prop-address">
@@ -558,27 +593,27 @@
               <span class="prop-tag"><i class="bi bi-aspect-ratio"></i> {{ p.area }} m²</span>
               {% endif %}
               {% if p.bedrooms %}
-              <span class="prop-tag"><i class="bi bi-door-open"></i> {{ p.bedrooms }} bed</span>
+              <span class="prop-tag"><i class="bi bi-door-open"></i> {{ p.bedrooms }} phòng ngủ</span>
               {% endif %}
               {% if p.bathrooms %}
-              <span class="prop-tag"><i class="bi bi-droplet"></i> {{ p.bathrooms }} bath</span>
+              <span class="prop-tag"><i class="bi bi-droplet"></i> {{ p.bathrooms }} phòng tắm</span>
               {% endif %}
             </div>
             {% if p.price %}
             <div class="prop-price">
-              {{ p.price|floatformat:0 }} <span style="font-size:.85rem;font-weight:400;color:var(--text-muted)">VND</span>
+              {{ p.price|floatformat:0 }} <span style="font-size:.85rem;font-weight:400;color:var(--text-muted)">VNĐ</span>
             </div>
             {% endif %}
           </div>
 
-          <!-- Right: distance + CTA -->
+          <!-- Phải: khoảng cách + nút -->
           <div class="prop-right">
             <div class="dist-pill">
               <span class="dist-num">{{ p.distance.km|floatformat:2 }}</span>
               <span class="dist-unit">km</span>
             </div>
             <a class="btn-view" href="{% url 'properties:detail' p.pk %}">
-              <i class="bi bi-eye"></i> View
+              <i class="bi bi-eye"></i> Xem
             </a>
           </div>
 
@@ -589,19 +624,19 @@
       {% else %}
       <div class="empty-state fade-up">
         <div class="empty-icon">🔍</div>
-        <h5>No properties found</h5>
-        <p>Try increasing the search radius or changing the property type filter. Make sure your coordinates are within the mapped area.</p>
+        <h5>Không tìm thấy bất động sản</h5>
+        <p>Thử tăng bán kính, đổi loại bất động sản hoặc chọn lại khu vực tìm kiếm.</p>
       </div>
       {% endif %}
     </div>
 
-    <!-- Right: map sidebar -->
+    <!-- Phải: sidebar bản đồ -->
     <div class="map-sticky">
       <div class="map-card fade-up">
         <div class="map-card-header">
           <div class="map-card-title">
             <div class="map-live-dot"></div>
-            Search Area
+            Khu vực tìm kiếm
           </div>
           <span style="font-size:11px;color:var(--text-muted)">
             {% if params.radius %}r = {{ params.radius }} km{% endif %}
@@ -613,13 +648,13 @@
           <iframe
             src="https://www.openstreetmap.org/export/embed.html?bbox={{ params.lng|add:'-0.05' }},{{ params.lat|add:'-0.04' }},{{ params.lng|add:'0.05' }},{{ params.lat|add:'0.04' }}&layer=mapnik&marker={{ params.lat }},{{ params.lng }}"
             allowfullscreen loading="lazy"
-            title="Search area map">
+            title="Bản đồ khu vực tìm kiếm">
           </iframe>
           {% else %}
           <iframe
             src="https://www.openstreetmap.org/export/embed.html?bbox=106.5,10.65,106.85,10.9&layer=mapnik"
             allowfullscreen loading="lazy"
-            title="Ho Chi Minh City map">
+            title="Bản đồ Thành phố Hồ Chí Minh">
           </iframe>
           {% endif %}
         </div>
@@ -627,27 +662,27 @@
         <div class="map-card-footer">
           <i class="bi bi-info-circle" style="color:var(--gold)"></i>
           {% if params.lat and params.lng %}
-            Centered at {{ params.lat }}, {{ params.lng }}
+            Tâm bản đồ tại {{ params.lat }}, {{ params.lng }}
           {% else %}
-            Enter coordinates to focus the map
+            Nhập tọa độ để tập trung bản đồ
           {% endif %}
         </div>
       </div>
 
-      <!-- Mini stat cards -->
+      <!-- Thẻ thống kê mini -->
       {% if results %}
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px">
         <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px;text-align:center">
           <div style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:700;color:var(--gold)">
             {{ results|length }}
           </div>
-          <div style="font-size:10px;color:var(--text-muted);letter-spacing:1.5px;text-transform:uppercase;margin-top:2px">Found</div>
+          <div style="font-size:10px;color:var(--text-muted);letter-spacing:1.5px;text-transform:uppercase;margin-top:2px">Đã tìm thấy</div>
         </div>
         <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px;text-align:center">
           <div style="font-family:'Cormorant Garamond',serif;font-size:1.4rem;font-weight:700;color:var(--gold)">
             {{ results.0.distance.km|floatformat:1 }}
           </div>
-          <div style="font-size:10px;color:var(--text-muted);letter-spacing:1.5px;text-transform:uppercase;margin-top:2px">Min km</div>
+          <div style="font-size:10px;color:var(--text-muted);letter-spacing:1.5px;text-transform:uppercase;margin-top:2px">Km nhỏ nhất</div>
         </div>
       </div>
       {% endif %}
@@ -665,7 +700,7 @@
 {% block scripts %}
 <script>
 (function () {
-  /* ── Radius slider ── */
+  /* ── Thanh trượt bán kính ── */
   const slider  = document.getElementById('idRadiusSlider');
   const display = document.getElementById('radiusDisplay');
   const hidden  = document.getElementById('idRadius');
@@ -683,7 +718,7 @@
     slider.addEventListener('input', () => updateSlider(slider.value));
   }
 
-  /* ── Type chips → select sync ── */
+  /* ── Đồng bộ chip loại → select ── */
   const chips  = document.querySelectorAll('.type-chip');
   const select = document.getElementById('idType');
 
@@ -701,42 +736,85 @@
     });
   }
 
-  /* ── Quick location presets ── */
+  const latEl = document.getElementById('idLat');
+  const lngEl = document.getElementById('idLng');
+  const locationQueryEl = document.getElementById('idLocationQuery');
+  const locationNameEl = document.getElementById('idLocationName');
+  const locationStatusEl = document.getElementById('locationStatus');
+  const resolveBtn = document.getElementById('btnResolveLocation');
+
+  function setLocation(lat, lng, label) {
+    latEl.value = Number(lat).toFixed(6);
+    lngEl.value = Number(lng).toFixed(6);
+    if (locationNameEl) locationNameEl.value = label || '';
+    if (locationQueryEl && label) locationQueryEl.value = label;
+    if (locationStatusEl) locationStatusEl.textContent = `Đã chọn: ${label || `${latEl.value}, ${lngEl.value}`}`;
+  }
+
+  if (latEl.value && lngEl.value && locationStatusEl) {
+    locationStatusEl.textContent = `Đang dùng: ${locationNameEl.value || `${latEl.value}, ${lngEl.value}`}`;
+  }
+
+  /* ── Vị trí nhanh ── */
   document.querySelectorAll('.quick-loc-btn[data-lat]').forEach(btn => {
     btn.addEventListener('click', () => {
-      document.getElementById('idLat').value = btn.dataset.lat;
-      document.getElementById('idLng').value = btn.dataset.lng;
+      setLocation(btn.dataset.lat, btn.dataset.lng, btn.textContent.trim());
     });
   });
 
-  /* ── Geolocation ── */
+  if (resolveBtn) {
+    resolveBtn.addEventListener('click', async () => {
+      const query = (locationQueryEl.value || '').trim();
+      if (!query) {
+        alert('Nhập địa điểm trước.');
+        return;
+      }
+      resolveBtn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Đang tìm...';
+      resolveBtn.disabled = true;
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`);
+        const data = await res.json();
+        if (!data.length) throw new Error('Không tìm thấy địa điểm');
+        setLocation(data[0].lat, data[0].lon, data[0].display_name);
+      } catch (e) {
+        alert('Không tìm thấy địa điểm này.');
+      } finally {
+        resolveBtn.innerHTML = '<i class="bi bi-search"></i> Dùng địa điểm này';
+        resolveBtn.disabled = false;
+      }
+    });
+  }
+
+  /* ── Định vị ── */
   const geoBtn = document.getElementById('btnGeolocate');
   if (geoBtn) {
     geoBtn.addEventListener('click', () => {
-      if (!navigator.geolocation) { alert('Geolocation not supported.'); return; }
-      geoBtn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Locating…';
+      if (!navigator.geolocation) { 
+        alert('Trình duyệt không hỗ trợ định vị.');
+        return; 
+      }
+      geoBtn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Đang xác định vị trí...';
       geoBtn.disabled = true;
 
       navigator.geolocation.getCurrentPosition(
         pos => {
-          document.getElementById('idLat').value = pos.coords.latitude.toFixed(6);
-          document.getElementById('idLng').value = pos.coords.longitude.toFixed(6);
-          geoBtn.innerHTML = '<i class="bi bi-check-circle"></i> Location set';
+          setLocation(pos.coords.latitude, pos.coords.longitude, 'Vị trí hiện tại');
+          geoBtn.innerHTML = '<i class="bi bi-check-circle"></i> Đã lấy vị trí';
           setTimeout(() => {
-            geoBtn.innerHTML = '<i class="bi bi-crosshair"></i> My location';
+            geoBtn.innerHTML = '<i class="bi bi-crosshair"></i> Vị trí hiện tại';
             geoBtn.disabled = false;
           }, 2000);
         },
         () => {
-          alert('Unable to retrieve your location.');
-          geoBtn.innerHTML = '<i class="bi bi-crosshair"></i> My location';
+          alert('Không thể lấy vị trí của bạn.');
+          geoBtn.innerHTML = '<i class="bi bi-crosshair"></i> Vị trí hiện tại';
           geoBtn.disabled = false;
         }
       );
     });
   }
 
-  /* ── Client-side sort ── */
+  /* ── Sắp xếp phía client ── */
   const sortSelect = document.getElementById('sortSelect');
   const propList   = document.getElementById('propList');
 

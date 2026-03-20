@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Amenity Search | GeoEstate{% endblock %}
+{% block title %}Tìm tiện ích xung quanh | GeoEstate{% endblock %}
 
 {% block breadcrumb %}
 <div class="breadcrumb-strip">
@@ -107,6 +107,34 @@
   .coord-hint {
     display: flex; align-items: center; gap: 6px;
     font-size: 11px; color: var(--text-muted); margin-top: 6px;
+  }
+
+  .location-mode-card {
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+  }
+
+  .location-actions {
+    display: flex; flex-wrap: wrap; gap: 10px;
+  }
+
+  .soft-btn {
+    background: var(--bg-3); border: 1px solid var(--border);
+    border-radius: 999px; padding: 8px 14px;
+    font-size: 12.5px; font-weight: 500; color: var(--text-dim);
+    cursor: pointer; transition: all var(--transition);
+    font-family: 'Outfit', sans-serif;
+  }
+
+  .soft-btn:hover {
+    border-color: var(--gold-border); color: var(--gold);
+    background: var(--gold-dim);
+  }
+
+  .location-status {
+    margin-top: 10px; font-size: 12px; color: var(--text-muted);
   }
 
   /* Quick location buttons */
@@ -377,11 +405,11 @@
 <div class="page-hero">
   <div class="container">
     <div class="page-icon">⭐</div>
-    <p class="page-eyebrow">Spatial Intelligence</p>
-    <h1 class="page-title">Amenity Search</h1>
+    <p class="page-eyebrow">Trí tuệ không gian</p>
+    <h1 class="page-title">Tìm kiếm tiện ích</h1>
     <p class="page-desc">
-      Discover schools, hospitals, supermarkets and more within any radius.
-      Powered by PostGIS spatial queries.
+      Khám phá trường học, bệnh viện, siêu thị và nhiều tiện ích khác trong bất kỳ bán kính nào.
+      Được hỗ trợ bởi truy vấn không gian PostGIS.
     </p>
   </div>
 </div>
@@ -391,19 +419,19 @@
   <!-- ══ SEARCH PANEL ══ -->
   <div class="search-panel fade-up">
     <div class="search-panel-title">
-      <i class="bi bi-sliders me-1"></i> Search Parameters
+      <i class="bi bi-sliders me-1"></i> Tham số tìm kiếm
     </div>
 
     <!-- Quick location presets -->
     <div style="margin-bottom:20px">
-      <div class="field-label"><i class="bi bi-lightning-charge"></i>Quick locations</div>
+      <div class="field-label"><i class="bi bi-lightning-charge"></i>Vị trí nhanh</div>
       <div class="quick-locs">
-        <button type="button" class="quick-loc-btn" data-lat="10.7769" data-lng="106.7009">📍 District 1</button>
-        <button type="button" class="quick-loc-btn" data-lat="10.8020" data-lng="106.7330">📍 Thao Dien</button>
-        <button type="button" class="quick-loc-btn" data-lat="10.7299" data-lng="106.6955">📍 District 7</button>
-        <button type="button" class="quick-loc-btn" data-lat="10.8517" data-lng="106.7717">📍 Thu Duc</button>
+        <button type="button" class="quick-loc-btn" data-lat="10.7769" data-lng="106.7009">📍 Quận 1</button>
+        <button type="button" class="quick-loc-btn" data-lat="10.8020" data-lng="106.7330">📍 Thảo Điền</button>
+        <button type="button" class="quick-loc-btn" data-lat="10.7299" data-lng="106.6955">📍 Quận 7</button>
+        <button type="button" class="quick-loc-btn" data-lat="10.8517" data-lng="106.7717">📍 Thủ Đức</button>
         <button type="button" class="quick-loc-btn" id="btnGeolocate">
-          <i class="bi bi-crosshair"></i> Use my location
+          <i class="bi bi-crosshair"></i> Dùng vị trí của tôi
         </button>
       </div>
     </div>
@@ -411,26 +439,33 @@
     <form method="get" id="amenityForm">
       <div class="row g-3 align-items-start">
 
-        <!-- Lat -->
-        <div class="col-md-3 col-sm-6">
-          <label class="field-label" for="idLat"><i class="bi bi-compass"></i>Latitude</label>
-          <input type="text" id="idLat" name="lat" class="field-input"
-                 placeholder="e.g. 10.7769" value="{{ params.lat }}" required />
-          <div class="coord-hint">
-            <i class="bi bi-info-circle" style="font-size:11px"></i> Decimal degrees (WGS84)
+        <div class="col-12">
+          <div class="location-mode-card">
+            <div class="row g-3 align-items-end">
+              <div class="col-lg-7">
+                <label class="field-label" for="idLocationQuery"><i class="bi bi-geo-alt"></i>Địa điểm cụ thể</label>
+                <input type="text" id="idLocationQuery" class="field-input" placeholder="VD: Quận 1, TP.HCM hoặc Thảo Điền" value="{{ params.location_query|default:'' }}" />
+                <div class="coord-hint">
+                  <i class="bi bi-info-circle" style="font-size:11px"></i> Nhập tên khu vực/địa chỉ, hệ thống sẽ tự lấy vị trí.
+                </div>
+              </div>
+              <div class="col-lg-5">
+                <div class="location-actions">
+                  <button type="button" class="soft-btn" id="btnResolveLocation"><i class="bi bi-search"></i> Dùng địa điểm này</button>
+                  <button type="button" class="soft-btn" id="btnGeolocate"><i class="bi bi-crosshair"></i> Vị trí hiện tại</button>
+                </div>
+                <div class="location-status" id="locationStatus">Chưa chọn vị trí.</div>
+              </div>
+            </div>
+            <input type="hidden" id="idLat" name="lat" value="{{ params.lat }}" />
+            <input type="hidden" id="idLng" name="lng" value="{{ params.lng }}" />
+            <input type="hidden" id="idLocationName" name="location_query" value="{{ params.location_query|default:'' }}" />
           </div>
         </div>
 
-        <!-- Lng -->
-        <div class="col-md-3 col-sm-6">
-          <label class="field-label" for="idLng"><i class="bi bi-compass"></i>Longitude</label>
-          <input type="text" id="idLng" name="lng" class="field-input"
-                 placeholder="e.g. 106.7009" value="{{ params.lng }}" required />
-        </div>
-
         <!-- Radius -->
-        <div class="col-md-3 col-sm-6">
-          <label class="field-label" for="idRadius"><i class="bi bi-circle"></i>Radius</label>
+        <div class="col-md-6 col-sm-6">
+          <label class="field-label" for="idRadius"><i class="bi bi-circle"></i>Bán kính</label>
           <div class="radius-track">
             <input type="range" id="idRadiusSlider" class="geo-range"
                    min="0.1" max="20" step="0.1" value="{{ params.radius|default:'2' }}" />
@@ -444,9 +479,9 @@
 
         <!-- Amenity type -->
         <div class="col-md-3 col-sm-6">
-          <label class="field-label" for="idAmenityType"><i class="bi bi-tag"></i>Amenity type</label>
+          <label class="field-label" for="idAmenityType"><i class="bi bi-tag"></i>Loại tiện ích</label>
           <select id="idAmenityType" name="amenity_type" class="field-input">
-            <option value="">All types</option>
+            <option value="">Tất cả loại</option>
             {% for value, label in amenity_types %}
               <option value="{{ value }}" {% if params.amenity_type == value %}selected{% endif %}>
                 {{ label }}
@@ -457,10 +492,10 @@
 
         <!-- Amenity type visual chips (synced to select) -->
         <div class="col-12">
-          <label class="field-label"><i class="bi bi-grid"></i>Filter by category</label>
+          <label class="field-label"><i class="bi bi-grid"></i>Lọc theo danh mục</label>
           <div class="type-chips" id="typeChips">
             <div class="type-chip {% if not params.amenity_type %}active{% endif %}" data-val="">
-              <i class="bi bi-asterisk"></i> All
+              <i class="bi bi-asterisk"></i> Tất cả
             </div>
             {% for value, label in amenity_types %}
             <div class="type-chip {% if params.amenity_type == value %}active{% endif %}" data-val="{{ value }}">
@@ -473,7 +508,7 @@
         <!-- Submit -->
         <div class="col-12 col-md-4 col-lg-3 ms-auto">
           <button type="submit" class="btn-search-main">
-            <i class="bi bi-search"></i> Search Amenities
+            <i class="bi bi-search"></i> Tìm tiện ích
           </button>
         </div>
 
@@ -488,17 +523,17 @@
     <div class="results-count">
       <span class="count-badge">{{ results|length }}</span>
       <span class="count-label">
-        amenit{{ results|length|pluralize:"y,ies" }} found
-        {% if params.radius %} within {{ params.radius }} km{% endif %}
+        tìm thấy {{ results|length }} tiện ích
+        {% if params.radius %} trong bán kính {{ params.radius }} km{% endif %}
       </span>
     </div>
 
     <div class="d-flex align-items-center gap-2">
       <div class="view-toggle">
-        <button class="view-btn active" id="btnListView" title="List view">
+        <button class="view-btn active" id="btnListView" title="Chế độ danh sách">
           <i class="bi bi-list-ul"></i>
         </button>
-        <button class="view-btn" id="btnGridView" title="Grid view">
+        <button class="view-btn" id="btnGridView" title="Chế độ lưới">
           <i class="bi bi-grid-3x3-gap"></i>
         </button>
       </div>
@@ -539,7 +574,7 @@
               <div class="dist-bar-fill"
                    style="width:{% widthratio a.distance.km max_dist 100 %}%"></div>
             </div>
-            <div class="dist-bar-label">relative distance</div>
+            <div class="dist-bar-label">khoảng cách tương đối</div>
           </div>
           <div class="dist-badge">
             <span class="dist-num">{{ a.distance.km|floatformat:2 }}</span>
@@ -572,7 +607,7 @@
         <div class="card-dist">
           <div>
             <div class="card-dist-num">{{ a.distance.km|floatformat:2 }} <span style="font-size:.9rem">km</span></div>
-            <div class="card-dist-label">from search point</div>
+            <div class="card-dist-label">tính từ điểm tìm kiếm</div>
           </div>
           <i class="bi bi-arrow-right" style="color:var(--gold);opacity:.6"></i>
         </div>
@@ -586,8 +621,8 @@
     <!-- Empty state -->
     <div class="empty-state fade-up">
       <div class="empty-icon">🔍</div>
-      <h5>No amenities found</h5>
-      <p>Try increasing the search radius or selecting a different amenity type. Make sure your coordinates are within the mapped area.</p>
+      <h5>Không tìm thấy tiện ích</h5>
+      <p>Thử tăng bán kính, đổi loại tiện ích hoặc chọn lại khu vực tìm kiếm.</p>
     </div>
   {% endif %}
 
@@ -639,40 +674,78 @@
     });
   }
 
+  const latEl = document.getElementById('idLat');
+  const lngEl = document.getElementById('idLng');
+  const locationQueryEl = document.getElementById('idLocationQuery');
+  const locationNameEl = document.getElementById('idLocationName');
+  const locationStatusEl = document.getElementById('locationStatus');
+  const resolveBtn = document.getElementById('btnResolveLocation');
+
+  function setLocation(lat, lng, label) {
+    latEl.value = Number(lat).toFixed(6);
+    lngEl.value = Number(lng).toFixed(6);
+    if (locationNameEl) locationNameEl.value = label || '';
+    if (locationQueryEl && label) locationQueryEl.value = label;
+    if (locationStatusEl) locationStatusEl.textContent = `Đã chọn: ${label || `${latEl.value}, ${lngEl.value}`}`;
+  }
+
+  if (latEl.value && lngEl.value && locationStatusEl) {
+    locationStatusEl.textContent = `Đang dùng: ${locationNameEl.value || `${latEl.value}, ${lngEl.value}`}`;
+  }
+
   /* ── Quick location presets ── */
   document.querySelectorAll('.quick-loc-btn[data-lat]').forEach(btn => {
     btn.addEventListener('click', () => {
-      const latEl = document.getElementById('idLat');
-      const lngEl = document.getElementById('idLng');
-      if (latEl) latEl.value = btn.dataset.lat;
-      if (lngEl) lngEl.value = btn.dataset.lng;
+      setLocation(btn.dataset.lat, btn.dataset.lng, btn.textContent.trim());
     });
   });
+
+  if (resolveBtn) {
+    resolveBtn.addEventListener('click', async () => {
+      const query = (locationQueryEl.value || '').trim();
+      if (!query) {
+        alert('Vui lòng nhập địa điểm trước.');
+        return;
+      }
+      resolveBtn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Đang tìm...';
+      resolveBtn.disabled = true;
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`);
+        const data = await res.json();
+        if (!data.length) throw new Error('Không tìm thấy địa điểm');
+        setLocation(data[0].lat, data[0].lon, data[0].display_name);
+      } catch (e) {
+        alert('Không tìm thấy địa điểm này.');
+      } finally {
+        resolveBtn.innerHTML = '<i class="bi bi-search"></i> Dùng địa điểm này';
+        resolveBtn.disabled = false;
+      }
+    });
+  }
 
   /* ── Geolocation ── */
   const geoBtn = document.getElementById('btnGeolocate');
   if (geoBtn) {
     geoBtn.addEventListener('click', () => {
       if (!navigator.geolocation) {
-        alert('Geolocation is not supported by your browser.');
+        alert('Trình duyệt của bạn không hỗ trợ định vị.');
         return;
       }
-      geoBtn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Locating...';
+      geoBtn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Đang xác định vị trí...';
       geoBtn.disabled = true;
 
       navigator.geolocation.getCurrentPosition(
         pos => {
-          document.getElementById('idLat').value = pos.coords.latitude.toFixed(6);
-          document.getElementById('idLng').value = pos.coords.longitude.toFixed(6);
-          geoBtn.innerHTML = '<i class="bi bi-check-circle"></i> Location set';
+          setLocation(pos.coords.latitude, pos.coords.longitude, 'Vị trí hiện tại');
+          geoBtn.innerHTML = '<i class="bi bi-check-circle"></i> Đã lấy vị trí';
           setTimeout(() => {
-            geoBtn.innerHTML = '<i class="bi bi-crosshair"></i> Use my location';
+            geoBtn.innerHTML = '<i class="bi bi-crosshair"></i> Vị trí hiện tại';
             geoBtn.disabled = false;
           }, 2000);
         },
         () => {
-          alert('Unable to retrieve your location.');
-          geoBtn.innerHTML = '<i class="bi bi-crosshair"></i> Use my location';
+          alert('Không thể lấy vị trí của bạn.');
+          geoBtn.innerHTML = '<i class="bi bi-crosshair"></i> Vị trí hiện tại';
           geoBtn.disabled = false;
         }
       );

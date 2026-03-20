@@ -1,20 +1,41 @@
 {% extends "base.html" %}
-{% block title %}Register | GeoEstate{% endblock %}
+{% block title %}Đăng ký | GeoEstate{% endblock %}
 {% block content %}
 <div class="container py-5" style="max-width:760px">
   <div class="card-geo p-4 p-md-5">
-    <p class="section-eyebrow">Create Account</p>
-    <h1 class="section-heading mb-4">Register</h1>
+    <p class="section-eyebrow">Tạo tài khoản</p>
+    <h1 class="section-heading mb-4">Đăng ký</h1>
     <form method="post" class="row g-3">
       {% csrf_token %}
-      <div class="col-md-6"><label class="form-label">Username</label>{{ form.username }}</div>
-      <div class="col-md-6"><label class="form-label">Full name</label>{{ form.full_name }}</div>
-      <div class="col-md-6"><label class="form-label">Email</label>{{ form.email }}</div>
-      <div class="col-md-6"><label class="form-label">Role</label>{{ form.role }}</div>
-      <div class="col-md-6"><label class="form-label">Password</label>{{ form.password1 }}</div>
-      <div class="col-md-6"><label class="form-label">Confirm password</label>{{ form.password2 }}</div>
-      {% if form.errors %}<div class="col-12"><div class="alert alert-danger">Please fix the form errors and try again.</div></div>{% endif %}
-      <div class="col-12"><button type="submit" class="btn-geo-primary justify-content-center">Create account</button></div>
+      {% if form.non_field_errors %}
+      <div class="col-12"><div class="alert alert-danger">{{ form.non_field_errors }}</div></div>
+      {% endif %}
+      <div class="col-md-6">
+        <label class="form-label">Tên đăng nhập</label>{{ form.username }}
+        {% if form.username.errors %}<div class="text-danger small mt-1">{{ form.username.errors|striptags }}</div>{% endif %}
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Họ tên</label>{{ form.full_name }}
+        {% if form.full_name.errors %}<div class="text-danger small mt-1">{{ form.full_name.errors|striptags }}</div>{% endif %}
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Email</label>{{ form.email }}
+        {% if form.email.errors %}<div class="text-danger small mt-1">{{ form.email.errors|striptags }}</div>{% endif %}
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Vai trò</label>{{ form.role }}
+        {% if form.role.errors %}<div class="text-danger small mt-1">{{ form.role.errors|striptags }}</div>{% endif %}
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Mật khẩu</label>{{ form.password1 }}
+        {% if form.password1.errors %}<div class="text-danger small mt-1">{{ form.password1.errors|striptags }}</div>{% endif %}
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Nhập lại mật khẩu</label>{{ form.password2 }}
+        {% if form.password2.errors %}<div class="text-danger small mt-1">{{ form.password2.errors|striptags }}</div>{% endif %}
+      </div>
+      {% if form.errors %}<div class="col-12"><div class="alert alert-danger">Vui lòng kiểm tra lại thông tin và thử lại.</div></div>{% endif %}
+      <div class="col-12"><button type="submit" class="btn-geo-primary justify-content-center">Tạo tài khoản</button></div>
     </form>
   </div>
 </div>

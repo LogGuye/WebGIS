@@ -6,8 +6,8 @@
   <div class="container">
     <nav aria-label="breadcrumb">
       <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{% url 'core:home' %}"><i class="bi bi-house me-1"></i>Home</a></li>
-        <li class="breadcrumb-item active">Properties</li>
+        <li class="breadcrumb-item"><a href="{% url 'core:home' %}"><i class="bi bi-house me-1"></i>Trang chủ</a></li>
+        <li class="breadcrumb-item active">Bất động sản</li>
       </ol>
     </nav>
   </div>
@@ -316,6 +316,15 @@
     display: flex; align-items: center; justify-content: center;
     font-size: 44px; position: relative;
     flex-shrink: 0;
+    background-size: cover;
+    background-position: center;
+  }
+
+  .prop-card-thumb.has-image::before,
+  .prop-list-thumb.has-image::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(to bottom, rgba(0,0,0,.08), rgba(0,0,0,.35));
   }
 
   .prop-card-thumb::after {
@@ -387,6 +396,8 @@
     background: linear-gradient(135deg, var(--bg-2) 0%, var(--bg-3) 100%);
     display: flex; align-items: center; justify-content: center;
     font-size: 36px; position: relative; min-height: 110px;
+    background-size: cover;
+    background-position: center;
   }
 
   .prop-list-body { padding: 14px 16px; display: flex; flex-direction: column; justify-content: center; min-width: 0; }
@@ -453,17 +464,17 @@
 
 {% block content %}
 
-<!-- ══ PAGE HERO ══ -->
+<!-- ══ HERO TRANG ══ -->
 <div class="page-hero">
   <div class="container">
     <div class="d-flex align-items-start justify-content-between flex-wrap gap-3">
       <div>
-        <p class="page-eyebrow">Real Estate Listings</p>
-        <h1 class="page-title">Browse Properties</h1>
-        <p class="page-desc">Explore our curated selection of properties across Ho Chi Minh City.</p>
+        <p class="page-eyebrow">Danh sách bất động sản</p>
+        <h1 class="page-title">Khám phá bất động sản</h1>
+        <p class="page-desc">Khám phá các bất động sản nổi bật trên khắp TP.HCM.</p>
       </div>
       <a href="{% url 'properties:nearby_search' %}" class="btn-geo-secondary" style="font-size:13px;padding:9px 18px;margin-top:8px">
-        <i class="bi bi-geo-alt"></i> Nearby Search
+        <i class="bi bi-geo-alt"></i> Tìm kiếm lân cận
       </a>
     </div>
   </div>
@@ -472,7 +483,7 @@
 <div class="container">
   <div class="list-layout">
 
-    <!-- ══ FILTER SIDEBAR ══ -->
+    <!-- ══ SIDEBAR BỘ LỌC ══ -->
     <aside class="filter-sidebar" id="filterSidebar">
       <div class="filter-sidebar-sticky">
         <form method="get" id="filterForm">
@@ -480,46 +491,46 @@
 
             <div class="filter-panel-header">
               <div class="filter-panel-title">
-                <i class="bi bi-sliders"></i> Filters
+                <i class="bi bi-sliders"></i> Bộ lọc
               </div>
               <button type="button" class="filter-clear-btn" id="btnClearFilters">
-                Clear all
+                Xóa tất cả
               </button>
             </div>
 
-            <!-- Active filter tags shown here via JS -->
+            <!-- Tag bộ lọc đang dùng, render bằng JS -->
             <div id="activeFilterBar" style="display:none"></div>
 
-            <!-- Property type -->
+            <!-- Loại bất động sản -->
             <div class="filter-section">
-              <div class="filter-section-label"><i class="bi bi-buildings"></i> Property Type</div>
+              <div class="filter-section-label"><i class="bi bi-buildings"></i> Loại bất động sản</div>
               <div class="type-chip-group" id="typeChipGroup">
                 <label class="type-chip-radio {% if not filters.type %}active{% endif %}">
                   <input type="radio" name="type" value="" {% if not filters.type %}checked{% endif %} />
                   <div class="type-chip-dot"></div>
-                  <span class="type-chip-radio-label">🏘️ All types</span>
+                  <span class="type-chip-radio-label">🏘️ Tất cả loại</span>
                 </label>
                 <label class="type-chip-radio {% if filters.type == 'apartment' %}active{% endif %}">
                   <input type="radio" name="type" value="apartment" {% if filters.type == 'apartment' %}checked{% endif %} />
                   <div class="type-chip-dot"></div>
-                  <span class="type-chip-radio-label">🏢 Apartment</span>
+                  <span class="type-chip-radio-label">🏢 Căn hộ</span>
                 </label>
                 <label class="type-chip-radio {% if filters.type == 'house' %}active{% endif %}">
                   <input type="radio" name="type" value="house" {% if filters.type == 'house' %}checked{% endif %} />
                   <div class="type-chip-dot"></div>
-                  <span class="type-chip-radio-label">🏠 House</span>
+                  <span class="type-chip-radio-label">🏠 Nhà</span>
                 </label>
                 <label class="type-chip-radio {% if filters.type == 'land' %}active{% endif %}">
                   <input type="radio" name="type" value="land" {% if filters.type == 'land' %}checked{% endif %} />
                   <div class="type-chip-dot"></div>
-                  <span class="type-chip-radio-label">🌿 Land</span>
+                  <span class="type-chip-radio-label">🌿 Đất</span>
                 </label>
               </div>
             </div>
 
-            <!-- Listing status -->
+            <!-- Trạng thái tin đăng -->
             <div class="filter-section">
-              <div class="filter-section-label"><i class="bi bi-check2-square"></i> Listing Status</div>
+              <div class="filter-section-label"><i class="bi bi-check2-square"></i> Trạng thái tin đăng</div>
               <select name="status" class="field-input">
                 {% for value, label in listing_statuses %}
                 <option value="{{ value }}" {% if filters.status == value %}selected{% endif %}>{{ label }}</option>
@@ -527,64 +538,64 @@
               </select>
             </div>
 
-            <!-- Price range -->
+            <!-- Khoảng giá -->
             <div class="filter-section">
-              <div class="filter-section-label"><i class="bi bi-cash-coin"></i> Price Range (VND)</div>
+              <div class="filter-section-label"><i class="bi bi-cash-coin"></i> Khoảng giá (VNĐ)</div>
               <div class="range-inputs">
                 <div>
-                  <div class="filter-section-label" style="font-size:10px;margin-bottom:5px">Min price</div>
+                  <div class="filter-section-label" style="font-size:10px;margin-bottom:5px">Giá tối thiểu</div>
                   <input type="number" name="price_min" class="field-input" step="500000000"
                          placeholder="0" value="{{ filters.price_min }}" />
                 </div>
                 <div>
-                  <div class="filter-section-label" style="font-size:10px;margin-bottom:5px">Max price</div>
+                  <div class="filter-section-label" style="font-size:10px;margin-bottom:5px">Giá tối đa</div>
                   <input type="number" name="price_max" class="field-input" step="500000000"
-                         placeholder="Any" value="{{ filters.price_max }}" />
+                         placeholder="Không giới hạn" value="{{ filters.price_max }}" />
                 </div>
               </div>
 
-              <!-- Quick price presets -->
+              <!-- Mốc giá nhanh -->
               <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:10px" id="pricePresets">
                 <button type="button" class="quick-loc-btn" style="font-size:11px;padding:4px 10px"
-                        data-min="" data-max="2000000000">Under 2B</button>
+                        data-min="" data-max="2000000000">Dưới 2 tỷ</button>
                 <button type="button" class="quick-loc-btn" style="font-size:11px;padding:4px 10px"
-                        data-min="2000000000" data-max="5000000000">2B – 5B</button>
+                        data-min="2000000000" data-max="5000000000">2 tỷ – 5 tỷ</button>
                 <button type="button" class="quick-loc-btn" style="font-size:11px;padding:4px 10px"
-                        data-min="5000000000" data-max="10000000000">5B – 10B</button>
+                        data-min="5000000000" data-max="10000000000">5 tỷ – 10 tỷ</button>
                 <button type="button" class="quick-loc-btn" style="font-size:11px;padding:4px 10px"
-                        data-min="10000000000" data-max="">Over 10B</button>
+                        data-min="10000000000" data-max="">Trên 10 tỷ</button>
               </div>
             </div>
 
-            <!-- Area range -->
+            <!-- Khoảng diện tích -->
             <div class="filter-section">
-              <div class="filter-section-label"><i class="bi bi-aspect-ratio"></i> Area (m²)</div>
+              <div class="filter-section-label"><i class="bi bi-aspect-ratio"></i> Diện tích (m²)</div>
               <div class="range-inputs">
                 <div>
-                  <div class="filter-section-label" style="font-size:10px;margin-bottom:5px">Min area</div>
+                  <div class="filter-section-label" style="font-size:10px;margin-bottom:5px">Diện tích tối thiểu</div>
                   <input type="number" name="area_min" class="field-input" step="10"
                          placeholder="0" value="{{ filters.area_min }}" />
                 </div>
                 <div>
-                  <div class="filter-section-label" style="font-size:10px;margin-bottom:5px">Max area</div>
+                  <div class="filter-section-label" style="font-size:10px;margin-bottom:5px">Diện tích tối đa</div>
                   <input type="number" name="area_max" class="field-input" step="10"
-                         placeholder="Any" value="{{ filters.area_max }}" />
+                         placeholder="Không giới hạn" value="{{ filters.area_max }}" />
                 </div>
               </div>
             </div>
 
-            <!-- Keyword search -->
+            <!-- Từ khóa -->
             <div class="filter-section">
-              <div class="filter-section-label"><i class="bi bi-search"></i> Keyword</div>
+              <div class="filter-section-label"><i class="bi bi-search"></i> Từ khóa</div>
               <input type="text" name="q" class="field-input"
-                     placeholder="Title, address…" value="{{ filters.q|default:'' }}" />
+                     placeholder="Tiêu đề, địa chỉ…" value="{{ filters.q|default:'' }}" />
               <input type="hidden" name="bbox" id="bboxInput" value="{{ filters.bbox|default:'' }}" />
             </div>
 
-            <!-- Apply -->
+            <!-- Nút áp dụng -->
             <div class="filter-section" style="border-bottom:none;padding-bottom:20px">
               <button type="submit" class="btn-apply-filter">
-                <i class="bi bi-funnel-fill"></i> Apply Filters
+                <i class="bi bi-funnel-fill"></i> Áp dụng bộ lọc
               </button>
             </div>
 
@@ -593,76 +604,76 @@
       </div>
     </aside>
 
-    <!-- ══ RESULTS ══ -->
+    <!-- ══ KẾT QUẢ ══ -->
     <div class="results-stack">
 
       <section class="map-card fade-up">
         <div class="map-card-header">
           <div>
-            <div class="map-card-title"><i class="bi bi-map me-1"></i> Map Explorer</div>
-            <div class="map-card-note">Di chuyển hoặc zoom map rồi bấm “Search this area” để lọc theo vùng.</div>
+            <div class="map-card-title"><i class="bi bi-map me-1"></i> Khám phá bản đồ</div>
+            <div class="map-card-note">Di chuyển hoặc phóng to/thu nhỏ bản đồ rồi bấm “Tìm trong khu vực này” để lọc theo vùng.</div>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button type="button" class="btn-card-view" id="btnSearchArea">
-              <i class="bi bi-bounding-box"></i> Search this area
+              <i class="bi bi-bounding-box"></i> Tìm trong khu vực này
             </button>
             <button type="button" class="btn-card-view" id="btnToggleHeatmap">
-              <i class="bi bi-fire"></i> Heatmap
+              <i class="bi bi-fire"></i> Bản đồ nhiệt
             </button>
             <button type="button" class="btn-card-view" id="btnResetMapFilter">
-              <i class="bi bi-arrow-counterclockwise"></i> Reset map
+              <i class="bi bi-arrow-counterclockwise"></i> Đặt lại bản đồ
             </button>
           </div>
         </div>
         <div id="propertyMap"></div>
       </section>
 
-      <!-- Results topbar -->
+      <!-- Thanh trên của kết quả -->
       <div class="results-topbar fade-up">
         <div class="results-count-row">
           <span class="results-num">{{ total_count }}</span>
           <span class="results-label">
-            propert{{ total_count|pluralize:"y,ies" }} found
+            tìm thấy {{ total_count }} bất động sản
           </span>
-          <!-- Mobile filter toggle -->
+          <!-- Nút mở bộ lọc trên mobile -->
           <button class="mobile-filter-btn" id="mobileFilterToggle">
-            <i class="bi bi-sliders"></i> Filters
+            <i class="bi bi-sliders"></i> Bộ lọc
           </button>
         </div>
 
         <div class="topbar-right">
           <select class="sort-select" id="sortSelect" name="sort" form="filterForm">
-            <option value="default" {% if filters.sort == 'default' %}selected{% endif %}>Sort: Default</option>
-            <option value="newest" {% if filters.sort == 'newest' %}selected{% endif %}>Newest</option>
-            <option value="price_asc" {% if filters.sort == 'price_asc' %}selected{% endif %}>Price: Low → High</option>
-            <option value="price_desc" {% if filters.sort == 'price_desc' %}selected{% endif %}>Price: High → Low</option>
-            <option value="area_desc" {% if filters.sort == 'area_desc' %}selected{% endif %}>Area: Largest first</option>
-            <option value="area_asc" {% if filters.sort == 'area_asc' %}selected{% endif %}>Area: Smallest first</option>
+            <option value="default" {% if filters.sort == 'default' %}selected{% endif %}>Sắp xếp: Mặc định</option>
+            <option value="newest" {% if filters.sort == 'newest' %}selected{% endif %}>Mới nhất</option>
+            <option value="price_asc" {% if filters.sort == 'price_asc' %}selected{% endif %}>Giá: Thấp → Cao</option>
+            <option value="price_desc" {% if filters.sort == 'price_desc' %}selected{% endif %}>Giá: Cao → Thấp</option>
+            <option value="area_desc" {% if filters.sort == 'area_desc' %}selected{% endif %}>Diện tích: Lớn nhất trước</option>
+            <option value="area_asc" {% if filters.sort == 'area_asc' %}selected{% endif %}>Diện tích: Nhỏ nhất trước</option>
           </select>
 
           <div class="view-toggle">
-            <button class="view-btn active" id="btnGrid" title="Grid view"><i class="bi bi-grid-3x3-gap"></i></button>
-            <button class="view-btn"        id="btnList" title="List view"><i class="bi bi-list-ul"></i></button>
+            <button class="view-btn active" id="btnGrid" title="Chế độ lưới"><i class="bi bi-grid-3x3-gap"></i></button>
+            <button class="view-btn" id="btnList" title="Chế độ danh sách"><i class="bi bi-list-ul"></i></button>
           </div>
         </div>
       </div>
 
-      <!-- ── GRID VIEW ── -->
+      <!-- ── CHẾ ĐỘ LƯỚI ── -->
       <div class="prop-grid fade-up delay-1" id="gridView">
         {% for p in properties %}
         <div class="prop-card"
              data-price="{{ p.price|default:0 }}"
              data-area="{{ p.area|default:0 }}">
 
-          <div class="prop-card-thumb">
-            {% with t=p.get_property_type_display|lower %}
+          <div class="prop-card-thumb {% if p.primary_image_url %}has-image{% endif %}" {% if p.primary_image_url %}style="background-image:url('{{ p.primary_image_url }}')"{% endif %}>
+            {% if not p.primary_image_url %}{% with t=p.get_property_type_display|lower %}
               {% if "apartment" in t %}🏢
               {% elif "house" in t %}🏠
               {% elif "land" in t %}🌿
               {% elif "villa" in t %}🏡
               {% else %}🏗️
               {% endif %}
-            {% endwith %}
+            {% endwith %}{% endif %}
             <span class="badge-gold" style="position:absolute;top:10px;left:10px;z-index:1">
               {{ p.get_property_type_display }}
             </span>
@@ -678,18 +689,18 @@
               <span class="prop-tag"><i class="bi bi-aspect-ratio"></i> {{ p.area }} m²</span>
               {% endif %}
               {% if p.bedrooms %}
-              <span class="prop-tag"><i class="bi bi-door-open"></i> {{ p.bedrooms }} bed</span>
+              <span class="prop-tag"><i class="bi bi-door-open"></i> {{ p.bedrooms }} phòng ngủ</span>
               {% endif %}
               {% if p.bathrooms %}
-              <span class="prop-tag"><i class="bi bi-droplet"></i> {{ p.bathrooms }} bath</span>
+              <span class="prop-tag"><i class="bi bi-droplet"></i> {{ p.bathrooms }} phòng tắm</span>
               {% endif %}
             </div>
             <div class="prop-card-footer">
               <div class="prop-card-price">
-                {% if p.price %}{{ p.price|floatformat:0 }}<span style="font-size:.8rem;font-weight:400;color:var(--text-muted)"> đ</span>{% else %}<span style="color:var(--text-muted);font-size:.9rem">On request</span>{% endif %}
+                {% if p.price %}{{ p.price|floatformat:0 }}<span style="font-size:.8rem;font-weight:400;color:var(--text-muted)"> đ</span>{% else %}<span style="color:var(--text-muted);font-size:.9rem">Liên hệ để biết giá</span>{% endif %}
               </div>
               <a class="btn-card-view" href="{% url 'properties:detail' p.pk %}">
-                <i class="bi bi-eye"></i> View
+                <i class="bi bi-eye"></i> Xem
               </a>
             </div>
           </div>
@@ -697,32 +708,32 @@
         {% empty %}
         <div class="empty-state">
           <div class="empty-icon">🏚️</div>
-          <h5>No properties found</h5>
-          <p>Try adjusting your filters or clearing them to see all available listings.</p>
+          <h5>Không tìm thấy bất động sản</h5>
+          <p>Hãy thử điều chỉnh bộ lọc hoặc xóa bộ lọc để xem toàn bộ tin đăng hiện có.</p>
           <a href="{% url 'properties:list' %}" class="btn-geo-primary" style="display:inline-flex">
-            <i class="bi bi-arrow-counterclockwise"></i> Clear filters
+            <i class="bi bi-arrow-counterclockwise"></i> Xóa bộ lọc
           </a>
         </div>
         {% endfor %}
       </div>
 
-      <!-- ── LIST VIEW (hidden by default) ── -->
+      <!-- ── CHẾ ĐỘ DANH SÁCH (ẩn mặc định) ── -->
       <div class="prop-list fade-up delay-1" id="listView" style="display:none">
         {% for p in properties %}
         <div class="prop-list-item"
              data-price="{{ p.price|default:0 }}"
              data-area="{{ p.area|default:0 }}">
 
-          <div class="prop-list-thumb">
-            {% with t=p.get_property_type_display|lower %}
+          <div class="prop-list-thumb {% if p.primary_image_url %}has-image{% endif %}" {% if p.primary_image_url %}style="background-image:url('{{ p.primary_image_url }}')"{% endif %}>
+            {% if not p.primary_image_url %}{% with t=p.get_property_type_display|lower %}
               {% if "apartment" in t %}🏢
               {% elif "house" in t %}🏠
               {% elif "land" in t %}🌿
               {% elif "villa" in t %}🏡
               {% else %}🏗️
               {% endif %}
-            {% endwith %}
-            <span class="badge-gold" style="position:absolute;bottom:8px;left:8px;font-size:9px">
+            {% endwith %}{% endif %}
+            <span class="badge-gold" style="position:absolute;bottom:8px;left:8px;font-size:9px;z-index:1">
               {{ p.get_property_type_display }}
             </span>
           </div>
@@ -737,20 +748,20 @@
               <span class="prop-tag"><i class="bi bi-aspect-ratio"></i> {{ p.area }} m²</span>
               {% endif %}
               {% if p.bedrooms %}
-              <span class="prop-tag">{{ p.bedrooms }} bed</span>
+              <span class="prop-tag">{{ p.bedrooms }} phòng ngủ</span>
               {% endif %}
               {% if p.bathrooms %}
-              <span class="prop-tag">{{ p.bathrooms }} bath</span>
+              <span class="prop-tag">{{ p.bathrooms }} phòng tắm</span>
               {% endif %}
             </div>
           </div>
 
           <div class="prop-list-right">
             <div class="prop-list-price">
-              {% if p.price %}{{ p.price|floatformat:0 }}<span style="font-size:.75rem;color:var(--text-muted)"> đ</span>{% else %}<span style="color:var(--text-muted)">On request</span>{% endif %}
+              {% if p.price %}{{ p.price|floatformat:0 }}<span style="font-size:.75rem;color:var(--text-muted)"> đ</span>{% else %}<span style="color:var(--text-muted)">Liên hệ để biết giá</span>{% endif %}
             </div>
             <a class="btn-card-view" href="{% url 'properties:detail' p.pk %}">
-              <i class="bi bi-eye"></i> View
+              <i class="bi bi-eye"></i> Xem
             </a>
           </div>
 
@@ -758,13 +769,13 @@
         {% empty %}
         <div class="empty-state">
           <div class="empty-icon">🏚️</div>
-          <h5>No properties found</h5>
-          <p>Try adjusting your filters or clearing them to see all available listings.</p>
+          <h5>Không tìm thấy bất động sản</h5>
+          <p>Hãy thử điều chỉnh bộ lọc hoặc xóa bộ lọc để xem toàn bộ tin đăng hiện có.</p>
         </div>
         {% endfor %}
       </div>
 
-      <!-- ── PAGINATION ── -->
+      <!-- ── PHÂN TRANG ── -->
       {% if is_paginated %}
       <div class="pagination-row">
         {% if page_obj.has_previous %}
@@ -802,7 +813,7 @@
 <script>
 (function () {
 
-  /* ── View toggle: Grid ↔ List ── */
+  /* ── Chuyển chế độ xem: Lưới ↔ Danh sách ── */
   const gridView = document.getElementById('gridView');
   const listView = document.getElementById('listView');
   const btnGrid  = document.getElementById('btnGrid');
@@ -822,11 +833,11 @@
     localStorage.setItem('geo_list_view', 'list');
   });
 
-  // Restore saved preference
+  // Khôi phục chế độ xem đã lưu
   const savedView = localStorage.getItem('geo_list_view');
   if (savedView === 'list') btnList && btnList.click();
 
-  /* ── Type chip radio styling ── */
+  /* ── Style radio chip loại ── */
   document.querySelectorAll('.type-chip-radio input[type="radio"]').forEach(radio => {
     radio.addEventListener('change', () => {
       document.querySelectorAll('.type-chip-radio').forEach(el => el.classList.remove('active'));
@@ -834,7 +845,7 @@
     });
   });
 
-  /* ── Price preset buttons ── */
+  /* ── Nút mốc giá nhanh ── */
   document.querySelectorAll('#pricePresets button[data-min]').forEach(btn => {
     btn.addEventListener('click', () => {
       const form = document.getElementById('filterForm');
@@ -843,43 +854,43 @@
     });
   });
 
-  /* ── Clear all filters ── */
+  /* ── Xóa toàn bộ bộ lọc ── */
   const clearBtn = document.getElementById('btnClearFilters');
   clearBtn && clearBtn.addEventListener('click', () => {
     window.location.href = window.location.pathname;
   });
 
-  /* ── Server-side sort ── */
+  /* ── Sắp xếp phía server ── */
   const sortSelect = document.getElementById('sortSelect');
   sortSelect && sortSelect.addEventListener('change', () => {
     const form = document.getElementById('filterForm');
     form.requestSubmit();
   });
 
-  /* ── Mobile filter sidebar toggle ── */
+  /* ── Mở sidebar bộ lọc trên mobile ── */
   const mobileToggle = document.getElementById('mobileFilterToggle');
   const sidebar      = document.getElementById('filterSidebar');
 
   mobileToggle && mobileToggle.addEventListener('click', () => {
     sidebar.classList.toggle('open');
     mobileToggle.innerHTML = sidebar.classList.contains('open')
-      ? '<i class="bi bi-x-lg"></i> Close'
-      : '<i class="bi bi-sliders"></i> Filters';
+      ? '<i class="bi bi-x-lg"></i> Đóng'
+      : '<i class="bi bi-sliders"></i> Bộ lọc';
   });
 
-  /* ── Active filter tags ── */
+  /* ── Tag bộ lọc đang hoạt động ── */
   (function renderActiveFilters() {
     const params  = new URLSearchParams(window.location.search);
     const bar     = document.getElementById('activeFilterBar');
     if (!bar) return;
 
     const labels = {
-      type:      v => ({ label: `Type: ${v.charAt(0).toUpperCase() + v.slice(1)}` }),
-      status:    v => ({ label: `Status: ${v.charAt(0).toUpperCase() + v.slice(1)}` }),
-      price_min: v => ({ label: `Min: ${Number(v).toLocaleString()} đ` }),
-      price_max: v => ({ label: `Max: ${Number(v).toLocaleString()} đ` }),
-      area_min:  v => ({ label: `Area ≥ ${v} m²` }),
-      area_max:  v => ({ label: `Area ≤ ${v} m²` }),
+      type:      v => ({ label: `Loại: ${v.charAt(0).toUpperCase() + v.slice(1)}` }),
+      status:    v => ({ label: `Trạng thái: ${v.charAt(0).toUpperCase() + v.slice(1)}` }),
+      price_min: v => ({ label: `Tối thiểu: ${Number(v).toLocaleString()} đ` }),
+      price_max: v => ({ label: `Tối đa: ${Number(v).toLocaleString()} đ` }),
+      area_min:  v => ({ label: `Diện tích ≥ ${v} m²` }),
+      area_max:  v => ({ label: `Diện tích ≤ ${v} m²` }),
       q:         v => ({ label: `"${v}"` }),
     };
 
@@ -896,7 +907,7 @@
     bar.innerHTML = tags.map(t => `
       <span class="active-filter-tag">
         ${t.label}
-        <button onclick="removeFilter('${t.key}')" title="Remove filter">×</button>
+        <button onclick="removeFilter('${t.key}')" title="Xóa bộ lọc">×</button>
       </span>
     `).join('');
   })();
@@ -907,7 +918,7 @@
     window.location.search = params.toString();
   };
 
-  /* ── Map + cluster + area search ── */
+  /* ── Bản đồ + cluster + tìm theo vùng ── */
   const mapEl = document.getElementById('propertyMap');
   if (mapEl && window.L) {
     const map = L.map(mapEl);
@@ -926,7 +937,7 @@
     }).addTo(map);
 
     function formatPrice(price) {
-      if (price === null || price === undefined || Number.isNaN(price)) return 'On request';
+      if (price === null || price === undefined || Number.isNaN(price)) return 'Liên hệ để biết giá';
       return `${Math.round(price).toLocaleString()} đ`;
     }
 
@@ -946,7 +957,7 @@
             <div style="font-size:12px;color:#666;margin:6px 0">${item.address}</div>
             <div style="font-size:12px;margin-bottom:6px">${item.property_type} · ${item.area || 'N/A'} m²</div>
             <div style="font-weight:700;color:#b5892f;margin-bottom:8px">${formatPrice(item.price)}</div>
-            <a href="${item.detail_url}" style="font-size:12px">View detail</a>
+            <a href="${item.detail_url}" style="font-size:12px">Xem chi tiết</a>
           </div>
         `);
         markerLayer.addLayer(marker);

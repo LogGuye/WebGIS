@@ -27,7 +27,7 @@ def login_view(request):
     form = LoginForm(request, data=request.POST or None)
     if request.method == "POST" and form.is_valid():
         login(request, form.get_user())
-        messages.success(request, "Logged in successfully.")
+        messages.success(request, "Đăng nhập thành công.")
         return redirect(request.GET.get("next") or "core:home")
     return render(request, "accounts/login.html", {"form": form})
 

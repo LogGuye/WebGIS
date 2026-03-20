@@ -1,8 +1,11 @@
+from django.contrib.auth.decorators import login_required
 from django.contrib.gis.geos import Point, Polygon
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+
+from accounts.models import UserProfile
 
 from core.gis_tools import (
     tool_amenities_within_radius,
@@ -87,7 +90,9 @@ def _apply_property_filters(request, queryset):
 
 
 def property_list(request):
-    qs = Property.objects.select_related("agent").prefetch_related("amenities").all()
+    qs = Property.objects.select_related("agent").prefetch_related("amenities", "images").all()
+    if request.user.is_authenticated and hasattr(request.user, "profile") and request.user.profile.role == UserProfile.Role.AGENT and request.user.profile.linked_agent:
+        qs = qs.filter(agent=request.user.profile.linked_agent)
     qs, filters = _apply_property_filters(request, qs)
 
     paginator = Paginator(qs, 9)
@@ -122,7 +127,9 @@ def property_list(request):
 
 
 def property_map_data(request):
-    qs = Property.objects.select_related("agent").all()
+    qs = Property.objects.select_related("agent").prefetch_related("images").all()
+    if request.user.is_authenticated and hasattr(request.user, "profile") and request.user.profile.role == UserProfile.Role.AGENT and request.user.profile.linked_agent:
+        qs = qs.filter(agent=request.user.profile.linked_agent)
     qs, _filters = _apply_property_filters(request, qs)
 
     items = []
@@ -154,6 +161,7 @@ def _save_session_ids(request, key, ids):
     request.session.modified = True
 
 
+@login_required
 def wishlist_toggle(request, pk):
     ids = [int(i) for i in _get_session_ids(request, "wishlist")]
     if pk in ids:
@@ -164,12 +172,14 @@ def wishlist_toggle(request, pk):
     return redirect(request.META.get("HTTP_REFERER") or "properties:list")
 
 
+@login_required
 def wishlist_view(request):
     ids = _get_session_ids(request, "wishlist")
-    properties = Property.objects.filter(pk__in=ids)
+    properties = Property.objects.filter(pk__in=ids).prefetch_related("images")
     return render(request, "properties/wishlist.html", {"properties": properties})
 
 
+@login_required
 def compare_toggle(request, pk):
     ids = [int(i) for i in _get_session_ids(request, "compare")]
     if pk in ids:
@@ -180,6 +190,7 @@ def compare_toggle(request, pk):
     return redirect(request.META.get("HTTP_REFERER") or "properties:list")
 
 
+@login_required
 def compare_view(request):
     ids = _get_session_ids(request, "compare")
     properties = list(Property.objects.filter(pk__in=ids).select_related("agent").prefetch_related("amenities"))
@@ -187,7 +198,7 @@ def compare_view(request):
 
 
 def property_detail(request, pk):
-    prop = get_object_or_404(Property.objects.select_related("agent").prefetch_related("amenities"), pk=pk)
+    prop = get_object_or_404(Property.objects.select_related("agent").prefetch_related("amenities", "images"), pk=pk)
     similar_properties = tool_similar_properties(prop, limit=4)
     location_score = tool_location_score(prop)
     wishlist_ids = [int(i) for i in _get_session_ids(request, "wishlist")]
@@ -211,6 +222,7 @@ def nearby_search(request):
     lng = request.GET.get("lng")
     radius = request.GET.get("radius") or 5
     prop_type = request.GET.get("type") or ""
+    location_query = request.GET.get("location_query") or ""
 
     if lat and lng:
         try:

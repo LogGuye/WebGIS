@@ -5,25 +5,31 @@ from django.contrib import admin, messages
 from django.contrib.gis.geos import Point
 from django.utils import timezone
 
-from .models import Amenity, Property, PropertyChangeLog
+from .models import Amenity, Property, PropertyChangeLog, PropertyImage
 
 
-@admin.action(description="Mark selected properties as active")
 def mark_active(modeladmin, request, queryset):
     updated = queryset.update(listing_status=Property.ListingStatus.ACTIVE)
     messages.success(request, f"Updated {updated} properties to active.")
+mark_active.short_description = "Mark selected properties as active"
 
 
-@admin.action(description="Mark selected properties as sold")
 def mark_sold(modeladmin, request, queryset):
     updated = queryset.update(listing_status=Property.ListingStatus.SOLD)
     messages.success(request, f"Updated {updated} properties to sold.")
+mark_sold.short_description = "Mark selected properties as sold"
 
 
-@admin.action(description="Hide selected properties")
 def mark_hidden(modeladmin, request, queryset):
     updated = queryset.update(listing_status=Property.ListingStatus.HIDDEN)
     messages.success(request, f"Updated {updated} properties to hidden.")
+mark_hidden.short_description = "Hide selected properties"
+
+
+class PropertyImageInline(admin.TabularInline):
+    model = PropertyImage
+    extra = 1
+    fields = ("image", "caption", "is_primary", "sort_order")
 
 
 @admin.register(Property)
@@ -33,6 +39,7 @@ class PropertyAdmin(admin.ModelAdmin):
     list_filter = ("property_type", "listing_status", "is_featured", "agent")
     list_editable = ("listing_status", "is_featured")
     filter_horizontal = ("amenities",)
+    inlines = [PropertyImageInline]
     actions = (mark_active, mark_sold, mark_hidden)
 
     fieldsets = (

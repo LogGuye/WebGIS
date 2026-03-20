@@ -6,8 +6,8 @@
   <div class="container">
     <nav aria-label="breadcrumb">
       <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{% url 'core:home' %}"><i class="bi bi-house me-1"></i>Home</a></li>
-        <li class="breadcrumb-item active">Lead Form</li>
+        <li class="breadcrumb-item"><a href="{% url 'core:home' %}"><i class="bi bi-house me-1"></i>Trang chủ</a></li>
+        <li class="breadcrumb-item active">Biểu mẫu khách hàng</li>
       </ol>
     </nav>
   </div>
@@ -454,8 +454,8 @@
         <div class="assignment-result-header">
           <div class="assignment-success-icon">✅</div>
           <div>
-            <div class="assignment-result-title">Lead submitted successfully!</div>
-            <div class="assignment-result-sub">Nearest agent has been assigned automatically.</div>
+            <div class="assignment-result-title">Tạo khách hàng thành công!</div>
+            <div class="assignment-result-sub">Môi giới gần nhất đã được gán tự động.</div>
           </div>
         </div>
         <div class="assignment-result-body">
@@ -966,7 +966,7 @@
     if (!valid) { e.preventDefault(); return; }
     if (submitBtn) {
       submitBtn.disabled = true;
-      submitBtn.innerHTML = '<i class="bi bi-hourglass-split spin"></i> Submitting…';
+      submitBtn.innerHTML = '<i class="bi bi-hourglass-split spin"></i> Đang gửi...';
     }
   });
 

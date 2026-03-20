@@ -1,12 +1,14 @@
 from decimal import Decimal
+from pathlib import Path
 import random
 
+from django.core.files import File
 from django.core.management.base import BaseCommand
 from django.contrib.gis.geos import Point
 
 from accounts.models import Agent
 from leads.models import Lead
-from properties.models import Amenity, Property
+from properties.models import Amenity, Property, PropertyImage
 
 
 class Command(BaseCommand):
@@ -25,6 +27,7 @@ class Command(BaseCommand):
         agent_count = options["agents"]
         amenity_count = options["amenities"]
         lead_count = options["leads"]
+        seed_dir = Path(__file__).resolve().parents[3] / "media" / "seed"
 
         if reset:
             Lead.objects.all().delete()
@@ -152,7 +155,7 @@ class Command(BaseCommand):
                 ),
                 property_type=property_type,
                 listing_status=status,
-                is_featured=(idx < max(3, property_count // 10)) and status == Property.ListingStatus.ACTIVE,
+                is_featured=False,
                 price=price,
                 area=area,
                 address=address,
@@ -161,7 +164,24 @@ class Command(BaseCommand):
             sample_amenities = random.sample(created_amenities, k=min(random.randint(2, 5), len(created_amenities))) if created_amenities else []
             if sample_amenities:
                 prop.amenities.set(sample_amenities)
+
+            image_name = {
+                "apartment": "apartment.svg",
+                "house": "house.svg",
+                "land": "land.svg",
+            }.get(property_type, "apartment.svg")
+            image_path = seed_dir / image_name
+            if image_path.exists():
+                with image_path.open("rb") as fh:
+                    prop_image = PropertyImage(property=prop, is_primary=True, sort_order=0, caption=title)
+                    prop_image.image.save(f"{property_type}-{idx + 1}.svg", File(fh), save=True)
+
             created_properties.append(prop)
+
+        active_feature_candidates = [p for p in created_properties if p.listing_status == Property.ListingStatus.ACTIVE]
+        for prop in active_feature_candidates[: max(3, min(5, len(active_feature_candidates)))]:
+            prop.is_featured = True
+            prop.save(update_fields=["is_featured"])
 
         for idx in range(lead_count):
             district = random.choice(list(district_centers.keys()))

@@ -1,14 +1,14 @@
 {% extends "admin/base_site.html" %}
 
 {% block content %}
-  <h1>Import Properties from CSV</h1>
-  <p>Required columns: <code>title, property_type, price, area, address, lat, lng</code></p>
-  <p>Optional columns: <code>description, listing_status, is_featured</code></p>
+  <h1>Nhập bất động sản từ file CSV</h1>
+  <p>Các cột bắt buộc: <code>title, property_type, price, area, address, lat, lng</code></p>
+  <p>Các cột không bắt buộc: <code>description, listing_status, is_featured</code></p>
   <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
     <p>
       <input type="file" name="csv_file" accept=".csv" required>
     </p>
-    <button type="submit" class="default">Import</button>
+    <button type="submit" class="default">Nhập dữ liệu</button>
   </form>
 {% endblock %}

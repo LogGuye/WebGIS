@@ -57,6 +57,31 @@ class Property(models.Model):
     def __str__(self):
         return self.title
 
+    @property
+    def primary_image(self):
+        primary = self.images.filter(is_primary=True).order_by("sort_order", "id").first()
+        return primary or self.images.order_by("sort_order", "id").first()
+
+    @property
+    def primary_image_url(self):
+        image = self.primary_image
+        return image.image.url if image and image.image else None
+
+
+class PropertyImage(models.Model):
+    property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name="images")
+    image = models.ImageField(upload_to="properties/")
+    caption = models.CharField(max_length=255, blank=True)
+    is_primary = models.BooleanField(default=False)
+    sort_order = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+
+    def __str__(self):
+        return f"Image for {self.property.title}"
+
 
 class PropertyChangeLog(models.Model):
     property = models.ForeignKey(Property, on_delete=models.CASCADE, related_name="change_logs")

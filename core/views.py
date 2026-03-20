@@ -6,7 +6,7 @@ from properties.models import Amenity, Property
 
 
 def home(request):
-    featured_properties = Property.objects.filter(listing_status="active", is_featured=True)[:3]
+    featured_properties = Property.objects.filter(listing_status="active", is_featured=True).prefetch_related("images")[:3]
     context = {
         "property_count": Property.objects.count(),
         "agent_count": Agent.objects.count(),

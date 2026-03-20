@@ -16,6 +16,7 @@
 {% endblock %}
 
 {% block head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
 <style>
   /* ══════════════════════════════════════════
      PROPERTY DETAIL — all colors via var()
@@ -35,6 +36,8 @@
     background: linear-gradient(135deg, var(--bg-2) 0%, var(--bg-3) 50%, var(--bg-2) 100%);
     display: flex; align-items: center; justify-content: center;
     font-size: 96px; position: relative;
+    background-size: cover;
+    background-position: center;
   }
 
   /* Decorative corner accent */
@@ -57,6 +60,22 @@
     position: absolute; bottom: 20px; left: 0; right: 0;
     display: flex; align-items: center; gap: 10px;
     padding: 0 32px; z-index: 2; flex-wrap: wrap;
+  }
+
+  .detail-gallery-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+    margin-top: 16px;
+  }
+
+  .gallery-thumb {
+    height: 90px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    background-size: cover;
+    background-position: center;
+    background-color: var(--bg-3);
   }
 
   /* ── Main layout ── */
@@ -185,13 +204,9 @@
     background: var(--bg-3); position: relative;
   }
 
-  .map-embed-wrap iframe {
-    width: 100%; height: 100%; border: none;
-    filter: brightness(.82) saturate(.55) hue-rotate(185deg);
-    transition: filter var(--transition);
+  #detailMap {
+    width: 100%; height: 100%;
   }
-
-  [data-theme="light"] .map-embed-wrap iframe { filter: brightness(.95) saturate(.75); }
 
   /* ── Sidebar ── */
   .detail-sidebar { }
@@ -370,44 +385,54 @@
 
 {% block content %}
 
-<!-- ══ HERO IMAGE ══ -->
+<!-- ══ ẢNH HERO ══ -->
 <div class="detail-hero">
-  <div class="detail-hero-image">
-    {% with t=property.get_property_type_display|lower %}
+  <div class="detail-hero-image" {% if property.primary_image_url %}style="background-image:url('{{ property.primary_image_url }}')"{% endif %}>
+    {% if not property.primary_image_url %}{% with t=property.get_property_type_display|lower %}
       {% if "apartment" in t %}🏢
       {% elif "house" in t %}🏠
       {% elif "land" in t %}🌿
       {% elif "villa" in t %}🏡
       {% else %}🏗️
       {% endif %}
-    {% endwith %}
+    {% endwith %}{% endif %}
 
     <div class="hero-badge-strip">
       <span class="badge-gold">{{ property.get_property_type_display }}</span>
       {% if property.is_featured %}
-      <span class="badge-outline"><i class="bi bi-star-fill me-1" style="font-size:9px"></i>Featured</span>
+      <span class="badge-outline"><i class="bi bi-star-fill me-1" style="font-size:9px"></i>Nổi bật</span>
       {% endif %}
       <span style="background:var(--bg-card);backdrop-filter:blur(10px);border:1px solid var(--border);border-radius:999px;padding:4px 12px;font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:6px">
         <i class="bi bi-eye" style="color:var(--gold)"></i>
-        Listed property
+        Bất động sản đang đăng bán
       </span>
     </div>
   </div>
 </div>
 
+{% if property.images.all %}
+<div class="container" style="margin-top:18px">
+  <div class="detail-gallery-strip">
+    {% for img in property.images.all %}
+    <div class="gallery-thumb" style="background-image:url('{{ img.image.url }}')" title="{{ img.caption|default:property.title }}"></div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
 <div class="container">
   <div class="detail-layout">
 
-    <!-- ══ LEFT: MAIN CONTENT ══ -->
+    <!-- ══ TRÁI: NỘI DUNG CHÍNH ══ -->
     <div>
 
-      <!-- Back link -->
+      <!-- Nút quay lại -->
       <a href="{% url 'properties:list' %}" class="btn-geo-secondary d-inline-flex mb-24"
          style="font-size:13px;padding:8px 16px;margin-bottom:20px">
-        <i class="bi bi-arrow-left"></i> Back to listings
+        <i class="bi bi-arrow-left"></i> Quay lại danh sách
       </a>
 
-      <!-- Headline card -->
+      <!-- Card tiêu đề -->
       <div class="detail-card fade-up">
         <div class="detail-card-body">
           <div class="prop-headline">
@@ -428,58 +453,58 @@
             </div>
           </div>
 
-          <!-- Key stats -->
+          <!-- Thông số chính -->
           <div class="stats-grid">
             {% if property.area %}
             <div class="stat-box">
               <div class="stat-box-icon">📐</div>
               <div class="stat-box-val">{{ property.area }}</div>
-              <div class="stat-box-label">Area m²</div>
+              <div class="stat-box-label">Diện tích m²</div>
             </div>
             {% endif %}
             {% if property.bedrooms %}
             <div class="stat-box">
               <div class="stat-box-icon">🛏</div>
               <div class="stat-box-val">{{ property.bedrooms }}</div>
-              <div class="stat-box-label">Bedrooms</div>
+              <div class="stat-box-label">Phòng ngủ</div>
             </div>
             {% endif %}
             {% if property.bathrooms %}
             <div class="stat-box">
               <div class="stat-box-icon">🚿</div>
               <div class="stat-box-val">{{ property.bathrooms }}</div>
-              <div class="stat-box-label">Bathrooms</div>
+              <div class="stat-box-label">Phòng tắm</div>
             </div>
             {% endif %}
             {% if property.floors %}
             <div class="stat-box">
               <div class="stat-box-icon">🏗️</div>
               <div class="stat-box-val">{{ property.floors }}</div>
-              <div class="stat-box-label">Floors</div>
+              <div class="stat-box-label">Số tầng</div>
             </div>
             {% endif %}
             {% if property.year_built %}
             <div class="stat-box">
               <div class="stat-box-icon">📅</div>
               <div class="stat-box-val">{{ property.year_built }}</div>
-              <div class="stat-box-label">Year built</div>
+              <div class="stat-box-label">Năm xây dựng</div>
             </div>
             {% endif %}
             <div class="stat-box">
               <div class="stat-box-icon">📍</div>
               <div class="stat-box-val">{{ location_score }}</div>
-              <div class="stat-box-label">Location score</div>
+              <div class="stat-box-label">Điểm vị trí</div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Description -->
+      <!-- Mô tả -->
       {% if property.description %}
       <div class="detail-card fade-up delay-1">
         <div class="detail-card-header">
           <div class="detail-card-header-icon">📝</div>
-          <div class="detail-card-title">Description</div>
+          <div class="detail-card-title">Mô tả</div>
         </div>
         <div class="detail-card-body">
           <p class="desc-text">{{ property.description }}</p>
@@ -487,12 +512,12 @@
       </div>
       {% endif %}
 
-      <!-- Amenities -->
+      <!-- Tiện ích -->
       <div class="detail-card fade-up delay-2">
         <div class="detail-card-header">
           <div class="detail-card-header-icon">⭐</div>
           <div class="detail-card-title">
-            Nearby Amenities
+            Tiện ích lân cận
             {% with cnt=property.amenities.all|length %}
               {% if cnt %}<span style="margin-left:8px;font-size:10px;color:var(--text-muted)">({{ cnt }})</span>{% endif %}
             {% endwith %}
@@ -518,31 +543,27 @@
             </div>
             {% empty %}
             <p style="color:var(--text-muted);font-size:14px;margin:0">
-              <i class="bi bi-info-circle me-2"></i>No amenities linked yet.
+              <i class="bi bi-info-circle me-2"></i>Chưa có tiện ích nào được liên kết.
             </p>
             {% endfor %}
           </div>
         </div>
       </div>
 
-      <!-- Map location -->
+      <!-- Bản đồ vị trí -->
       {% if property.location %}
       <div class="detail-card fade-up delay-3">
         <div class="detail-card-header">
           <div class="detail-card-header-icon">🗺️</div>
-          <div class="detail-card-title">Location on Map</div>
+          <div class="detail-card-title">Vị trí trên bản đồ</div>
         </div>
         <div class="detail-card-body">
           <div class="map-embed-wrap">
-            <iframe
-              src="https://www.openstreetmap.org/export/embed.html?bbox={{ property.location.x|add:'-0.015' }},{{ property.location.y|add:'-0.012' }},{{ property.location.x|add:'0.015' }},{{ property.location.y|add:'0.012' }}&layer=mapnik&marker={{ property.location.y }},{{ property.location.x }}"
-              allowfullscreen loading="lazy"
-              title="Property location">
-            </iframe>
+            <div id="detailMap"></div>
           </div>
           <div style="margin-top:10px;font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:6px">
             <i class="bi bi-geo-alt" style="color:var(--gold)"></i>
-            Coordinates: {{ property.location.y|floatformat:6 }}, {{ property.location.x|floatformat:6 }}
+            Tọa độ: {{ property.location.y|floatformat:6 }}, {{ property.location.x|floatformat:6 }}
           </div>
         </div>
       </div>
@@ -550,20 +571,20 @@
 
     </div>
 
-    <!-- ══ RIGHT: SIDEBAR ══ -->
+    <!-- ══ PHẢI: SIDEBAR ══ -->
     <div class="detail-sidebar">
       <div class="sidebar-sticky">
 
-        <!-- Price card -->
+        <!-- Card giá -->
         <div class="price-card fade-up">
           <div class="price-card-top">
-            <div class="price-eyebrow">Asking price</div>
+            <div class="price-eyebrow">Giá chào bán</div>
             <div class="price-main">
               {% if property.price %}
                 {{ property.price|floatformat:0 }}
-                <span style="font-size:1rem;font-weight:400;color:var(--text-muted)"> VND</span>
+                <span style="font-size:1rem;font-weight:400;color:var(--text-muted)"> VNĐ</span>
               {% else %}
-                <span style="color:var(--text-muted);font-size:1.2rem">Price on request</span>
+                <span style="color:var(--text-muted);font-size:1.2rem">Liên hệ để biết giá</span>
               {% endif %}
             </div>
             {% if property.price and property.area %}
@@ -576,37 +597,37 @@
 
           <div class="price-card-body">
             <a href="{% url 'leads:lead_form' %}?property={{ property.pk }}" class="cta-primary">
-              <i class="bi bi-person-lines-fill"></i> Enquire Now
+              <i class="bi bi-person-lines-fill"></i> Liên hệ ngay
             </a>
             <a href="{% url 'properties:nearby_search' %}?lat={{ property.location.y }}&lng={{ property.location.x }}&radius=2" class="cta-secondary">
-              <i class="bi bi-geo-alt"></i> Find nearby properties
+              <i class="bi bi-geo-alt"></i> Tìm bất động sản lân cận
             </a>
             <div class="action-row">
-              <button class="action-btn" onclick="navigator.share ? navigator.share({title:'{{ property.title }}',url:window.location.href}) : navigator.clipboard.writeText(window.location.href).then(()=>alert('Link copied!'))">
-                <i class="bi bi-share"></i> Share
+              <button class="action-btn" onclick="navigator.share ? navigator.share({title:'{{ property.title }}',url:window.location.href}) : navigator.clipboard.writeText(window.location.href).then(()=>alert('Đã sao chép liên kết!'))">
+                <i class="bi bi-share"></i> Chia sẻ
               </button>
               <a class="action-btn" id="btnSave" href="{% url 'properties:wishlist_toggle' property.pk %}">
-                <i class="bi {% if is_in_wishlist %}bi-bookmark-fill{% else %}bi-bookmark{% endif %}"></i> {% if is_in_wishlist %}Saved{% else %}Save{% endif %}
+                <i class="bi {% if is_in_wishlist %}bi-bookmark-fill{% else %}bi-bookmark{% endif %}"></i> {% if is_in_wishlist %}Đã lưu{% else %}Lưu{% endif %}
               </a>
               <a class="action-btn" href="{% url 'properties:compare_toggle' property.pk %}">
-                <i class="bi bi-columns-gap"></i> {% if is_in_compare %}Comparing{% else %}Compare{% endif %}
+                <i class="bi bi-columns-gap"></i> {% if is_in_compare %}Đang so sánh{% else %}So sánh{% endif %}
               </a>
               <button class="action-btn" onclick="window.print()">
-                <i class="bi bi-printer"></i> Print
+                <i class="bi bi-printer"></i> In
               </button>
             </div>
           </div>
         </div>
 
-        <!-- Agent card -->
+        <!-- Card môi giới -->
         {% if property.agent %}
         <div class="agent-card fade-up delay-1">
-          <div class="agent-card-label">Listing Agent</div>
+          <div class="agent-card-label">Nhân viên đăng tin</div>
           <div class="agent-row">
             <div class="agent-avatar">👤</div>
             <div>
               <div class="agent-name">{{ property.agent.name }}</div>
-              <div class="agent-role">Real Estate Agent</div>
+              <div class="agent-role">Chuyên viên bất động sản</div>
               <div class="agent-contacts">
                 {% if property.agent.phone %}
                 <a class="agent-contact-item" href="tel:{{ property.agent.phone }}">
@@ -624,11 +645,11 @@
         </div>
         {% endif %}
 
-        <!-- Similar properties placeholder -->
+        <!-- Bất động sản tương tự -->
         <div class="detail-card fade-up delay-2" style="margin-bottom:0">
           <div class="detail-card-header">
             <div class="detail-card-header-icon">🏘️</div>
-            <div class="detail-card-title">Similar listings</div>
+            <div class="detail-card-title">Tin đăng tương tự</div>
           </div>
           <div class="detail-card-body">
             {% if similar_properties %}
@@ -651,7 +672,7 @@
             </div>
             {% else %}
             <p style="font-size:13px;color:var(--text-muted);margin:0">
-              <i class="bi bi-info-circle me-2"></i>No similar listings available.
+              <i class="bi bi-info-circle me-2"></i>Chưa có tin đăng tương tự.
             </p>
             {% endif %}
           </div>
@@ -665,4 +686,27 @@
 
 {% endblock %}
 
-{% block scripts %}{% endblock %}
+{% block scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script>
+(function () {
+  const mapEl = document.getElementById('detailMap');
+  if (!mapEl || !window.L) return;
+
+  const lat = {{ property.location.y|floatformat:6 }};
+  const lng = {{ property.location.x|floatformat:6 }};
+  const map = L.map(mapEl, { scrollWheelZoom: false }).setView([lat, lng], 15);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map);
+
+  L.marker([lat, lng]).addTo(map)
+    .bindPopup({% if property.title %}`{{ property.title|escapejs }}`{% else %}'Vị trí bất động sản'{% endif %})
+    .openPopup();
+
+  setTimeout(() => map.invalidateSize(), 250);
+})();
+</script>
+{% endblock %}

@@ -1,18 +1,18 @@
 {% extends "base.html" %}
-{% block title %}Profile | GeoEstate{% endblock %}
+{% block title %}Hồ sơ | GeoEstate{% endblock %}
 {% block content %}
 <div class="container py-5" style="max-width:760px">
   <div class="card-geo p-4 p-md-5">
-    <p class="section-eyebrow">User Profile</p>
+    <p class="section-eyebrow">Hồ sơ người dùng</p>
     <h1 class="section-heading mb-2">{{ request.user.username }}</h1>
-    <p style="color:var(--text-muted)">Role: {{ profile.get_role_display }}</p>
+    <p style="color:var(--text-muted)">Vai trò: {{ profile.get_role_display }}</p>
     <form method="post" class="row g-3 mt-2">
       {% csrf_token %}
-      <div class="col-md-6"><label class="form-label">Full name</label>{{ form.full_name }}</div>
+      <div class="col-md-6"><label class="form-label">Họ và tên</label>{{ form.full_name }}</div>
       <div class="col-md-6"><label class="form-label">Email</label>{{ form.email }}</div>
-      <div class="col-md-6"><label class="form-label">Role</label>{{ form.role }}</div>
-      <div class="col-md-6"><label class="form-label">Linked agent</label>{{ form.linked_agent }}</div>
-      <div class="col-12"><button type="submit" class="btn-geo-primary justify-content-center">Save profile</button></div>
+      <div class="col-md-6"><label class="form-label">Vai trò</label>{{ form.role }}</div>
+      <div class="col-md-6"><label class="form-label">Môi giới liên kết</label>{{ form.linked_agent }}</div>
+      <div class="col-12"><button type="submit" class="btn-geo-primary justify-content-center">Lưu hồ sơ</button></div>
     </form>
   </div>
 </div>

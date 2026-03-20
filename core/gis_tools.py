@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import D
 from django.contrib.gis.db.models.functions import Distance
@@ -92,8 +94,8 @@ def tool_similar_properties(property_obj, limit=4):
     qs = qs.filter(property_type=property_obj.property_type)
 
     if property_obj.price:
-        price_min = property_obj.price * 0.7
-        price_max = property_obj.price * 1.3
+        price_min = property_obj.price * Decimal("0.7")
+        price_max = property_obj.price * Decimal("1.3")
         qs = qs.filter(price__gte=price_min, price__lte=price_max)
     if property_obj.area:
         area_min = property_obj.area * 0.7
