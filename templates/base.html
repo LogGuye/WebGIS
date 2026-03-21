@@ -853,7 +853,7 @@
               Quản trị hệ thống
             </a>
             {% elif is_agent_role %}
-            <a class="btn-admin" href="/admin/properties/property/add/">
+            <a class="btn-admin" href="{% url 'properties:create' %}">
               <i class="bi bi-building-add"></i>
               Đăng tin
             </a>

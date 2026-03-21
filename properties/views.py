@@ -1,3 +1,4 @@
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.gis.geos import Point, Polygon
 from django.core.paginator import Paginator
@@ -6,13 +7,14 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 
 from accounts.models import UserProfile
-
+from accounts.permissions import role_required
 from core.gis_tools import (
     tool_amenities_within_radius,
     tool_location_score,
     tool_nearby_properties,
     tool_similar_properties,
 )
+from .forms import PropertyCreateForm
 from .models import Amenity, Property
 
 
@@ -24,13 +26,6 @@ SORT_OPTIONS = {
     "area_desc": "-area",
     "newest": "-created_at",
 }
-
-
-def _parse_float(value):
-    try:
-        return float(value)
-    except (TypeError, ValueError):
-        return None
 
 
 def _apply_property_filters(request, queryset):
@@ -222,7 +217,6 @@ def nearby_search(request):
     lng = request.GET.get("lng")
     radius = request.GET.get("radius") or 5
     prop_type = request.GET.get("type") or ""
-    location_query = request.GET.get("location_query") or ""
 
     if lat and lng:
         try:
@@ -263,3 +257,24 @@ def amenity_search(request):
         "params": {"lat": lat or "", "lng": lng or "", "radius": radius, "amenity_type": amenity_type},
     }
     return render(request, "properties/amenity_search.html", context)
+
+
+@role_required(UserProfile.Role.AGENT, UserProfile.Role.ADMIN)
+def property_create(request):
+    profile = getattr(request.user, "profile", None)
+    role = getattr(profile, "role", None)
+    linked_agent = getattr(profile, "linked_agent", None)
+    form = PropertyCreateForm(request.POST or None)
+
+    if request.method == "POST":
+        if role == UserProfile.Role.AGENT and not linked_agent:
+            messages.error(request, "Tài khoản môi giới chưa được gắn với hồ sơ môi giới nên chưa thể đăng tin.")
+        elif form.is_valid():
+            agent = linked_agent if role == UserProfile.Role.AGENT else linked_agent
+            prop = form.save(agent=agent)
+            messages.success(request, "Đăng tin thành công.")
+            return redirect("properties:detail", pk=prop.pk)
+        else:
+            messages.error(request, "Vui lòng kiểm tra lại thông tin đăng tin.")
+
+    return render(request, "properties/property_create.html", {"form": form})

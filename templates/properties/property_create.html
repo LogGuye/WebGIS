@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Đăng tin | GeoEstate{% endblock %}
+{% block content %}
+<div class="container py-5" style="max-width:980px">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+    <div>
+      <p class="section-eyebrow">Dành cho môi giới</p>
+      <h1 class="section-heading mb-2">Đăng tin bất động sản</h1>
+      <p style="color:var(--text-muted);margin:0">Tạo tin mới để đưa bất động sản lên hệ thống. Tin sẽ được gắn vào đúng môi giới đang đăng nhập.</p>
+    </div>
+    <a href="{% url 'properties:list' %}" class="btn-geo-secondary"><i class="bi bi-arrow-left"></i> Quay lại danh sách</a>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-8">
+      <div class="card-geo p-4 p-md-5">
+        <form method="post" class="row g-3">
+          {% csrf_token %}
+          {% if form.non_field_errors %}
+          <div class="col-12"><div class="alert alert-danger">{{ form.non_field_errors }}</div></div>
+          {% endif %}
+
+          <div class="col-12">
+            <label class="form-label">Tiêu đề</label>{{ form.title }}
+            {% if form.title.errors %}<div class="text-danger small mt-1">{{ form.title.errors|striptags }}</div>{% endif %}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Loại bất động sản</label>{{ form.property_type }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Trạng thái</label>{{ form.listing_status }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Giá bán</label>{{ form.price }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Diện tích (m²)</label>{{ form.area }}
+          </div>
+          <div class="col-12">
+            <label class="form-label">Địa chỉ</label>{{ form.address }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Vĩ độ</label>{{ form.lat }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Kinh độ</label>{{ form.lng }}
+          </div>
+          <div class="col-12">
+            <label class="form-label">Mô tả</label>{{ form.description }}
+          </div>
+          <div class="col-12 d-flex align-items-center gap-2">
+            {{ form.is_featured }}
+            <label class="form-label" style="margin:0">Đánh dấu nổi bật</label>
+          </div>
+
+          {% if form.errors %}
+          <div class="col-12"><div class="alert alert-danger">Vui lòng kiểm tra lại các trường và thử lại.</div></div>
+          {% endif %}
+
+          <div class="col-12 d-flex gap-2 flex-wrap">
+            <button type="submit" class="btn-admin"><i class="bi bi-building-add"></i> Đăng tin</button>
+            <a href="{% url 'leads:lead_form' %}" class="btn-geo-secondary"><i class="bi bi-person-lines-fill"></i> Tạo khách hàng</a>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card-geo p-4">
+        <div class="section-eyebrow" style="margin-bottom:8px">Lưu ý</div>
+        <ul style="margin:0;padding-left:18px;color:var(--text-muted);line-height:1.8">
+          <li>Agent chỉ đăng tin cho chính mình.</li>
+          <li>Admin có thể đăng tin cho hệ thống.</li>
+          <li>Hãy nhập đúng tọa độ để tin hiển thị trên bản đồ.</li>
+          <li>Sau khi tạo xong, bạn có thể quay lại danh sách để kiểm tra.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

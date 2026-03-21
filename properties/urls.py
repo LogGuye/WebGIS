@@ -4,6 +4,7 @@ from . import views
 
 urlpatterns = [
     path("", views.property_list, name="list"),
+    path("create/", views.property_create, name="create"),
     path("map/data/", views.property_map_data, name="map_data"),
     path("wishlist/", views.wishlist_view, name="wishlist"),
     path("compare/", views.compare_view, name="compare"),
