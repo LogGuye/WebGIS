@@ -6,13 +6,13 @@ from accounts.models import Agent
 
 class Amenity(models.Model):
     class AmenityType(models.TextChoices):
-        SCHOOL = "school", _("School")
-        HOSPITAL = "hospital", _("Hospital")
-        PARK = "park", _("Park")
-        MALL = "mall", _("Mall")
-        SUPERMARKET = "supermarket", _("Supermarket")
-        TRANSPORT = "transport", _("Transport Hub")
-        OTHER = "other", _("Other")
+        SCHOOL = "school", _("Trường học")
+        HOSPITAL = "hospital", _("Bệnh viện")
+        PARK = "park", _("Công viên")
+        MALL = "mall", _("Trung tâm thương mại")
+        SUPERMARKET = "supermarket", _("Siêu thị")
+        TRANSPORT = "transport", _("Điểm giao thông")
+        OTHER = "other", _("Khác")
 
     name = models.CharField(max_length=255)
     amenity_type = models.CharField(max_length=32, choices=AmenityType.choices, default=AmenityType.OTHER)
