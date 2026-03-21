@@ -15,7 +15,7 @@ from core.gis_tools import (
     tool_similar_properties,
 )
 from .forms import PropertyCreateForm
-from .models import Amenity, Property, SavedSearch
+from .models import Amenity, Property, PropertyImage, SavedSearch
 
 
 SORT_OPTIONS = {
@@ -288,6 +288,13 @@ def property_create(request):
                 messages.success(request, "Đăng tin thành công. Tin của bạn đang ở trạng thái chờ duyệt.")
             else:
                 messages.success(request, "Đăng tin thành công.")
+            return redirect("properties:detail", pk=prop.pk)
+        else:
+            messages.error(request, "Vui lòng kiểm tra lại thông tin đăng tin.")
+
+    return render(request, "properties/property_create.html", {"form": form})
+operties/property_create.html", {"form": form})
+           messages.success(request, "Đăng tin thành công.")
             return redirect("properties:detail", pk=prop.pk)
         else:
             messages.error(request, "Vui lòng kiểm tra lại thông tin đăng tin.")

@@ -14,7 +14,7 @@
   <div class="row g-4">
     <div class="col-lg-7">
       <div class="card-geo p-4 p-md-5">
-        <form method="post" class="row g-3">
+        <form method="post" class="row g-3" enctype="multipart/form-data">
           {% csrf_token %}
           {% if form.non_field_errors %}
           <div class="col-12"><div class="alert alert-danger">{{ form.non_field_errors }}</div></div>
@@ -27,9 +27,16 @@
           <div class="col-md-6">
             <label class="form-label">Loại bất động sản</label>{{ form.property_type }}
           </div>
+          {% if form.listing_status %}
           <div class="col-md-6">
             <label class="form-label">Trạng thái</label>{{ form.listing_status }}
           </div>
+          {% else %}
+          <div class="col-md-6">
+            <label class="form-label">Trạng thái</label>
+            <input class="form-geo" value="Chờ duyệt" disabled />
+          </div>
+          {% endif %}
           <div class="col-md-6">
             <label class="form-label">Giá bán</label>{{ form.price }}
           </div>
@@ -48,10 +55,16 @@
           <div class="col-12">
             <label class="form-label">Mô tả</label>{{ form.description }}
           </div>
+          <div class="col-12">
+            <label class="form-label">Ảnh bất động sản</label>{{ form.images }}
+            <div class="small mt-1" style="color:var(--text-muted)">Có thể chọn nhiều ảnh cùng lúc. Ảnh đầu tiên sẽ được dùng làm ảnh chính.</div>
+          </div>
+          {% if form.is_featured %}
           <div class="col-12 d-flex align-items-center gap-2">
             {{ form.is_featured }}
             <label class="form-label" style="margin:0">Đánh dấu nổi bật</label>
           </div>
+          {% endif %}
 
           {% if form.errors %}
           <div class="col-12"><div class="alert alert-danger">Vui lòng kiểm tra lại các trường và thử lại.</div></div>
@@ -88,7 +101,7 @@
           <li>Tin môi giới tạo mới sẽ vào trạng thái chờ duyệt.</li>
           <li>Quản trị có thể đăng tin cho toàn hệ thống.</li>
           <li>Nên kiểm tra lại ghim sau khi tìm theo địa chỉ.</li>
-          <li>Tọa độ chính xác giúp tin hiển thị đúng trên bản đồ.</li>
+          <li>Ảnh đầu tiên sẽ được ưu tiên làm ảnh đại diện cho tin.</li>
         </ul>
       </div>
     </div>
@@ -181,15 +194,6 @@
         },
         () => {
           mapHint.textContent = 'Không lấy được vị trí hiện tại. Hãy thử lại hoặc bấm trực tiếp lên bản đồ.';
-          myLocationBtn.disabled = false;
-        },
-        { enableHighAccuracy: true, timeout: 10000 }
-      );
-    });
-  })();
-</script>
-{% endblock %}
-lên bản đồ.';
           myLocationBtn.disabled = false;
         },
         { enableHighAccuracy: true, timeout: 10000 }

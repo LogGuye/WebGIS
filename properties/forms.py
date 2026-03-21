@@ -7,6 +7,11 @@ from .models import Property
 class PropertyCreateForm(forms.ModelForm):
     lat = forms.FloatField(label="Vĩ độ")
     lng = forms.FloatField(label="Kinh độ")
+    images = forms.FileField(
+        label="Ảnh bất động sản",
+        required=False,
+        widget=forms.ClearableFileInput(attrs={"multiple": True, "class": "form-geo"}),
+    )
 
     class Meta:
         model = Property
@@ -32,6 +37,7 @@ class PropertyCreateForm(forms.ModelForm):
         }
 
     def __init__(self, *args, **kwargs):
+        user_role = kwargs.pop("user_role", None)
         super().__init__(*args, **kwargs)
         for field in self.fields.values():
             field.widget.attrs.setdefault("class", "form-geo")
@@ -43,8 +49,11 @@ class PropertyCreateForm(forms.ModelForm):
         self.fields["area"].widget.attrs.setdefault("placeholder", "Ví dụ: 85")
         self.fields["lat"].widget.attrs.setdefault("placeholder", "Ví dụ: 10.7769")
         self.fields["lng"].widget.attrs.setdefault("placeholder", "Ví dụ: 106.7009")
+        if user_role != "admin":
+            self.fields.pop("listing_status", None)
+            self.fields.pop("is_featured", None)
 
-    def save(self, commit=True, agent=None):
+    def save(self, commit=True, agent=None, listing_status=None):
         obj = super().save(commit=False)
         obj.location = Point(self.cleaned_data["lng"], self.cleaned_data["lat"], srid=4326)
         if agent is not None:
