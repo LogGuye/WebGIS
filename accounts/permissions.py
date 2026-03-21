@@ -32,10 +32,17 @@ def role_required(*allowed_roles):
 
 
 def role_context(request):
-    role = _role(request.user)
+    role = _role(getattr(request, "user", None)) if hasattr(request, "user") else None
+    session = getattr(request, "session", {}) or {}
     return {
         "current_role": role,
         "is_admin_role": role == UserProfile.Role.ADMIN,
         "is_agent_role": role == UserProfile.Role.AGENT,
         "is_user_role": role == UserProfile.Role.USER,
+        "property_count": Property.objects.count(),
+        "agent_count": Agent.objects.count(),
+        "lead_count": Lead.objects.count(),
+        "amenity_count": Amenity.objects.count(),
+        "wishlist_count": len(session.get("wishlist", [])),
+        "compare_count": len(session.get("compare", [])),
     }
