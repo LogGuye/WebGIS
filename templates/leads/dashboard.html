@@ -12,7 +12,7 @@
     {% if dashboard_role == 'admin' %}
     <a href="/admin/" class="btn-geo-primary"><i class="bi bi-shield-lock"></i> Quản trị hệ thống</a>
     {% else %}
-    <a href="{% url 'leads:lead_form' %}" class="btn-geo-primary"><i class="bi bi-person-lines-fill"></i> Tạo khách hàng mới</a>
+    <a href="/admin/properties/property/add/" class="btn-geo-primary"><i class="bi bi-building-add"></i> Đăng tin mới</a>
     {% endif %}
   </div>
 

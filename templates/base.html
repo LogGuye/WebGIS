@@ -848,11 +848,21 @@
             <a class="btn-geo-secondary" href="/admin/" style="padding:9px 14px;font-size:13px;border-radius:999px">
               <i class="bi bi-shield-lock"></i> Quản trị
             </a>
-            {% endif %}
-            <a class="btn-admin" href="{% url 'leads:lead_form' %}">
+            <a class="btn-admin" href="/admin/">
+              <i class="bi bi-shield-lock"></i>
+              Quản trị hệ thống
+            </a>
+            {% elif is_agent_role %}
+            <a class="btn-admin" href="/admin/properties/property/add/">
+              <i class="bi bi-building-add"></i>
+              Đăng tin
+            </a>
+            {% else %}
+            <a class="btn-admin" href="{% url 'leads:dashboard_home' %}">
               <i class="bi bi-send-plus"></i>
               Gửi nhu cầu
             </a>
+            {% endif %}
           {% else %}
             <a class="btn-geo-secondary" href="{% url 'accounts:login' %}" style="padding:9px 14px;font-size:13px;border-radius:999px">
               Đăng nhập

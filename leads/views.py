@@ -129,7 +129,8 @@ def dashboard(request):
         ]
         dashboard_note = "Bạn đang xem khu vực làm việc cá nhân: lead phụ trách, nguồn hàng và tình trạng tin đăng của mình."
         dashboard_actions = [
-            ("/leads/lead-form/", "Tạo khách hàng mới"),
+            ("/admin/properties/property/add/", "Đăng tin mới"),
+            ("/leads/lead-form/", "Tạo khách hàng"),
             ("/accounts/profile/", "Hồ sơ môi giới"),
         ]
 
