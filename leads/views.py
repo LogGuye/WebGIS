@@ -1,17 +1,17 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.gis.geos import Point
-from django.db.models import Avg, Count, Q
+from django.db.models import Avg, Count
 from django.shortcuts import redirect, render
 
 from accounts.models import Agent, UserProfile
 from accounts.permissions import role_required
 from core.gis_tools import tool_assign_lead_to_nearest_agent
 from properties.models import Property
-from .models import Lead
+from .models import Appointment, Lead
 
 
-@login_required
+@role_required(UserProfile.Role.AGENT, UserProfile.Role.ADMIN)
 def lead_form(request):
     assignment = None
     lead_obj = None
@@ -39,16 +39,16 @@ def lead_form(request):
                     pipeline_stage=Lead.PipelineStage.NEW,
                 )
                 agent, distance_km = tool_assign_lead_to_nearest_agent(point)
-                if request.user.is_authenticated and hasattr(request.user, "profile") and request.user.profile.role == UserProfile.Role.AGENT and request.user.profile.linked_agent:
+                if request.user.profile.role == UserProfile.Role.AGENT and request.user.profile.linked_agent:
                     lead_obj.assigned_agent = request.user.profile.linked_agent
                     lead_obj.save(update_fields=["assigned_agent"])
                     assignment = {"agent": lead_obj.assigned_agent, "distance": 0}
-                    messages.success(request, "Lead đã được gán cho môi giới hiện tại.")
+                    messages.success(request, "Khách hàng đã được gán cho môi giới hiện tại.")
                 elif agent:
                     lead_obj.assigned_agent = agent
                     lead_obj.save(update_fields=["assigned_agent"])
                     assignment = {"agent": agent, "distance": round(distance_km, 2)}
-                    messages.success(request, "Lead đã được phân phối cho môi giới gần nhất.")
+                    messages.success(request, "Khách hàng đã được phân phối cho môi giới gần nhất.")
                 else:
                     messages.warning(request, "Chưa có môi giới nào trong hệ thống.")
             except ValueError:
@@ -93,6 +93,7 @@ def customer_dashboard(request):
 def dashboard(request):
     property_qs = Property.objects.all()
     lead_qs = Lead.objects.all()
+    appointment_qs = Appointment.objects.select_related("lead", "property", "agent")
     profile = getattr(request.user, "profile", None)
     role = getattr(profile, "role", UserProfile.Role.USER)
     linked_agent = getattr(profile, "linked_agent", None)
@@ -100,6 +101,7 @@ def dashboard(request):
     if role == UserProfile.Role.AGENT and linked_agent:
         property_qs = property_qs.filter(agent=linked_agent)
         lead_qs = lead_qs.filter(assigned_agent=linked_agent)
+        appointment_qs = appointment_qs.filter(agent=linked_agent)
 
     property_status = {
         row["listing_status"]: row["total"]
@@ -108,12 +110,16 @@ def dashboard(request):
     property_types = property_qs.values("property_type").annotate(total=Count("id")).order_by("property_type")
     active_qs = property_qs.filter(listing_status=Property.ListingStatus.ACTIVE)
     avg_price_by_type = active_qs.values("property_type").annotate(avg_price=Avg("price"), avg_area=Avg("area"), total=Count("id")).order_by("property_type")
+    pipeline_summary = {
+        row["pipeline_stage"]: row["total"]
+        for row in lead_qs.values("pipeline_stage").annotate(total=Count("id"))
+    }
 
     if role == UserProfile.Role.ADMIN:
         pending_tasks = [
-            ("Lead chưa bật cảnh báo", lead_qs.filter(alert_enabled=False).count()),
+            ("Lead mới", lead_qs.filter(pipeline_stage=Lead.PipelineStage.NEW).count()),
+            ("Tin chờ duyệt", property_qs.filter(listing_status=Property.ListingStatus.PENDING).count()),
             ("Tin đang ẩn", property_qs.filter(listing_status=Property.ListingStatus.HIDDEN).count()),
-            ("Tin nổi bật đang chạy", property_qs.filter(is_featured=True, listing_status=Property.ListingStatus.ACTIVE).count()),
             ("Môi giới đang hoạt động", Agent.objects.count()),
         ]
         dashboard_note = "Bạn đang xem toàn bộ hệ thống: hàng tồn, lead, môi giới và hiệu suất chung."
@@ -121,15 +127,15 @@ def dashboard(request):
             ("/admin/properties/property/add/", "Thêm bất động sản"),
             ("/admin/properties/property/", "Quản lý bất động sản"),
             ("/admin/leads/lead/", "Quản lý khách hàng"),
+            ("/admin/leads/appointment/", "Quản lý lịch hẹn"),
             ("/admin/accounts/agent/", "Quản lý môi giới"),
-            ("/admin/accounts/userprofile/", "Quản lý tài khoản"),
         ]
     else:
         pending_tasks = [
-            ("Lead cần theo dõi", lead_qs.count()),
-            ("Lead bật cảnh báo", lead_qs.filter(alert_enabled=True).count()),
-            ("Tin đang bán của bạn", property_qs.filter(listing_status=Property.ListingStatus.ACTIVE).count()),
-            ("Tin nổi bật bạn đang phụ trách", property_qs.filter(is_featured=True, listing_status=Property.ListingStatus.ACTIVE).count()),
+            ("Lead mới", lead_qs.filter(pipeline_stage=Lead.PipelineStage.NEW).count()),
+            ("Đang tư vấn", lead_qs.filter(pipeline_stage=Lead.PipelineStage.CONSULTING).count()),
+            ("Tin chờ duyệt", property_qs.filter(listing_status=Property.ListingStatus.PENDING).count()),
+            ("Tin đang bán", property_qs.filter(listing_status=Property.ListingStatus.ACTIVE).count()),
         ]
         dashboard_note = "Bạn đang xem khu vực làm việc cá nhân: lead phụ trách, nguồn hàng và tình trạng tin đăng của mình."
         dashboard_actions = [
@@ -143,8 +149,11 @@ def dashboard(request):
         "linked_agent": linked_agent,
         "dashboard_note": dashboard_note,
         "pending_tasks": pending_tasks,
+        "dashboard_actions": dashboard_actions,
+        "pipeline_summary": pipeline_summary,
         "property_total": property_qs.count(),
         "active_total": property_status.get("active", 0),
+        "pending_total": property_status.get("pending", 0),
         "sold_total": property_status.get("sold", 0),
         "hidden_total": property_status.get("hidden", 0),
         "featured_total": property_qs.filter(is_featured=True).count(),
@@ -156,8 +165,6 @@ def dashboard(request):
         "avg_price_all": active_qs.aggregate(avg=Avg("price")).get("avg"),
         "avg_area_all": active_qs.aggregate(avg=Avg("area")).get("avg"),
         "recent_leads": lead_qs.select_related("assigned_agent").order_by("-created_at")[:5],
-    }
-    return render(request, "leads/dashboard.html", context)
-eads": lead_qs.select_related("assigned_agent").order_by("-created_at")[:5],
+        "upcoming_appointments": appointment_qs.order_by("scheduled_at")[:5],
     }
     return render(request, "leads/dashboard.html", context)

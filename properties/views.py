@@ -1,6 +1,6 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.contrib.gis.geos import Point, Polygon
+from django.contrib.gis.geos import Polygon
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.http import JsonResponse
@@ -26,6 +26,29 @@ SORT_OPTIONS = {
     "area_desc": "-area",
     "newest": "-created_at",
 }
+
+
+def _viewer_role(request):
+    if request.user.is_authenticated and hasattr(request.user, "profile"):
+        return request.user.profile.role
+    return None
+
+
+def _viewer_agent(request):
+    if request.user.is_authenticated and hasattr(request.user, "profile"):
+        return request.user.profile.linked_agent
+    return None
+
+
+def _base_property_queryset(request):
+    qs = Property.objects.select_related("agent").prefetch_related("amenities", "images").all()
+    role = _viewer_role(request)
+    linked_agent = _viewer_agent(request)
+    if role == UserProfile.Role.AGENT and linked_agent:
+        qs = qs.filter(agent=linked_agent)
+    elif role != UserProfile.Role.ADMIN:
+        qs = qs.filter(listing_status=Property.ListingStatus.ACTIVE)
+    return qs
 
 
 def _apply_property_filters(request, queryset):
@@ -69,7 +92,6 @@ def _apply_property_filters(request, queryset):
             pass
 
     queryset = queryset.order_by(SORT_OPTIONS.get(sort, "title"))
-
     filters = {
         "type": prop_type or "",
         "status": listing_status or "",
@@ -85,11 +107,7 @@ def _apply_property_filters(request, queryset):
 
 
 def property_list(request):
-    qs = Property.objects.select_related("agent").prefetch_related("amenities", "images").all()
-    if request.user.is_authenticated and hasattr(request.user, "profile") and request.user.profile.role == UserProfile.Role.AGENT and request.user.profile.linked_agent:
-        qs = qs.filter(agent=request.user.profile.linked_agent)
-    qs, filters = _apply_property_filters(request, qs)
-
+    qs, filters = _apply_property_filters(request, _base_property_queryset(request))
     paginator = Paginator(qs, 9)
     page_obj = paginator.get_page(request.GET.get("page") or 1)
 
@@ -101,49 +119,29 @@ def property_list(request):
         "property_types": Property.PropertyType.choices,
         "listing_statuses": Property.ListingStatus.choices,
         "total_count": paginator.count,
-        "map_properties": list(
-            qs[:300].values(
-                "id",
-                "title",
-                "price",
-                "area",
-                "address",
-                "property_type",
-                "location",
-            )
-        ),
-        "heatmap_points": [
-            [prop.location.y, prop.location.x, float(prop.price or 0)]
-            for prop in qs[:300]
-            if prop.location
-        ],
+        "map_properties": list(qs[:300].values("id", "title", "price", "area", "address", "property_type", "location")),
+        "heatmap_points": [[prop.location.y, prop.location.x, float(prop.price or 0)] for prop in qs[:300] if prop.location],
     }
     return render(request, "properties/property_list.html", context)
 
 
 def property_map_data(request):
-    qs = Property.objects.select_related("agent").prefetch_related("images").all()
-    if request.user.is_authenticated and hasattr(request.user, "profile") and request.user.profile.role == UserProfile.Role.AGENT and request.user.profile.linked_agent:
-        qs = qs.filter(agent=request.user.profile.linked_agent)
-    qs, _filters = _apply_property_filters(request, qs)
-
+    qs, _filters = _apply_property_filters(request, _base_property_queryset(request))
     items = []
     for prop in qs[:500]:
         if not prop.location:
             continue
-        items.append(
-            {
-                "id": prop.pk,
-                "title": prop.title,
-                "price": float(prop.price) if prop.price is not None else None,
-                "area": prop.area,
-                "address": prop.address,
-                "property_type": prop.get_property_type_display(),
-                "lat": prop.location.y,
-                "lng": prop.location.x,
-                "detail_url": request.build_absolute_uri(prop.get_absolute_url()) if hasattr(prop, "get_absolute_url") else f"/properties/{prop.pk}/",
-            }
-        )
+        items.append({
+            "id": prop.pk,
+            "title": prop.title,
+            "price": float(prop.price) if prop.price is not None else None,
+            "area": prop.area,
+            "address": prop.address,
+            "property_type": prop.get_property_type_display(),
+            "lat": prop.location.y,
+            "lng": prop.location.x,
+            "detail_url": f"/properties/{prop.pk}/",
+        })
     return JsonResponse({"results": items})
 
 
@@ -194,21 +192,25 @@ def compare_view(request):
 
 def property_detail(request, pk):
     prop = get_object_or_404(Property.objects.select_related("agent").prefetch_related("amenities", "images"), pk=pk)
+    role = _viewer_role(request)
+    linked_agent = _viewer_agent(request)
+    if prop.listing_status != Property.ListingStatus.ACTIVE:
+        is_admin = role == UserProfile.Role.ADMIN
+        is_owner_agent = role == UserProfile.Role.AGENT and linked_agent and prop.agent_id == linked_agent.id
+        if not (is_admin or is_owner_agent):
+            return redirect("properties:list")
+
     similar_properties = tool_similar_properties(prop, limit=4)
     location_score = tool_location_score(prop)
     wishlist_ids = [int(i) for i in _get_session_ids(request, "wishlist")]
     compare_ids = [int(i) for i in _get_session_ids(request, "compare")]
-    return render(
-        request,
-        "properties/property_detail.html",
-        {
-            "property": prop,
-            "similar_properties": similar_properties,
-            "location_score": location_score,
-            "is_in_wishlist": prop.pk in wishlist_ids,
-            "is_in_compare": prop.pk in compare_ids,
-        },
-    )
+    return render(request, "properties/property_detail.html", {
+        "property": prop,
+        "similar_properties": similar_properties,
+        "location_score": location_score,
+        "is_in_wishlist": prop.pk in wishlist_ids,
+        "is_in_compare": prop.pk in compare_ids,
+    })
 
 
 def nearby_search(request):
@@ -217,24 +219,12 @@ def nearby_search(request):
     lng = request.GET.get("lng")
     radius = request.GET.get("radius") or 5
     prop_type = request.GET.get("type") or ""
-
     if lat and lng:
         try:
-            lat_f, lng_f, radius_f = float(lat), float(lng), float(radius)
-            results = tool_nearby_properties(
-                lat_f,
-                lng_f,
-                radius_f,
-                filters={"property_type": prop_type or None},
-            )
+            results = tool_nearby_properties(float(lat), float(lng), float(radius), filters={"property_type": prop_type or None})
         except ValueError:
             results = []
-
-    context = {
-        "results": results,
-        "params": {"lat": lat or "", "lng": lng or "", "radius": radius, "type": prop_type},
-    }
-    return render(request, "properties/nearby_search.html", context)
+    return render(request, "properties/nearby_search.html", {"results": results, "params": {"lat": lat or "", "lng": lng or "", "radius": radius, "type": prop_type}})
 
 
 def amenity_search(request):
@@ -243,20 +233,12 @@ def amenity_search(request):
     lng = request.GET.get("lng")
     radius = request.GET.get("radius") or 3
     amenity_type = request.GET.get("amenity_type") or ""
-
     if lat and lng:
         try:
-            lat_f, lng_f, radius_f = float(lat), float(lng), float(radius)
-            results = tool_amenities_within_radius(lat_f, lng_f, radius_f, amenity_type or None)
+            results = tool_amenities_within_radius(float(lat), float(lng), float(radius), amenity_type or None)
         except ValueError:
             results = []
-
-    context = {
-        "results": results,
-        "amenity_types": Amenity.AmenityType.choices,
-        "params": {"lat": lat or "", "lng": lng or "", "radius": radius, "amenity_type": amenity_type},
-    }
-    return render(request, "properties/amenity_search.html", context)
+    return render(request, "properties/amenity_search.html", {"results": results, "amenity_types": Amenity.AmenityType.choices, "params": {"lat": lat or "", "lng": lng or "", "radius": radius, "amenity_type": amenity_type}})
 
 
 @role_required(UserProfile.Role.AGENT, UserProfile.Role.ADMIN)
@@ -270,19 +252,12 @@ def property_create(request):
         if role == UserProfile.Role.AGENT and not linked_agent:
             messages.error(request, "Tài khoản môi giới chưa được gắn với hồ sơ môi giới nên chưa thể đăng tin.")
         elif form.is_valid():
-            agent = linked_agent if role == UserProfile.Role.AGENT else linked_agent
-            prop = form.save(agent=agent)
-            messages.success(request, "Đăng tin thành công.")
-            return redirect("properties:detail", pk=prop.pk)
-        else:
-            messages.error(request, "Vui lòng kiểm tra lại thông tin đăng tin.")
-
-    return render(request, "properties/property_create.html", {"form": form})
- khoản môi giới chưa được gắn với hồ sơ môi giới nên chưa thể đăng tin.")
-        elif form.is_valid():
-            agent = linked_agent if role == UserProfile.Role.AGENT else linked_agent
-            prop = form.save(agent=agent)
-            messages.success(request, "Đăng tin thành công.")
+            listing_status = Property.ListingStatus.PENDING if role == UserProfile.Role.AGENT else form.cleaned_data.get("listing_status", Property.ListingStatus.ACTIVE)
+            prop = form.save(agent=linked_agent, listing_status=listing_status)
+            if role == UserProfile.Role.AGENT:
+                messages.success(request, "Đăng tin thành công. Tin của bạn đang ở trạng thái chờ duyệt.")
+            else:
+                messages.success(request, "Đăng tin thành công.")
             return redirect("properties:detail", pk=prop.pk)
         else:
             messages.error(request, "Vui lòng kiểm tra lại thông tin đăng tin.")
