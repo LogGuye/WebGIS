@@ -122,6 +122,43 @@
     </div>
   </div>
 
+  {% if dashboard_role == 'admin' %}
+  <div class="row g-4 mb-4">
+    <div class="col-lg-12">
+      <div class="card-geo p-4 h-100">
+        <h5 style="color:var(--text);margin-bottom:16px">Tin chờ duyệt</h5>
+        <div class="table-responsive">
+          <table class="table" style="color:var(--text)">
+            <thead><tr><th>Tiêu đề</th><th>Môi giới</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
+            <tbody>
+              {% for item in pending_properties %}
+              <tr>
+                <td>{{ item.title }}</td>
+                <td>{% if item.agent %}{{ item.agent.name }}{% else %}-{% endif %}</td>
+                <td>{{ item.get_listing_status_display }}</td>
+                <td>
+                  <form method="post" action="{% url 'leads:listing_stage_update' item.pk %}" class="d-flex gap-2 align-items-center">
+                    {% csrf_token %}
+                    <select name="listing_status" class="form-geo" style="min-width:140px;padding:6px 10px;height:auto">
+                      {% for value, label in listing_statuses %}
+                      <option value="{{ value }}" {% if item.listing_status == value %}selected{% endif %}>{{ label }}</option>
+                      {% endfor %}
+                    </select>
+                    <button type="submit" class="btn-geo-secondary" style="padding:6px 10px;font-size:12px">Lưu</button>
+                  </form>
+                </td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="4" style="color:var(--text-muted)">Không có tin nào đang chờ duyệt.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
   <div class="row g-4 mb-4">
     <div class="col-lg-12">
       <div class="card-geo p-4 h-100">

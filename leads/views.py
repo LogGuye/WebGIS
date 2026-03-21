@@ -167,6 +167,9 @@ def dashboard(request):
         "avg_area_all": active_qs.aggregate(avg=Avg("area")).get("avg"),
         "recent_leads": lead_qs.select_related("assigned_agent").order_by("-created_at")[:5],
         "upcoming_appointments": appointment_qs.order_by("scheduled_at")[:5],
+        "recent_properties": recent_properties,
+        "pending_properties": pending_properties,
+        "listing_statuses": Property.ListingStatus.choices,
     }
     return render(request, "leads/dashboard.html", context)
 
@@ -213,6 +216,17 @@ def appointment_create(request):
             appointment.save()
             if appointment.lead.pipeline_stage != Lead.PipelineStage.VIEWING:
                 appointment.lead.pipeline_stage = Lead.PipelineStage.VIEWING
+                appointment.lead.save(update_fields=["pipeline_stage"])
+            messages.success(request, "Đã tạo lịch hẹn xem nhà.")
+            return redirect("leads:dashboard")
+        else:
+            messages.error(request, "Vui lòng kiểm tra lại thông tin lịch hẹn.")
+
+    return render(request, "leads/appointment_create.html", {"form": form})
+, "Vui lòng kiểm tra lại thông tin lịch hẹn.")
+
+    return render(request, "leads/appointment_create.html", {"form": form})
+         appointment.lead.pipeline_stage = Lead.PipelineStage.VIEWING
                 appointment.lead.save(update_fields=["pipeline_stage"])
             messages.success(request, "Đã tạo lịch hẹn xem nhà.")
             return redirect("leads:dashboard")
