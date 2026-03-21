@@ -11,6 +11,7 @@ urlpatterns = [
     path("images/<int:image_id>/delete/", views.property_image_delete, name="image_delete"),
     path("images/<int:image_id>/reorder/", views.property_image_reorder, name="image_reorder"),
     path("saved-searches/create/", views.saved_search_create, name="saved_search_create"),
+    path("saved-searches/<int:pk>/seen/", views.saved_search_mark_seen, name="saved_search_seen"),
     path("saved-searches/<int:pk>/delete/", views.saved_search_delete, name="saved_search_delete"),
     path("map/data/", views.property_map_data, name="map_data"),
     path("wishlist/", views.wishlist_view, name="wishlist"),

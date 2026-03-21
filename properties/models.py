@@ -109,6 +109,7 @@ class SavedSearch(models.Model):
     area_min = models.FloatField(null=True, blank=True)
     area_max = models.FloatField(null=True, blank=True)
     alerts_enabled = models.BooleanField(default=True)
+    last_viewed_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

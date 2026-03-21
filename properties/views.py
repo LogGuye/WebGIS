@@ -178,6 +178,15 @@ def saved_search_create(request):
 
 
 @login_required
+def saved_search_mark_seen(request, pk):
+    search = get_object_or_404(SavedSearch, pk=pk, user=request.user)
+    search.last_viewed_at = timezone.now()
+    search.save(update_fields=["last_viewed_at"])
+    messages.success(request, "Đã đánh dấu bộ lọc là đã xem.")
+    return redirect(request.META.get("HTTP_REFERER") or "properties:list")
+
+
+@login_required
 def saved_search_delete(request, pk):
     search = get_object_or_404(SavedSearch, pk=pk, user=request.user)
     search.delete()
@@ -371,6 +380,19 @@ def property_image_reorder(request, image_id):
     prop = image.property
     if not _can_manage_property(request, prop):
         messages.error(request, "Bạn không có quyền sắp xếp ảnh của tin này.")
+        return redirect("properties:list")
+    if request.method == "POST":
+        try:
+            image.sort_order = int(request.POST.get("sort_order", image.sort_order))
+            image.save(update_fields=["sort_order"])
+            messages.success(request, "Đã cập nhật thứ tự ảnh.")
+        except ValueError:
+            messages.error(request, "Thứ tự ảnh không hợp lệ.")
+    return redirect("properties:images_manage", pk=prop.pk)
+eError:
+            messages.error(request, "Thứ tự ảnh không hợp lệ.")
+    return redirect("properties:images_manage", pk=prop.pk)
+in này.")
         return redirect("properties:list")
     if request.method == "POST":
         try:

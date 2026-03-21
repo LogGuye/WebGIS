@@ -15,7 +15,7 @@
     <div class="col-md-6 col-xl-3"><div class="card-geo p-4"><div class="stat-num">{{ wishlist_total }}</div><div class="stat-lbl">Đã lưu</div></div></div>
     <div class="col-md-6 col-xl-3"><div class="card-geo p-4"><div class="stat-num">{{ compare_total }}</div><div class="stat-lbl">Đang so sánh</div></div></div>
     <div class="col-md-6 col-xl-3"><div class="card-geo p-4"><div class="stat-num">{{ saved_search_total|default:0 }}</div><div class="stat-lbl">Tìm kiếm đã lưu</div></div></div>
-    <div class="col-md-6 col-xl-3"><div class="card-geo p-4"><div class="stat-num">{{ active_total }}</div><div class="stat-lbl">Tin đang bán</div></div></div>
+    <div class="col-md-6 col-xl-3"><div class="card-geo p-4"><div class="stat-num">{{ saved_search_alert_total|default:0 }}</div><div class="stat-lbl">Tin mới khớp bộ lọc</div></div></div>
   </div>
 
   <div class="row g-4 mb-4">
@@ -55,6 +55,37 @@
           </div>
         {% empty %}
           <p style="color:var(--text-muted);margin:0">Bạn chưa thêm bất động sản nào vào so sánh.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="card-geo p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+      <h5 style="color:var(--text);margin:0">Gợi ý nổi bật dành cho bạn</h5>
+      <span class="stat-pill">Ưu tiên tin đang bán</span>
+    </div>
+    <div class="row g-3">
+      {% for p in recommended_properties %}
+      <div class="col-md-6 col-xl-4">
+        <div style="background:var(--bg-3);border:1px solid var(--border);border-radius:var(--radius-md);padding:16px;height:100%">
+          <div style="color:var(--gold);font-size:12px;font-weight:600;margin-bottom:6px">{{ p.get_property_type_display }}</div>
+          <div style="color:var(--text);font-weight:600;margin-bottom:6px">{{ p.title }}</div>
+          <div style="color:var(--text-muted);font-size:13px;margin-bottom:10px">{{ p.address }}</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+            <span style="color:var(--gold);font-weight:700">{{ p.price|price_vn }}</span>
+            <a href="{% url 'properties:detail' p.pk %}" class="btn-geo-secondary" style="padding:7px 12px;font-size:12px">Xem chi tiết</a>
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <div class="col-12"><p style="color:var(--text-muted);margin:0">Hiện chưa có tin phù hợp để gợi ý.</p></div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+�o vào so sánh.</p>
         {% endfor %}
       </div>
     </div>

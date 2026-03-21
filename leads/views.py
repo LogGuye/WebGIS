@@ -77,13 +77,47 @@ def customer_dashboard(request):
     compare_qs = Property.objects.filter(pk__in=compare_ids).select_related("agent").prefetch_related("images")
     recommended = Property.objects.filter(listing_status=Property.ListingStatus.ACTIVE, is_featured=True).select_related("agent").prefetch_related("images")[:6]
 
+    saved_searches = SavedSearch.objects.filter(user=request.user)[:5]
+    alert_total = 0
+    saved_search_alerts = []
+    for item in saved_searches:
+        matched = Property.objects.filter(listing_status=Property.ListingStatus.ACTIVE)
+        if item.property_type:
+            matched = matched.filter(property_type=item.property_type)
+        if item.listing_status:
+            matched = matched.filter(listing_status=item.listing_status)
+        if item.price_min:
+            matched = matched.filter(price__gte=item.price_min)
+        if item.price_max:
+            matched = matched.filter(price__lte=item.price_max)
+        if item.area_min:
+            matched = matched.filter(area__gte=item.area_min)
+        if item.area_max:
+            matched = matched.filter(area__lte=item.area_max)
+        if item.query:
+            matched = matched.filter(
+                Q(title__icontains=item.query)
+                | Q(address__icontains=item.query)
+                | Q(description__icontains=item.query)
+                | Q(agent__name__icontains=item.query)
+            )
+        if item.last_viewed_at:
+            matched = matched.filter(created_at__gt=item.last_viewed_at)
+        else:
+            matched = matched.filter(created_at__gte=item.created_at)
+        new_count = matched.count()
+        alert_total += new_count
+        saved_search_alerts.append((item, new_count))
+
     context = {
         "wishlist_properties": wishlist_qs[:3],
         "compare_properties": compare_qs[:3],
         "recommended_properties": recommended,
         "wishlist_total": wishlist_qs.count(),
         "compare_total": compare_qs.count(),
-        "saved_search_total": getattr(request.user, 'saved_searches', []).count() if hasattr(request.user, 'saved_searches') else 0,
+        "saved_search_total": saved_searches.count(),
+        "saved_search_alert_total": alert_total,
+        "saved_search_alerts": saved_search_alerts,
         "featured_total": Property.objects.filter(listing_status=Property.ListingStatus.ACTIVE, is_featured=True).count(),
         "active_total": Property.objects.filter(listing_status=Property.ListingStatus.ACTIVE).count(),
     }
