@@ -9,7 +9,11 @@
       <h1 class="section-heading mb-2">{% if dashboard_role == 'admin' %}Bảng điều khiển quản trị{% else %}Bảng điều khiển môi giới{% endif %}</h1>
       <p style="color:var(--text-muted);margin:0">{{ dashboard_note }}</p>
     </div>
+    {% if dashboard_role == 'admin' %}
+    <a href="/admin/" class="btn-geo-primary"><i class="bi bi-shield-lock"></i> Quản trị hệ thống</a>
+    {% else %}
     <a href="{% url 'leads:lead_form' %}" class="btn-geo-primary"><i class="bi bi-person-lines-fill"></i> Tạo khách hàng mới</a>
+    {% endif %}
   </div>
 
   {% if dashboard_role == 'agent' and linked_agent %}
@@ -24,6 +28,26 @@
     </div>
   </div>
   {% endif %}
+
+  <div class="card-geo p-4 mb-4">
+    <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
+      <div>
+        <div class="section-eyebrow" style="margin-bottom:6px">Quyền hiện tại</div>
+        <div style="color:var(--text-muted)">
+          {% if dashboard_role == 'admin' %}
+          Quản trị có quyền xem toàn bộ hệ thống và truy cập quản trị backend.
+          {% else %}
+          Môi giới chỉ làm việc trên khách hàng và bất động sản được giao/phụ trách.
+          {% endif %}
+        </div>
+      </div>
+      <div class="d-flex flex-wrap gap-2">
+        {% for href, label in dashboard_actions %}
+        <a href="{{ href }}" class="btn-geo-secondary" style="padding:8px 14px;font-size:12px">{{ label }}</a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
 
   <div class="row g-4 mb-4">
     <div class="col-md-6 col-xl-3"><div class="card-geo p-4"><div class="stat-num">{{ property_total }}</div><div class="stat-lbl">Bất động sản</div></div></div>

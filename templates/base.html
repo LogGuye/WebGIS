@@ -789,11 +789,17 @@
               Bảng điều khiển
             </a>
           </li>
-          {% if is_agent_role or is_admin_role %}
+          {% if is_agent_role %}
           <li class="nav-item">
             <a class="nav-link {% if request.resolver_match.url_name == 'lead_form' %}active{% endif %}"
                href="{% url 'leads:lead_form' %}">
               Khách hàng
+            </a>
+          </li>
+          {% elif is_admin_role %}
+          <li class="nav-item">
+            <a class="nav-link" href="/admin/">
+              Quản trị
             </a>
           </li>
           {% endif %}

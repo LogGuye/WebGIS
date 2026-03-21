@@ -116,6 +116,10 @@ def dashboard(request):
             ("Môi giới đang hoạt động", Agent.objects.count()),
         ]
         dashboard_note = "Bạn đang xem toàn bộ hệ thống: hàng tồn, lead, môi giới và hiệu suất chung."
+        dashboard_actions = [
+            ("/admin/", "Quản trị hệ thống"),
+            ("/accounts/profile/", "Quản lý hồ sơ"),
+        ]
     else:
         pending_tasks = [
             ("Lead cần theo dõi", lead_qs.count()),
@@ -124,6 +128,10 @@ def dashboard(request):
             ("Tin nổi bật bạn đang phụ trách", property_qs.filter(is_featured=True, listing_status=Property.ListingStatus.ACTIVE).count()),
         ]
         dashboard_note = "Bạn đang xem khu vực làm việc cá nhân: lead phụ trách, nguồn hàng và tình trạng tin đăng của mình."
+        dashboard_actions = [
+            ("/leads/lead-form/", "Tạo khách hàng mới"),
+            ("/accounts/profile/", "Hồ sơ môi giới"),
+        ]
 
     context = {
         "dashboard_role": role,
