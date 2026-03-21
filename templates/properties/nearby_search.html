@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load property_format %}
 {% block title %}Tìm kiếm lân cận | GeoEstate{% endblock %}
 
 {% block breadcrumb %}
@@ -601,7 +602,7 @@
             </div>
             {% if p.price %}
             <div class="prop-price">
-              {{ p.price|floatformat:0 }} <span style="font-size:.85rem;font-weight:400;color:var(--text-muted)">VNĐ</span>
+              {{ p.price|price_vn }}
             </div>
             {% endif %}
           </div>

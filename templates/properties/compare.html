@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load humanize %}
+{% load humanize property_format %}
 {% block title %}So sánh bất động sản | GeoEstate{% endblock %}
 {% block content %}
 <div class="container py-5">
@@ -45,7 +45,7 @@
         <tr>
           <th>Giá</th>
           {% for p in properties %}
-          <td>{{ p.price|floatformat:0|intcomma }} đ</td>
+          <td>{{ p.price|price_vn }}</td>
           {% endfor %}
         </tr>
 

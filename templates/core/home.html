@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load humanize %}
+{% load humanize property_format %}
 {% block title %}Trang chủ | GeoEstate{% endblock %}
 
 {% block head %}
@@ -494,7 +494,7 @@
           <span class="badge-gold" style="position:absolute;top:12px;left:12px;z-index:1">{{ p.get_listing_status_display }}</span>
         </div>
         <div class="prop-body">
-          <div class="prop-price">{{ p.price|floatformat:0 }} VNĐ</div>
+          <div class="prop-price">{{ p.price|price_vn }}</div>
           <div class="prop-name">{{ p.title }}</div>
           <div class="prop-loc"><i class="bi bi-geo-alt me-1"></i>{{ p.address }}</div>
           <div class="prop-meta">

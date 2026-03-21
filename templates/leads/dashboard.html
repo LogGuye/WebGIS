@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load property_format %}
 {% block title %}Dashboard | GeoEstate{% endblock %}
 {% block content %}
 <div class="container py-5">
@@ -75,7 +76,7 @@
               <tr>
                 <td>{{ row.property_type|title }}</td>
                 <td>{{ row.total }}</td>
-                <td>{% if row.avg_price %}{{ row.avg_price|floatformat:0 }} đ{% else %}-{% endif %}</td>
+                <td>{% if row.avg_price %}{{ row.avg_price|price_vn }}{% else %}-{% endif %}</td>
                 <td>{% if row.avg_area %}{{ row.avg_area|floatformat:1 }} m²{% else %}-{% endif %}</td>
               </tr>
               {% empty %}
@@ -89,3 +90,4 @@
   </div>
 </div>
 {% endblock %}
+%}

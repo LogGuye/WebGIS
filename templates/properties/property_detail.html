@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load property_format %}
 {% block title %}{{ property.title }} | GeoEstate{% endblock %}
 
 {% block breadcrumb %}
@@ -664,7 +665,7 @@
                 <div class="similar-body">
                   <div class="similar-title">{{ sp.title }}</div>
                   {% if sp.price %}
-                  <div class="similar-price">{{ sp.price|floatformat:0 }} đ</div>
+                  <div class="similar-price">{{ sp.price|price_vn }}</div>
                   {% endif %}
                 </div>
               </a>

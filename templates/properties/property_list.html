@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load humanize %}
+{% load humanize property_format %}
 {% block title %}Property Listings | GeoEstate{% endblock %}
 
 {% block breadcrumb %}
@@ -698,7 +698,7 @@
             </div>
             <div class="prop-card-footer">
               <div class="prop-card-price">
-                {% if p.price %}{{ p.price|floatformat:0 }}<span style="font-size:.8rem;font-weight:400;color:var(--text-muted)"> đ</span>{% else %}<span style="color:var(--text-muted);font-size:.9rem">Liên hệ để biết giá</span>{% endif %}
+                {% if p.price %}{{ p.price|price_vn }}{% else %}<span style="color:var(--text-muted);font-size:.9rem">Liên hệ để biết giá</span>{% endif %}
               </div>
               <a class="btn-card-view" href="{% url 'properties:detail' p.pk %}">
                 <i class="bi bi-eye"></i> Xem
@@ -759,7 +759,7 @@
 
           <div class="prop-list-right">
             <div class="prop-list-price">
-              {% if p.price %}{{ p.price|floatformat:0 }}<span style="font-size:.75rem;color:var(--text-muted)"> đ</span>{% else %}<span style="color:var(--text-muted)">Liên hệ để biết giá</span>{% endif %}
+              {% if p.price %}{{ p.price|price_vn }}{% else %}<span style="color:var(--text-muted)">Liên hệ để biết giá</span>{% endif %}
             </div>
             <a class="btn-card-view" href="{% url 'properties:detail' p.pk %}">
               <i class="bi bi-eye"></i> Xem
@@ -952,7 +952,15 @@
 
     function formatPrice(price) {
       if (price === null || price === undefined || Number.isNaN(price)) return 'Liên hệ để biết giá';
-      return `${Math.round(price).toLocaleString()} đ`;
+      if (price >= 1_000_000_000) {
+        const ty = Math.round((price / 1_000_000_000) * 10) / 10;
+        return `${ty.toString().replace('.', ',')} tỷ`;
+      }
+      if (price >= 1_000_000) {
+        const trieu = Math.round((price / 1_000_000) * 10) / 10;
+        return `${trieu.toString().replace('.', ',')} triệu`;
+      }
+      return `${Math.round(price).toLocaleString('vi-VN')} đ`;
     }
 
     async function loadMarkers() {
