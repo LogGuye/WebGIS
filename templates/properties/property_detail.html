@@ -697,9 +697,10 @@
   const lng = {{ property.location.x|floatformat:6 }};
   const map = L.map(mapEl, { scrollWheelZoom: false }).setView([lat, lng], 15);
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '&copy; OpenStreetMap contributors'
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    subdomains: 'abcd',
+    maxZoom: 20,
+    attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
   }).addTo(map);
 
   L.marker([lat, lng]).addTo(map)
