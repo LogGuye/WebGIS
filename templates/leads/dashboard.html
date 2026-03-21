@@ -159,6 +159,39 @@
   </div>
   {% endif %}
 
+  {% if dashboard_role == 'admin' %}
+  <div class="row g-4 mb-4">
+    <div class="col-lg-12">
+      <div class="card-geo p-4 h-100">
+        <h5 style="color:var(--text);margin-bottom:16px">Tin đăng gần đây</h5>
+        <div class="table-responsive">
+          <table class="table" style="color:var(--text)">
+            <thead><tr><th>Tiêu đề</th><th>Trạng thái</th><th>Môi giới</th><th>Thao tác</th></tr></thead>
+            <tbody>
+              {% for item in recent_properties %}
+              <tr>
+                <td>{{ item.title }}</td>
+                <td>{{ item.get_listing_status_display }}</td>
+                <td>{% if item.agent %}{{ item.agent.name }}{% else %}-{% endif %}</td>
+                <td>
+                  <div class="d-flex gap-2 flex-wrap">
+                    <a href="{% url 'properties:edit' item.pk %}" class="btn-geo-secondary" style="padding:6px 10px;font-size:12px">Sửa</a>
+                    <a href="{% url 'properties:images_manage' item.pk %}" class="btn-geo-secondary" style="padding:6px 10px;font-size:12px">Ảnh</a>
+                    <a href="{% url 'properties:detail' item.pk %}" class="btn-geo-secondary" style="padding:6px 10px;font-size:12px">Xem</a>
+                  </div>
+                </td>
+              </tr>
+              {% empty %}
+              <tr><td colspan="4" style="color:var(--text-muted)">Chưa có tin đăng nào.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
   <div class="row g-4 mb-4">
     <div class="col-lg-12">
       <div class="card-geo p-4 h-100">

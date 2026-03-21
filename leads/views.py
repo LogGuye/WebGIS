@@ -159,10 +159,10 @@ def dashboard(request):
         ]
         dashboard_note = "Bạn đang xem toàn bộ hệ thống: hàng tồn, lead, môi giới và hiệu suất chung."
         dashboard_actions = [
-            ("/admin/properties/property/add/", "Thêm bất động sản"),
-            ("/admin/properties/property/", "Quản lý bất động sản"),
+            ("/properties/create/", "Thêm bất động sản"),
+            ("/admin/properties/property/", "Toàn bộ bất động sản"),
             ("/admin/leads/lead/", "Quản lý khách hàng"),
-            ("/admin/leads/appointment/", "Quản lý lịch hẹn"),
+            ("/leads/appointments/create/", "Tạo lịch hẹn"),
             ("/admin/accounts/agent/", "Quản lý môi giới"),
         ]
     else:
