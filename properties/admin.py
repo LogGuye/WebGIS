@@ -113,7 +113,7 @@ class PropertyCsvImportAdmin(admin.ModelAdmin):
                     location=Point(lng, lat, srid=4326),
                 )
                 created += 1
-            self.message_user(request, f"Imported {created} properties from CSV.", level=messages.SUCCESS)
+            self.message_user(request, f"Đã nhập {created} bất động sản từ tệp CSV.", level=messages.SUCCESS)
             return redirect("..")
 
         return render(request, "admin/properties/property/import_csv.html", {})
@@ -121,3 +121,5 @@ class PropertyCsvImportAdmin(admin.ModelAdmin):
 
 admin.site.unregister(Property)
 admin.site.register(Property, type("PropertyAdminWithImport", (PropertyCsvImportAdmin, PropertyAdmin), {}))
+, {}))
+roperty, type("PropertyAdminWithImport", (PropertyCsvImportAdmin, PropertyAdmin), {}))
