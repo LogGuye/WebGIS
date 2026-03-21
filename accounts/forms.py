@@ -6,9 +6,14 @@ from .models import UserProfile
 
 
 class RegisterForm(UserCreationForm):
+    PUBLIC_ROLE_CHOICES = [
+        (UserProfile.Role.USER, UserProfile.Role.USER.label),
+        (UserProfile.Role.AGENT, UserProfile.Role.AGENT.label),
+    ]
+
     email = forms.EmailField(required=True)
     full_name = forms.CharField(max_length=150, required=True)
-    role = forms.ChoiceField(choices=UserProfile.Role.choices, initial=UserProfile.Role.USER)
+    role = forms.ChoiceField(choices=PUBLIC_ROLE_CHOICES, initial=UserProfile.Role.USER)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -70,3 +75,4 @@ class ProfileForm(forms.ModelForm):
             self.user.save()
             profile.save()
         return profile
+
