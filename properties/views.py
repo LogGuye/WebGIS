@@ -15,6 +15,7 @@ from core.gis_tools import (
     tool_similar_properties,
 )
 from .forms import PropertyCreateForm
+from .image_forms import PropertyImageOrderForm, PropertyImageUploadForm
 from .models import Amenity, Property, PropertyImage, SavedSearch
 
 
@@ -302,3 +303,80 @@ def property_create(request):
             messages.error(request, "Vui lòng kiểm tra lại thông tin đăng tin.")
 
     return render(request, "properties/property_create.html", {"form": form})
+erty_images_manage(request, pk):
+    prop = get_object_or_404(Property.objects.prefetch_related("images"), pk=pk)
+    if not _can_manage_property(request, prop):
+        messages.error(request, "Bạn không có quyền quản lý ảnh của tin này.")
+        return redirect("properties:list")
+
+    upload_form = PropertyImageUploadForm()
+    order_forms = {img.pk: PropertyImageOrderForm(instance=img, prefix=f"img-{img.pk}") for img in prop.images.all()}
+    return render(request, "properties/property_images_manage.html", {
+        "property": prop,
+        "upload_form": upload_form,
+        "order_forms": order_forms,
+    })
+
+
+@role_required(UserProfile.Role.AGENT, UserProfile.Role.ADMIN)
+def property_images_upload(request, pk):
+    prop = get_object_or_404(Property.objects.prefetch_related("images"), pk=pk)
+    if not _can_manage_property(request, prop):
+        messages.error(request, "Bạn không có quyền tải ảnh cho tin này.")
+        return redirect("properties:list")
+    if request.method == "POST":
+        files = request.FILES.getlist("images")
+        start = prop.images.count()
+        for idx, uploaded in enumerate(files):
+            PropertyImage.objects.create(property=prop, image=uploaded, caption=prop.title, is_primary=(start == 0 and idx == 0), sort_order=start + idx)
+        messages.success(request, f"Đã tải lên {len(files)} ảnh.")
+    return redirect("properties:images_manage", pk=prop.pk)
+
+
+@role_required(UserProfile.Role.AGENT, UserProfile.Role.ADMIN)
+def property_image_set_primary(request, image_id):
+    image = get_object_or_404(PropertyImage.objects.select_related("property"), pk=image_id)
+    prop = image.property
+    if not _can_manage_property(request, prop):
+        messages.error(request, "Bạn không có quyền cập nhật ảnh của tin này.")
+        return redirect("properties:list")
+    prop.images.update(is_primary=False)
+    image.is_primary = True
+    image.save(update_fields=["is_primary"])
+    messages.success(request, "Đã đặt ảnh chính.")
+    return redirect("properties:images_manage", pk=prop.pk)
+
+
+@role_required(UserProfile.Role.AGENT, UserProfile.Role.ADMIN)
+def property_image_delete(request, image_id):
+    image = get_object_or_404(PropertyImage.objects.select_related("property"), pk=image_id)
+    prop = image.property
+    if not _can_manage_property(request, prop):
+        messages.error(request, "Bạn không có quyền xóa ảnh của tin này.")
+        return redirect("properties:list")
+    was_primary = image.is_primary
+    image.delete()
+    if was_primary:
+        replacement = prop.images.order_by("sort_order", "id").first()
+        if replacement:
+            replacement.is_primary = True
+            replacement.save(update_fields=["is_primary"])
+    messages.success(request, "Đã xóa ảnh.")
+    return redirect("properties:images_manage", pk=prop.pk)
+
+
+@role_required(UserProfile.Role.AGENT, UserProfile.Role.ADMIN)
+def property_image_reorder(request, image_id):
+    image = get_object_or_404(PropertyImage.objects.select_related("property"), pk=image_id)
+    prop = image.property
+    if not _can_manage_property(request, prop):
+        messages.error(request, "Bạn không có quyền sắp xếp ảnh của tin này.")
+        return redirect("properties:list")
+    if request.method == "POST":
+        try:
+            image.sort_order = int(request.POST.get("sort_order", image.sort_order))
+            image.save(update_fields=["sort_order"])
+            messages.success(request, "Đã cập nhật thứ tự ảnh.")
+        except ValueError:
+            messages.error(request, "Thứ tự ảnh không hợp lệ.")
+    return redirect("properties:images_manage", pk=prop.pk)

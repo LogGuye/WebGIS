@@ -5,6 +5,11 @@ from . import views
 urlpatterns = [
     path("", views.property_list, name="list"),
     path("create/", views.property_create, name="create"),
+    path("<int:pk>/images/", views.property_images_manage, name="images_manage"),
+    path("<int:pk>/images/upload/", views.property_images_upload, name="images_upload"),
+    path("images/<int:image_id>/primary/", views.property_image_set_primary, name="image_set_primary"),
+    path("images/<int:image_id>/delete/", views.property_image_delete, name="image_delete"),
+    path("images/<int:image_id>/reorder/", views.property_image_reorder, name="image_reorder"),
     path("saved-searches/create/", views.saved_search_create, name="saved_search_create"),
     path("saved-searches/<int:pk>/delete/", views.saved_search_delete, name="saved_search_delete"),
     path("map/data/", views.property_map_data, name="map_data"),
