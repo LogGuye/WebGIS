@@ -5,6 +5,7 @@ from . import views
 urlpatterns = [
     path("", views.property_list, name="list"),
     path("create/", views.property_create, name="create"),
+    path("<int:pk>/edit/", views.property_edit, name="edit"),
     path("<int:pk>/images/", views.property_images_manage, name="images_manage"),
     path("<int:pk>/images/upload/", views.property_images_upload, name="images_upload"),
     path("images/<int:image_id>/primary/", views.property_image_set_primary, name="image_set_primary"),

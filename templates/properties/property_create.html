@@ -5,8 +5,8 @@
   <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
     <div>
       <p class="section-eyebrow">Dành cho môi giới</p>
-      <h1 class="section-heading mb-2">Đăng tin bất động sản</h1>
-      <p style="color:var(--text-muted);margin:0">Tạo tin mới, nhập địa chỉ hoặc chọn trực tiếp trên bản đồ để đặt vị trí ghim chính xác.</p>
+      <h1 class="section-heading mb-2">{% if is_edit %}Sửa tin bất động sản{% else %}Đăng tin bất động sản{% endif %}</h1>
+      <p style="color:var(--text-muted);margin:0">{% if is_edit %}Cập nhật thông tin tin đăng, vị trí, mô tả và ảnh ngay trên giao diện web.{% else %}Tạo tin mới, nhập địa chỉ hoặc chọn trực tiếp trên bản đồ để đặt vị trí ghim chính xác.{% endif %}</p>
     </div>
     <a href="{% url 'properties:list' %}" class="btn-geo-secondary"><i class="bi bi-arrow-left"></i> Quay lại danh sách</a>
   </div>
