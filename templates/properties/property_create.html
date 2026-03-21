@@ -85,6 +85,7 @@
         <div class="section-eyebrow" style="margin-bottom:8px">Lưu ý</div>
         <ul style="margin:0;padding-left:18px;color:var(--text-muted);line-height:1.8">
           <li>Môi giới chỉ đăng tin cho chính mình.</li>
+          <li>Tin môi giới tạo mới sẽ vào trạng thái chờ duyệt.</li>
           <li>Quản trị có thể đăng tin cho toàn hệ thống.</li>
           <li>Nên kiểm tra lại ghim sau khi tìm theo địa chỉ.</li>
           <li>Tọa độ chính xác giúp tin hiển thị đúng trên bản đồ.</li>
@@ -180,6 +181,15 @@
         },
         () => {
           mapHint.textContent = 'Không lấy được vị trí hiện tại. Hãy thử lại hoặc bấm trực tiếp lên bản đồ.';
+          myLocationBtn.disabled = false;
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    });
+  })();
+</script>
+{% endblock %}
+lên bản đồ.';
           myLocationBtn.disabled = false;
         },
         { enableHighAccuracy: true, timeout: 10000 }

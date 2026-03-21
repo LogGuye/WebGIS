@@ -33,6 +33,7 @@ class Property(models.Model):
         LAND = "land", _("Đất")
 
     class ListingStatus(models.TextChoices):
+        PENDING = "pending", _("Chờ duyệt")
         ACTIVE = "active", _("Đang bán")
         SOLD = "sold", _("Đã bán")
         HIDDEN = "hidden", _("Ẩn tin")
@@ -41,7 +42,7 @@ class Property(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True)
     property_type = models.CharField(max_length=20, choices=PropertyType.choices)
-    listing_status = models.CharField(max_length=20, choices=ListingStatus.choices, default=ListingStatus.ACTIVE)
+    listing_status = models.CharField(max_length=20, choices=ListingStatus.choices, default=ListingStatus.PENDING)
     is_featured = models.BooleanField(default=False)
     price = models.DecimalField(max_digits=14, decimal_places=2)
     area = models.FloatField(help_text="Area in square meters")

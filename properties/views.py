@@ -264,11 +264,21 @@ def property_create(request):
     profile = getattr(request.user, "profile", None)
     role = getattr(profile, "role", None)
     linked_agent = getattr(profile, "linked_agent", None)
-    form = PropertyCreateForm(request.POST or None)
+    form = PropertyCreateForm(request.POST or None, user_role=role)
 
     if request.method == "POST":
         if role == UserProfile.Role.AGENT and not linked_agent:
             messages.error(request, "Tài khoản môi giới chưa được gắn với hồ sơ môi giới nên chưa thể đăng tin.")
+        elif form.is_valid():
+            agent = linked_agent if role == UserProfile.Role.AGENT else linked_agent
+            prop = form.save(agent=agent)
+            messages.success(request, "Đăng tin thành công.")
+            return redirect("properties:detail", pk=prop.pk)
+        else:
+            messages.error(request, "Vui lòng kiểm tra lại thông tin đăng tin.")
+
+    return render(request, "properties/property_create.html", {"form": form})
+ khoản môi giới chưa được gắn với hồ sơ môi giới nên chưa thể đăng tin.")
         elif form.is_valid():
             agent = linked_agent if role == UserProfile.Role.AGENT else linked_agent
             prop = form.save(agent=agent)

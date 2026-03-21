@@ -49,6 +49,8 @@ class PropertyCreateForm(forms.ModelForm):
         obj.location = Point(self.cleaned_data["lng"], self.cleaned_data["lat"], srid=4326)
         if agent is not None:
             obj.agent = agent
+        if listing_status is not None:
+            obj.listing_status = listing_status
         if commit:
             obj.save()
             self.save_m2m()

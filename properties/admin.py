@@ -8,22 +8,28 @@ from django.utils import timezone
 from .models import Amenity, Property, PropertyChangeLog, PropertyImage
 
 
+def mark_pending(modeladmin, request, queryset):
+    updated = queryset.update(listing_status=Property.ListingStatus.PENDING)
+    messages.success(request, f"Đã chuyển {updated} bất động sản sang trạng thái chờ duyệt.")
+mark_pending.short_description = "Đánh dấu các tin đã chọn là chờ duyệt"
+
+
 def mark_active(modeladmin, request, queryset):
     updated = queryset.update(listing_status=Property.ListingStatus.ACTIVE)
-    messages.success(request, f"Updated {updated} properties to active.")
-mark_active.short_description = "Mark selected properties as active"
+    messages.success(request, f"Đã chuyển {updated} bất động sản sang trạng thái đang bán.")
+mark_active.short_description = "Duyệt và cho hiển thị các tin đã chọn"
 
 
 def mark_sold(modeladmin, request, queryset):
     updated = queryset.update(listing_status=Property.ListingStatus.SOLD)
-    messages.success(request, f"Updated {updated} properties to sold.")
-mark_sold.short_description = "Mark selected properties as sold"
+    messages.success(request, f"Đã chuyển {updated} bất động sản sang trạng thái đã bán.")
+mark_sold.short_description = "Đánh dấu các tin đã chọn là đã bán"
 
 
 def mark_hidden(modeladmin, request, queryset):
     updated = queryset.update(listing_status=Property.ListingStatus.HIDDEN)
-    messages.success(request, f"Updated {updated} properties to hidden.")
-mark_hidden.short_description = "Hide selected properties"
+    messages.success(request, f"Đã ẩn {updated} bất động sản đã chọn.")
+mark_hidden.short_description = "Ẩn các tin đã chọn"
 
 
 class PropertyImageInline(admin.TabularInline):
@@ -40,22 +46,22 @@ class PropertyAdmin(admin.ModelAdmin):
     list_editable = ("listing_status", "is_featured")
     filter_horizontal = ("amenities",)
     inlines = [PropertyImageInline]
-    actions = (mark_active, mark_sold, mark_hidden)
+    actions = (mark_pending, mark_active, mark_sold, mark_hidden)
 
     fieldsets = (
         (None, {"fields": ("title", "description", "property_type", "listing_status", "is_featured")}),
-        ("Pricing & size", {"fields": ("price", "area")}),
-        ("Location", {"fields": ("address", "location")}),
-        ("Relations", {"fields": ("agent", "amenities")}),
+        ("Giá & diện tích", {"fields": ("price", "area")}),
+        ("Vị trí", {"fields": ("address", "location")}),
+        ("Liên kết", {"fields": ("agent", "amenities")}),
     )
 
     def save_model(self, request, obj, form, change):
-        action = "updated" if change else "created"
+        action = "cập nhật" if change else "tạo mới"
         super().save_model(request, obj, form, change)
         PropertyChangeLog.objects.create(
             property=obj,
-            action=action,
-            summary=f"Property {action} via admin at {timezone.now():%Y-%m-%d %H:%M}",
+            action="updated" if change else "created",
+            summary=f"Tin đã được {action} trong trang quản trị lúc {timezone.now():%Y-%m-%d %H:%M}",
         )
 
 
@@ -105,7 +111,7 @@ class PropertyCsvImportAdmin(admin.ModelAdmin):
                     title=row["title"],
                     description=row.get("description", ""),
                     property_type=row["property_type"],
-                    listing_status=row.get("listing_status", Property.ListingStatus.ACTIVE),
+                    listing_status=row.get("listing_status", Property.ListingStatus.PENDING),
                     is_featured=str(row.get("is_featured", "")).lower() in {"1", "true", "yes"},
                     price=row["price"],
                     area=row["area"],
@@ -121,5 +127,3 @@ class PropertyCsvImportAdmin(admin.ModelAdmin):
 
 admin.site.unregister(Property)
 admin.site.register(Property, type("PropertyAdminWithImport", (PropertyCsvImportAdmin, PropertyAdmin), {}))
-, {}))
-roperty, type("PropertyAdminWithImport", (PropertyCsvImportAdmin, PropertyAdmin), {}))
