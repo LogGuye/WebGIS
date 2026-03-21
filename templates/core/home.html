@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load humanize %}
 {% block title %}Trang chủ | GeoEstate{% endblock %}
 
 {% block head %}
@@ -391,11 +392,11 @@
             <div class="stat-lbl">Môi giới</div>
           </div>
           <div class="stat-cell">
-            <div class="stat-num">{{ lead_count }}</div>
+            <div class="stat-num">{{ lead_count|floatformat:0|intcomma }}</div>
             <div class="stat-lbl">Khách tiềm năng</div>
           </div>
           <div class="stat-cell">
-            <div class="stat-num">{{ amenity_count }}</div>
+            <div class="stat-num">{{ amenity_count|floatformat:0|intcomma }}</div>
             <div class="stat-lbl">Tiện ích</div>
           </div>
         </div>

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load humanize %}
 {% block title %}Property Listings | GeoEstate{% endblock %}
 
 {% block breadcrumb %}
@@ -631,9 +632,9 @@
       <!-- Thanh trên của kết quả -->
       <div class="results-topbar fade-up">
         <div class="results-count-row">
-          <span class="results-num">{{ total_count }}</span>
+          <span class="results-num">{{ total_count|floatformat:0|intcomma }}</span>
           <span class="results-label">
-            tìm thấy {{ total_count }} bất động sản
+            tìm thấy {{ total_count|floatformat:0|intcomma }} bất động sản
           </span>
           <!-- Nút mở bộ lọc trên mobile -->
           <button class="mobile-filter-btn" id="mobileFilterToggle">
