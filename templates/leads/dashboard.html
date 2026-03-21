@@ -10,7 +10,7 @@
       <p style="color:var(--text-muted);margin:0">{{ dashboard_note }}</p>
     </div>
     {% if dashboard_role == 'admin' %}
-    <a href="/admin/" class="btn-geo-primary"><i class="bi bi-shield-lock"></i> Quản trị hệ thống</a>
+    <a href="/admin/properties/property/" class="btn-geo-primary"><i class="bi bi-sliders"></i> Quản lý hệ thống</a>
     {% else %}
     <a href="{% url 'properties:create' %}" class="btn-geo-primary"><i class="bi bi-building-add"></i> Đăng tin mới</a>
     {% endif %}

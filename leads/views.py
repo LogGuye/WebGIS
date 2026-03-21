@@ -117,8 +117,11 @@ def dashboard(request):
         ]
         dashboard_note = "Bạn đang xem toàn bộ hệ thống: hàng tồn, lead, môi giới và hiệu suất chung."
         dashboard_actions = [
-            ("/admin/", "Quản trị hệ thống"),
-            ("/accounts/profile/", "Quản lý hồ sơ"),
+            ("/admin/properties/property/add/", "Thêm bất động sản"),
+            ("/admin/properties/property/", "Quản lý bất động sản"),
+            ("/admin/leads/lead/", "Quản lý khách hàng"),
+            ("/admin/accounts/agent/", "Quản lý môi giới"),
+            ("/admin/accounts/userprofile/", "Quản lý tài khoản"),
         ]
     else:
         pending_tasks = [
