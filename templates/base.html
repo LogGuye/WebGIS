@@ -807,7 +807,6 @@
             </a>
           </li>
           <li class="d-none d-lg-block nav-dot align-self-center"></li>
-          {% endif %}
           <li class="nav-item">
             <a class="nav-link {% if request.resolver_match.url_name == 'lead_form' %}active{% endif %}"
                href="{% url 'leads:lead_form' %}">
@@ -1095,6 +1094,17 @@
         el.style.animationPlayState = 'paused';
         io.observe(el);
       });
+    }
+
+  })();
+  </script>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>
+
+
+     });
     }
 
   })();

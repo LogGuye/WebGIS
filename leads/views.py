@@ -2,7 +2,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.gis.geos import Point
 from django.db.models import Avg, Count
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 
 from accounts.models import Agent, UserProfile
 from accounts.permissions import role_required
@@ -42,14 +42,14 @@ def lead_form(request):
                     lead_obj.assigned_agent = request.user.profile.linked_agent
                     lead_obj.save(update_fields=["assigned_agent"])
                     assignment = {"agent": lead_obj.assigned_agent, "distance": 0}
-                    messages.success(request, "Lead đã được gán cho agent hiện tại.")
+                    messages.success(request, "Lead đã được gán cho môi giới hiện tại.")
                 elif agent:
                     lead_obj.assigned_agent = agent
                     lead_obj.save(update_fields=["assigned_agent"])
                     assignment = {"agent": agent, "distance": round(distance_km, 2)}
-                    messages.success(request, "Lead đã được phân phối cho agent gần nhất.")
+                    messages.success(request, "Lead đã được phân phối cho môi giới gần nhất.")
                 else:
-                    messages.warning(request, "Chưa có agent nào trong hệ thống.")
+                    messages.warning(request, "Chưa có môi giới nào trong hệ thống.")
             except ValueError:
                 messages.error(request, "Vui lòng nhập tọa độ hợp lệ.")
         else:
@@ -59,13 +59,47 @@ def lead_form(request):
     return render(request, "leads/lead_form.html", context)
 
 
+@login_required
+def dashboard_home(request):
+    profile = getattr(request.user, "profile", None)
+    role = getattr(profile, "role", UserProfile.Role.USER)
+    if role in (UserProfile.Role.AGENT, UserProfile.Role.ADMIN):
+        return redirect("leads:dashboard")
+    return customer_dashboard(request)
+
+
+@login_required
+def customer_dashboard(request):
+    wishlist_ids = request.session.get("wishlist", [])
+    compare_ids = request.session.get("compare", [])
+    wishlist_qs = Property.objects.filter(pk__in=wishlist_ids).select_related("agent").prefetch_related("images")
+    compare_qs = Property.objects.filter(pk__in=compare_ids).select_related("agent").prefetch_related("images")
+
+    recommended = Property.objects.filter(listing_status=Property.ListingStatus.ACTIVE, is_featured=True).select_related("agent").prefetch_related("images")[:6]
+
+    context = {
+        "wishlist_properties": wishlist_qs[:3],
+        "compare_properties": compare_qs[:3],
+        "recommended_properties": recommended,
+        "wishlist_total": wishlist_qs.count(),
+        "compare_total": compare_qs.count(),
+        "featured_total": Property.objects.filter(listing_status=Property.ListingStatus.ACTIVE, is_featured=True).count(),
+        "active_total": Property.objects.filter(listing_status=Property.ListingStatus.ACTIVE).count(),
+    }
+    return render(request, "leads/customer_dashboard.html", context)
+
+
 @role_required(UserProfile.Role.AGENT, UserProfile.Role.ADMIN)
 def dashboard(request):
     property_qs = Property.objects.all()
     lead_qs = Lead.objects.all()
-    if hasattr(request.user, "profile") and request.user.profile.role == UserProfile.Role.AGENT and request.user.profile.linked_agent:
-        property_qs = property_qs.filter(agent=request.user.profile.linked_agent)
-        lead_qs = lead_qs.filter(assigned_agent=request.user.profile.linked_agent)
+    profile = getattr(request.user, "profile", None)
+    role = getattr(profile, "role", UserProfile.Role.USER)
+    linked_agent = getattr(profile, "linked_agent", None)
+
+    if role == UserProfile.Role.AGENT and linked_agent:
+        property_qs = property_qs.filter(agent=linked_agent)
+        lead_qs = lead_qs.filter(assigned_agent=linked_agent)
 
     property_status = {
         row["listing_status"]: row["total"]
@@ -74,7 +108,10 @@ def dashboard(request):
     property_types = property_qs.values("property_type").annotate(total=Count("id")).order_by("property_type")
     active_qs = property_qs.filter(listing_status=Property.ListingStatus.ACTIVE)
     avg_price_by_type = active_qs.values("property_type").annotate(avg_price=Avg("price"), avg_area=Avg("area"), total=Count("id")).order_by("property_type")
+
     context = {
+        "dashboard_role": role,
+        "linked_agent": linked_agent,
         "property_total": property_qs.count(),
         "active_total": property_status.get("active", 0),
         "sold_total": property_status.get("sold", 0),

@@ -80,7 +80,7 @@
                 <td>{% if row.avg_area %}{{ row.avg_area|floatformat:1 }} m²{% else %}-{% endif %}</td>
               </tr>
               {% empty %}
-              <tr><td colspan="4" style="color:var(--text-muted)">No analytics data yet.</td></tr>
+              <tr><td colspan="4" style="color:var(--text-muted)">Chưa có dữ liệu phân tích.</td></tr>
               {% endfor %}
             </tbody>
           </table>
