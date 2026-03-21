@@ -410,7 +410,7 @@
             allowfullscreen loading="lazy" title="Bản đồ bất động sản — Thành phố Hồ Chí Minh">
           </iframe>
           <div class="map-frame-overlay"></div>
-          <div class="map-chip">BẢN ĐỒ TRỰC TIẾP · TP.HCM</div>
+          <div class="map-chip">KHÁM PHÁ NHANH · TP.HCM</div>
         </div>
       </div>
 
@@ -517,13 +517,16 @@
 <!-- ══ CTA ══ -->
 <div class="container" style="padding-bottom:80px">
   <div class="cta-banner fade-up">
-    <h2>Bắt đầu khám phá ngay hôm nay</h2>
-    <p>Hàng nghìn bất động sản đang chờ bạn trên bản đồ. Tìm kiếm theo vị trí, tiện ích và ngân sách — tất cả trong một nơi.</p>
+    <h2>Sẵn sàng bắt đầu?</h2>
+    <p>Đi thẳng vào khu vực khám phá, lọc nhanh theo nhu cầu và lưu lại những tin phù hợp nhất.</p>
     <div class="cta-actions">
-      <a href="{% url 'properties:list' %}" class="btn-geo-primary"><i class="bi bi-grid-3x3-gap"></i> Xem bất động sản</a>
-      <a href="{% url 'properties:nearby_search' %}" class="btn-geo-secondary"><i class="bi bi-geo-alt"></i> Tìm lân cận</a>
+      <a href="{% url 'properties:list' %}" class="btn-geo-primary"><i class="bi bi-compass"></i> Mở khu vực khám phá</a>
+      <a href="{% url 'leads:dashboard_home' %}" class="btn-geo-secondary"><i class="bi bi-bar-chart"></i> Mở bảng điều khiển</a>
     </div>
   </div>
+</div>
+
+{% endblock %}</div>
 </div>
 
 {% endblock %}
