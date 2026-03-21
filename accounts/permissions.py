@@ -3,7 +3,10 @@ from functools import wraps
 from django.contrib import messages
 from django.shortcuts import redirect
 
-from .models import UserProfile
+from leads.models import Lead
+from properties.models import Amenity, Property
+
+from .models import Agent, UserProfile
 
 
 def _role(user):
