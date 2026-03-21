@@ -1,11 +1,12 @@
 {% extends "base.html" %}
-{% block title %}Login | GeoEstate{% endblock %}
+{% block title %}Đăng nhập | GeoEstate{% endblock %}
 {% block content %}
 <div class="container py-5" style="max-width:640px">
   <div class="card-geo p-4 p-md-5">
-    <p class="section-eyebrow">Account Access</p>
-    <h1 class="section-heading mb-4">Sign in</h1>
+    <p class="section-eyebrow">Truy cập tài khoản</p>
+    <h1 class="section-heading mb-4">Đăng nhập</h1>
     <form method="post" class="d-flex flex-column gap-3">
+      <input type="hidden" name="next" value="{{ next }}" />
       {% csrf_token %}
       <div>
         <label class="form-label">Username</label>

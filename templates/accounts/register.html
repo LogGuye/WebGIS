@@ -24,6 +24,7 @@
       </div>
       <div class="col-md-6">
         <label class="form-label">Vai trò</label>{{ form.role }}
+        <div class="small mt-1" style="color:var(--text-muted)">Khách hàng dùng khu vực cá nhân, môi giới và quản trị sẽ vào bảng điều khiển nghiệp vụ.</div>
         {% if form.role.errors %}<div class="text-danger small mt-1">{{ form.role.errors|striptags }}</div>{% endif %}
       </div>
       <div class="col-md-6">
