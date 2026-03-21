@@ -171,6 +171,29 @@ def dashboard(request):
 
 
 @role_required(UserProfile.Role.AGENT, UserProfile.Role.ADMIN)
+def lead_stage_update(request, pk):
+    lead = get_object_or_404(Lead, pk=pk)
+    profile = getattr(request.user, "profile", None)
+    role = getattr(profile, "role", None)
+    linked_agent = getattr(profile, "linked_agent", None)
+
+    if role == UserProfile.Role.AGENT and (not linked_agent or lead.assigned_agent_id != linked_agent.id):
+        messages.error(request, "Bạn không có quyền cập nhật lead này.")
+        return redirect("leads:dashboard")
+
+    if request.method == "POST":
+        next_stage = request.POST.get("pipeline_stage")
+        allowed = {choice[0] for choice in Lead.PipelineStage.choices}
+        if next_stage in allowed:
+            lead.pipeline_stage = next_stage
+            lead.save(update_fields=["pipeline_stage"])
+            messages.success(request, f"Đã cập nhật lead sang trạng thái: {lead.get_pipeline_stage_display()}.")
+        else:
+            messages.error(request, "Trạng thái lead không hợp lệ.")
+    return redirect("leads:dashboard")
+
+
+@role_required(UserProfile.Role.AGENT, UserProfile.Role.ADMIN)
 def appointment_create(request):
     profile = getattr(request.user, "profile", None)
     role = getattr(profile, "role", None)

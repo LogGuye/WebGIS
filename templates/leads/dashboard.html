@@ -99,6 +99,17 @@
                 <td>{{ lead.name }}</td>
                 <td>{{ lead.budget|price_vn }}</td>
                 <td>{{ lead.property_interest|default:'-' }}</td>
+                <td>
+                  <form method="post" action="{% url 'leads:lead_stage_update' lead.pk %}" class="d-flex gap-2 align-items-center">
+                    {% csrf_token %}
+                    <select name="pipeline_stage" class="form-geo" style="min-width:150px;padding:6px 10px;height:auto">
+                      {% for value, label in lead.PipelineStage.choices %}
+                      <option value="{{ value }}" {% if lead.pipeline_stage == value %}selected{% endif %}>{{ label }}</option>
+                      {% endfor %}
+                    </select>
+                    <button type="submit" class="btn-geo-secondary" style="padding:6px 10px;font-size:12px">Lưu</button>
+                  </form>
+                </td>
                 <td>{% if lead.assigned_agent %}{{ lead.assigned_agent.name }}{% else %}-{% endif %}</td>
               </tr>
               {% empty %}
