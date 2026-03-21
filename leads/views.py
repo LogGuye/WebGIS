@@ -1,7 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.gis.geos import Point
-from django.db.models import Avg, Count
+from django.db.models import Avg, Count, Q
 from django.shortcuts import redirect, render
 
 from accounts.models import Agent, UserProfile
@@ -74,7 +74,6 @@ def customer_dashboard(request):
     compare_ids = request.session.get("compare", [])
     wishlist_qs = Property.objects.filter(pk__in=wishlist_ids).select_related("agent").prefetch_related("images")
     compare_qs = Property.objects.filter(pk__in=compare_ids).select_related("agent").prefetch_related("images")
-
     recommended = Property.objects.filter(listing_status=Property.ListingStatus.ACTIVE, is_featured=True).select_related("agent").prefetch_related("images")[:6]
 
     context = {
@@ -109,9 +108,28 @@ def dashboard(request):
     active_qs = property_qs.filter(listing_status=Property.ListingStatus.ACTIVE)
     avg_price_by_type = active_qs.values("property_type").annotate(avg_price=Avg("price"), avg_area=Avg("area"), total=Count("id")).order_by("property_type")
 
+    if role == UserProfile.Role.ADMIN:
+        pending_tasks = [
+            ("Lead chưa bật cảnh báo", lead_qs.filter(alert_enabled=False).count()),
+            ("Tin đang ẩn", property_qs.filter(listing_status=Property.ListingStatus.HIDDEN).count()),
+            ("Tin nổi bật đang chạy", property_qs.filter(is_featured=True, listing_status=Property.ListingStatus.ACTIVE).count()),
+            ("Môi giới đang hoạt động", Agent.objects.count()),
+        ]
+        dashboard_note = "Bạn đang xem toàn bộ hệ thống: hàng tồn, lead, môi giới và hiệu suất chung."
+    else:
+        pending_tasks = [
+            ("Lead cần theo dõi", lead_qs.count()),
+            ("Lead bật cảnh báo", lead_qs.filter(alert_enabled=True).count()),
+            ("Tin đang bán của bạn", property_qs.filter(listing_status=Property.ListingStatus.ACTIVE).count()),
+            ("Tin nổi bật bạn đang phụ trách", property_qs.filter(is_featured=True, listing_status=Property.ListingStatus.ACTIVE).count()),
+        ]
+        dashboard_note = "Bạn đang xem khu vực làm việc cá nhân: lead phụ trách, nguồn hàng và tình trạng tin đăng của mình."
+
     context = {
         "dashboard_role": role,
         "linked_agent": linked_agent,
+        "dashboard_note": dashboard_note,
+        "pending_tasks": pending_tasks,
         "property_total": property_qs.count(),
         "active_total": property_status.get("active", 0),
         "sold_total": property_status.get("sold", 0),

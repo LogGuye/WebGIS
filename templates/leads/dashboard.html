@@ -1,57 +1,71 @@
 {% extends "base.html" %}
 {% load property_format %}
-{% block title %}Dashboard | GeoEstate{% endblock %}
+{% block title %}Bảng điều khiển | GeoEstate{% endblock %}
 {% block content %}
 <div class="container py-5">
   <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
     <div>
-      <p class="section-eyebrow">Analytics & Operations</p>
-      <h1 class="section-heading mb-0">Dashboard</h1>
+      <p class="section-eyebrow">{% if dashboard_role == 'admin' %}Tổng quan vận hành{% else %}Khu vực làm việc của môi giới{% endif %}</p>
+      <h1 class="section-heading mb-2">{% if dashboard_role == 'admin' %}Bảng điều khiển quản trị{% else %}Bảng điều khiển môi giới{% endif %}</h1>
+      <p style="color:var(--text-muted);margin:0">{{ dashboard_note }}</p>
     </div>
     <a href="{% url 'leads:lead_form' %}" class="btn-geo-primary"><i class="bi bi-person-lines-fill"></i> Tạo khách hàng mới</a>
   </div>
 
+  {% if dashboard_role == 'agent' and linked_agent %}
+  <div class="card-geo p-4 mb-4">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+      <div>
+        <div class="section-eyebrow" style="margin-bottom:6px">Hồ sơ môi giới liên kết</div>
+        <div style="color:var(--text);font-weight:700;font-size:1.2rem">{{ linked_agent.name }}</div>
+        <div style="color:var(--text-muted);margin-top:4px">{{ linked_agent.email }} · {{ linked_agent.phone }}</div>
+      </div>
+      <div class="stat-pill">Đang phụ trách khu vực riêng</div>
+    </div>
+  </div>
+  {% endif %}
+
   <div class="row g-4 mb-4">
-    <div class="col-md-6 col-xl-3"><div class="card-geo p-4"><div class="stat-num">{{ property_total }}</div><div class="stat-lbl">Properties</div></div></div>
-    <div class="col-md-6 col-xl-3"><div class="card-geo p-4"><div class="stat-num">{{ active_total }}</div><div class="stat-lbl">Active</div></div></div>
-    <div class="col-md-6 col-xl-3"><div class="card-geo p-4"><div class="stat-num">{{ sold_total }}</div><div class="stat-lbl">Sold</div></div></div>
-    <div class="col-md-6 col-xl-3"><div class="card-geo p-4"><div class="stat-num">{{ hidden_total }}</div><div class="stat-lbl">Hidden</div></div></div>
-    <div class="col-md-6 col-xl-3"><div class="card-geo p-4"><div class="stat-num">{{ featured_total }}</div><div class="stat-lbl">Featured</div></div></div>
-    <div class="col-md-6 col-xl-3"><div class="card-geo p-4"><div class="stat-num">{{ lead_total }}</div><div class="stat-lbl">Leads</div></div></div>
-    <div class="col-md-6 col-xl-3"><div class="card-geo p-4"><div class="stat-num">{{ alert_total }}</div><div class="stat-lbl">Alerts</div></div></div>
-    <div class="col-md-6 col-xl-3"><div class="card-geo p-4"><div class="stat-num">{{ agent_total }}</div><div class="stat-lbl">Agents</div></div></div>
+    <div class="col-md-6 col-xl-3"><div class="card-geo p-4"><div class="stat-num">{{ property_total }}</div><div class="stat-lbl">Bất động sản</div></div></div>
+    <div class="col-md-6 col-xl-3"><div class="card-geo p-4"><div class="stat-num">{{ active_total }}</div><div class="stat-lbl">Đang bán</div></div></div>
+    <div class="col-md-6 col-xl-3"><div class="card-geo p-4"><div class="stat-num">{{ sold_total }}</div><div class="stat-lbl">Đã bán</div></div></div>
+    <div class="col-md-6 col-xl-3"><div class="card-geo p-4"><div class="stat-num">{{ hidden_total }}</div><div class="stat-lbl">Ẩn tin</div></div></div>
+    <div class="col-md-6 col-xl-3"><div class="card-geo p-4"><div class="stat-num">{{ featured_total }}</div><div class="stat-lbl">Tin nổi bật</div></div></div>
+    <div class="col-md-6 col-xl-3"><div class="card-geo p-4"><div class="stat-num">{{ lead_total }}</div><div class="stat-lbl">Khách tiềm năng</div></div></div>
+    <div class="col-md-6 col-xl-3"><div class="card-geo p-4"><div class="stat-num">{{ alert_total }}</div><div class="stat-lbl">Đã bật cảnh báo</div></div></div>
+    <div class="col-md-6 col-xl-3"><div class="card-geo p-4"><div class="stat-num">{{ agent_total }}</div><div class="stat-lbl">Môi giới</div></div></div>
   </div>
 
   <div class="row g-4 mb-4">
     <div class="col-lg-5">
       <div class="card-geo p-4 h-100">
-        <h5 style="color:var(--text);margin-bottom:16px">Properties by type</h5>
-        {% for item in property_types %}
+        <h5 style="color:var(--text);margin-bottom:16px">Việc cần xử lý</h5>
+        {% for label, value in pending_tasks %}
         <div class="d-flex justify-content-between align-items-center py-2 border-bottom" style="border-color:var(--border)!important">
-          <span style="color:var(--text-dim)">{{ item.property_type|title }}</span>
-          <span class="badge-gold">{{ item.total }}</span>
+          <span style="color:var(--text-dim)">{{ label }}</span>
+          <span class="badge-gold">{{ value }}</span>
         </div>
         {% empty %}
-        <p style="color:var(--text-muted)">No data yet.</p>
+        <p style="color:var(--text-muted)">Chưa có việc cần xử lý.</p>
         {% endfor %}
       </div>
     </div>
     <div class="col-lg-7">
       <div class="card-geo p-4 h-100">
-        <h5 style="color:var(--text);margin-bottom:16px">Recent leads</h5>
+        <h5 style="color:var(--text);margin-bottom:16px">Khách tiềm năng gần đây</h5>
         <div class="table-responsive">
           <table class="table" style="color:var(--text)">
-            <thead><tr><th>Name</th><th>Budget</th><th>Interest</th><th>Agent</th></tr></thead>
+            <thead><tr><th>Khách hàng</th><th>Ngân sách</th><th>Nhu cầu</th><th>Môi giới</th></tr></thead>
             <tbody>
               {% for lead in recent_leads %}
               <tr>
                 <td>{{ lead.name }}</td>
-                <td>{{ lead.budget|floatformat:0 }} đ</td>
+                <td>{{ lead.budget|price_vn }}</td>
                 <td>{{ lead.property_interest|default:'-' }}</td>
                 <td>{% if lead.assigned_agent %}{{ lead.assigned_agent.name }}{% else %}-{% endif %}</td>
               </tr>
               {% empty %}
-              <tr><td colspan="4" style="color:var(--text-muted)">No leads yet.</td></tr>
+              <tr><td colspan="4" style="color:var(--text-muted)">Chưa có khách tiềm năng nào.</td></tr>
               {% endfor %}
             </tbody>
           </table>
@@ -61,20 +75,33 @@
   </div>
 
   <div class="row g-4">
-    <div class="col-lg-12">
-      <div class="card-geo p-4">
-        <h5 style="color:var(--text);margin-bottom:16px">Analytics</h5>
+    <div class="col-lg-5">
+      <div class="card-geo p-4 h-100">
+        <h5 style="color:var(--text);margin-bottom:16px">Phân bổ theo loại bất động sản</h5>
+        {% for item in property_types %}
+        <div class="d-flex justify-content-between align-items-center py-2 border-bottom" style="border-color:var(--border)!important">
+          <span style="color:var(--text-dim)">{{ item.property_type }}</span>
+          <span class="badge-gold">{{ item.total }}</span>
+        </div>
+        {% empty %}
+        <p style="color:var(--text-muted)">Chưa có dữ liệu.</p>
+        {% endfor %}
+      </div>
+    </div>
+    <div class="col-lg-7">
+      <div class="card-geo p-4 h-100">
+        <h5 style="color:var(--text);margin-bottom:16px">Phân tích nhanh</h5>
         <div class="row g-3 mb-4">
-          <div class="col-md-6 col-xl-3"><div style="background:var(--bg-3);border:1px solid var(--border);border-radius:var(--radius-md);padding:16px"><div class="stat-lbl">Avg active price</div><div style="font-family:'Cormorant Garamond',serif;font-size:1.8rem;color:var(--gold)">{% if avg_price_all %}{{ avg_price_all|floatformat:0 }}{% else %}-{% endif %}</div></div></div>
-          <div class="col-md-6 col-xl-3"><div style="background:var(--bg-3);border:1px solid var(--border);border-radius:var(--radius-md);padding:16px"><div class="stat-lbl">Avg active area</div><div style="font-family:'Cormorant Garamond',serif;font-size:1.8rem;color:var(--gold)">{% if avg_area_all %}{{ avg_area_all|floatformat:1 }}{% else %}-{% endif %}</div></div></div>
+          <div class="col-md-6"><div style="background:var(--bg-3);border:1px solid var(--border);border-radius:var(--radius-md);padding:16px"><div class="stat-lbl">Giá trung bình tin đang bán</div><div style="font-family:'Cormorant Garamond',serif;font-size:1.8rem;color:var(--gold)">{% if avg_price_all %}{{ avg_price_all|price_vn }}{% else %}-{% endif %}</div></div></div>
+          <div class="col-md-6"><div style="background:var(--bg-3);border:1px solid var(--border);border-radius:var(--radius-md);padding:16px"><div class="stat-lbl">Diện tích trung bình</div><div style="font-family:'Cormorant Garamond',serif;font-size:1.8rem;color:var(--gold)">{% if avg_area_all %}{{ avg_area_all|floatformat:1 }} m²{% else %}-{% endif %}</div></div></div>
         </div>
         <div class="table-responsive">
           <table class="table" style="color:var(--text)">
-            <thead><tr><th>Type</th><th>Total</th><th>Avg price</th><th>Avg area</th></tr></thead>
+            <thead><tr><th>Loại</th><th>Số lượng</th><th>Giá trung bình</th><th>Diện tích TB</th></tr></thead>
             <tbody>
               {% for row in avg_price_by_type %}
               <tr>
-                <td>{{ row.property_type|title }}</td>
+                <td>{{ row.property_type }}</td>
                 <td>{{ row.total }}</td>
                 <td>{% if row.avg_price %}{{ row.avg_price|price_vn }}{% else %}-{% endif %}</td>
                 <td>{% if row.avg_area %}{{ row.avg_area|floatformat:1 }} m²{% else %}-{% endif %}</td>
@@ -90,4 +117,3 @@
   </div>
 </div>
 {% endblock %}
-%}
