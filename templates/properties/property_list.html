@@ -644,7 +644,7 @@
 
         <div class="topbar-right">
           <select class="sort-select" id="sortSelect" name="sort" form="filterForm">
-            <option value="default" {% if filters.sort == 'default' %}selected{% endif %}>Sắp xếp: Mặc định</option>
+            <option value="default" {% if filters.sort == 'default' %}selected{% endif %}>Mặc định</option>
             <option value="newest" {% if filters.sort == 'newest' %}selected{% endif %}>Mới nhất</option>
             <option value="price_asc" {% if filters.sort == 'price_asc' %}selected{% endif %}>Giá: Thấp → Cao</option>
             <option value="price_desc" {% if filters.sort == 'price_desc' %}selected{% endif %}>Giá: Cao → Thấp</option>
@@ -762,7 +762,7 @@
               {% if p.price %}{{ p.price|price_vn }}{% else %}<span style="color:var(--text-muted)">Liên hệ để biết giá</span>{% endif %}
             </div>
             <a class="btn-card-view" href="{% url 'properties:detail' p.pk %}">
-              <i class="bi bi-eye"></i> Xem
+              <i class="bi bi-eye"></i> Chi tiết
             </a>
           </div>
 
@@ -1048,4 +1048,5 @@
   }
   .quick-loc-btn:hover { border-color: var(--gold-border); color: var(--gold); background: var(--gold-dim); }
 </style>
+{% endblock %}yle>
 {% endblock %}
