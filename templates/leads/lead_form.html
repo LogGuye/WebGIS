@@ -536,19 +536,15 @@
           <div class="steps-row">
             <div class="step active">
               <div class="step-dot">1</div>
-              <div class="step-label">Contact</div>
+              <div class="step-label">Liên hệ</div>
             </div>
             <div class="step">
               <div class="step-dot">2</div>
-              <div class="step-label">Budget</div>
+              <div class="step-label">Ngân sách</div>
             </div>
             <div class="step">
               <div class="step-dot">3</div>
-              <div class="step-label">Location</div>
-            </div>
-            <div class="step">
-              <div class="step-dot">4</div>
-              <div class="step-label">Submit</div>
+              <div class="step-label">Khu vực</div>
             </div>
           </div>
 
@@ -599,11 +595,11 @@
                        placeholder="e.g. 3000000000" step="500000000" required />
               </div>
               <div class="budget-presets">
-                <button type="button" class="budget-chip" data-val="1000000000">1 Billion</button>
-                <button type="button" class="budget-chip" data-val="2000000000">2 Billion</button>
-                <button type="button" class="budget-chip" data-val="5000000000">5 Billion</button>
-                <button type="button" class="budget-chip" data-val="10000000000">10 Billion</button>
-                <button type="button" class="budget-chip" data-val="20000000000">20 Billion+</button>
+                <button type="button" class="budget-chip" data-val="1000000000">1 tỷ</button>
+                <button type="button" class="budget-chip" data-val="2000000000">2 tỷ</button>
+                <button type="button" class="budget-chip" data-val="5000000000">5 tỷ</button>
+                <button type="button" class="budget-chip" data-val="10000000000">10 tỷ</button>
+                <button type="button" class="budget-chip" data-val="20000000000">20 tỷ+</button>
               </div>
               <div class="field-hint">
                 <i class="bi bi-info-circle"></i>
@@ -665,7 +661,7 @@
                 <div class="input-icon-wrap">
                   <i class="bi bi-compass"></i>
                   <input type="text" id="idLng" name="lng" class="field-input"
-                         placeholder="e.g. 106.7009" required />
+                         placeholder="Ví dụ: 106.7009" required />
                 </div>
               </div>
             </div>
@@ -708,7 +704,7 @@
 
             <p style="text-align:center;font-size:11.5px;color:var(--text-muted);margin-top:12px">
               <i class="bi bi-shield-check me-1" style="color:var(--gold)"></i>
-              Your information is kept private and only shared with your assigned agent.
+              Thông tin của bạn được giữ riêng tư và chỉ chia sẻ cho môi giới được phân công.
             </p>
 
           </form>
@@ -880,7 +876,7 @@
       updateMiniMap(lat, lng);
       geoBtn.innerHTML = '<i class="bi bi-check-circle"></i> Set';
       setTimeout(() => {
-        geoBtn.innerHTML = '<i class="bi bi-crosshair"></i> My location';
+        geoBtn.innerHTML = '<i class="bi bi-crosshair"></i> Vị trí của tôi';
         geoBtn.disabled = false;
       }, 2000);
     }, () => {
@@ -983,6 +979,36 @@ k %}
 %}
 }
 }
+}
+
+%}
+}
+(360deg); } }
+  .spin { display: inline-block; animation: spin .7s linear infinite; }
+</style>
+{% endblock %}
+k %}
+%}
+}
+}
+}
+
+%}
+}
+
+%}
+}
+}
+}
+
+%}
+}
+
+}
+}
+}
+
+%}
 }
 
 %}
