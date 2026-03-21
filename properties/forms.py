@@ -38,6 +38,7 @@ class PropertyCreateForm(forms.ModelForm):
         self.fields["description"].widget = forms.Textarea(attrs={"class": "form-geo", "rows": 5, "placeholder": "Mô tả ngắn về bất động sản..."})
         self.fields["title"].widget.attrs.setdefault("placeholder", "Ví dụ: Nhà phố 2 mặt tiền tại Quận 7")
         self.fields["address"].widget.attrs.setdefault("placeholder", "Số nhà, đường, quận/huyện, thành phố")
+        self.fields["address"].widget.attrs.setdefault("id", "id_address")
         self.fields["price"].widget.attrs.setdefault("placeholder", "Ví dụ: 5500000000")
         self.fields["area"].widget.attrs.setdefault("placeholder", "Ví dụ: 85")
         self.fields["lat"].widget.attrs.setdefault("placeholder", "Ví dụ: 10.7769")
