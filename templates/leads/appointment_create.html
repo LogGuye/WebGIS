@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Tạo lịch hẹn | GeoEstate{% endblock %}
+{% block content %}
+<div class="container py-5" style="max-width:900px">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+    <div>
+      <p class="section-eyebrow">Lịch hẹn xem nhà</p>
+      <h1 class="section-heading mb-2">Tạo lịch hẹn</h1>
+      <p style="color:var(--text-muted);margin:0">Chọn khách hàng, bất động sản và thời gian hẹn. Khi tạo thành công, lead sẽ tự chuyển sang trạng thái đã hẹn xem.</p>
+    </div>
+    <a href="{% url 'leads:dashboard' %}" class="btn-geo-secondary"><i class="bi bi-arrow-left"></i> Quay lại dashboard</a>
+  </div>
+
+  <div class="card-geo p-4 p-md-5">
+    <form method="post" class="row g-3">
+      {% csrf_token %}
+      <div class="col-md-6">
+        <label class="form-label">Khách hàng</label>{{ form.lead }}
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Bất động sản</label>{{ form.property }}
+      </div>
+      <div class="col-md-6">
+        <label class="form-label">Thời gian hẹn</label>{{ form.scheduled_at }}
+      </div>
+      <div class="col-12">
+        <label class="form-label">Ghi chú</label>{{ form.notes }}
+      </div>
+      {% if form.errors %}
+      <div class="col-12"><div class="alert alert-danger">Vui lòng kiểm tra lại các trường rồi thử lại.</div></div>
+      {% endif %}
+      <div class="col-12 d-flex gap-2 flex-wrap">
+        <button type="submit" class="btn-admin"><i class="bi bi-calendar-check"></i> Tạo lịch hẹn</button>
+        <a href="{% url 'leads:dashboard' %}" class="btn-geo-secondary">Hủy</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

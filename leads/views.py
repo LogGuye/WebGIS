@@ -168,3 +168,31 @@ def dashboard(request):
         "upcoming_appointments": appointment_qs.order_by("scheduled_at")[:5],
     }
     return render(request, "leads/dashboard.html", context)
+
+
+@role_required(UserProfile.Role.AGENT, UserProfile.Role.ADMIN)
+def appointment_create(request):
+    profile = getattr(request.user, "profile", None)
+    role = getattr(profile, "role", None)
+    linked_agent = getattr(profile, "linked_agent", None)
+    form = AppointmentCreateForm(request.POST or None, role=role, linked_agent=linked_agent)
+
+    if request.method == "POST":
+        if role == UserProfile.Role.AGENT and not linked_agent:
+            messages.error(request, "Tài khoản môi giới chưa được gắn với hồ sơ môi giới nên chưa thể tạo lịch hẹn.")
+        elif form.is_valid():
+            appointment = form.save(commit=False)
+            if role == UserProfile.Role.AGENT:
+                appointment.agent = linked_agent
+            elif not appointment.agent_id:
+                appointment.agent = appointment.lead.assigned_agent or linked_agent
+            appointment.save()
+            if appointment.lead.pipeline_stage != Lead.PipelineStage.VIEWING:
+                appointment.lead.pipeline_stage = Lead.PipelineStage.VIEWING
+                appointment.lead.save(update_fields=["pipeline_stage"])
+            messages.success(request, "Đã tạo lịch hẹn xem nhà.")
+            return redirect("leads:dashboard")
+        else:
+            messages.error(request, "Vui lòng kiểm tra lại thông tin lịch hẹn.")
+
+    return render(request, "leads/appointment_create.html", {"form": form})
