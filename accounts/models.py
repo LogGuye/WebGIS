@@ -19,9 +19,9 @@ class Agent(models.Model):
 
 class UserProfile(models.Model):
     class Role(models.TextChoices):
-        USER = "user", "User"
-        AGENT = "agent", "Agent"
-        ADMIN = "admin", "Admin"
+        USER = "user", "Khách hàng"
+        AGENT = "agent", "Môi giới"
+        ADMIN = "admin", "Quản trị"
 
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
     role = models.CharField(max_length=20, choices=Role.choices, default=Role.USER)

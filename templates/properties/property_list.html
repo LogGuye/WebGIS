@@ -885,9 +885,21 @@
     const bar     = document.getElementById('activeFilterBar');
     if (!bar) return;
 
+    const typeMap = {
+      apartment: 'Căn hộ',
+      house: 'Nhà',
+      land: 'Đất',
+    };
+
+    const statusMap = {
+      active: 'Đang bán',
+      sold: 'Đã bán',
+      hidden: 'Ẩn tin',
+    };
+
     const labels = {
-      type:      v => ({ label: `Loại: ${v.charAt(0).toUpperCase() + v.slice(1)}` }),
-      status:    v => ({ label: `Trạng thái: ${v.charAt(0).toUpperCase() + v.slice(1)}` }),
+      type:      v => ({ label: `Loại: ${typeMap[v] || v}` }),
+      status:    v => ({ label: `Trạng thái: ${statusMap[v] || v}` }),
       price_min: v => ({ label: `Tối thiểu: ${Number(v).toLocaleString()} đ` }),
       price_max: v => ({ label: `Tối đa: ${Number(v).toLocaleString()} đ` }),
       area_min:  v => ({ label: `Diện tích ≥ ${v} m²` }),

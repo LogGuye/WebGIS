@@ -28,14 +28,14 @@ class Amenity(models.Model):
 
 class Property(models.Model):
     class PropertyType(models.TextChoices):
-        APARTMENT = "apartment", _("Apartment")
-        HOUSE = "house", _("House")
-        LAND = "land", _("Land")
+        APARTMENT = "apartment", _("Căn hộ")
+        HOUSE = "house", _("Nhà")
+        LAND = "land", _("Đất")
 
     class ListingStatus(models.TextChoices):
-        ACTIVE = "active", _("Active")
-        SOLD = "sold", _("Sold")
-        HIDDEN = "hidden", _("Hidden")
+        ACTIVE = "active", _("Đang bán")
+        SOLD = "sold", _("Đã bán")
+        HIDDEN = "hidden", _("Ẩn tin")
 
     agent = models.ForeignKey(Agent, on_delete=models.SET_NULL, null=True, blank=True, related_name="properties")
     title = models.CharField(max_length=255)
