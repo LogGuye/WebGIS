@@ -821,18 +821,26 @@
         <div class="d-flex align-items-center gap-2 mt-2 mt-lg-0">
 
           <!-- Tìm kiếm -->
-          <form class="d-none d-lg-flex" method="get" action="{% url 'properties:list' %}" style="position:relative">
-            <div class="nav-search-wrap">
-              <i class="bi bi-search"></i>
-              <input class="nav-search"
-                     type="search"
-                     name="q"
-                     placeholder="Tìm bất động sản..."
-                     autocomplete="off"
-                     value="{{ request.GET.q|default:'' }}" />
-              <span class="kbd-hint">⌘K</span>
-            </div>
-          </form>
+          <div class="d-none d-lg-flex align-items-center gap-2">
+            <form method="get" action="{% url 'properties:list' %}" style="position:relative">
+              <div class="nav-search-wrap">
+                <i class="bi bi-search"></i>
+                <input class="nav-search"
+                       type="search"
+                       name="q"
+                       placeholder="Tìm bất động sản..."
+                       autocomplete="off"
+                       value="{{ request.GET.q|default:'' }}" />
+                <span class="kbd-hint">⌘K</span>
+              </div>
+            </form>
+            <a class="btn-geo-secondary" href="{% url 'properties:nearby_search' %}" style="padding:8px 12px;font-size:12px">
+              <i class="bi bi-geo-alt"></i> Quanh đây
+            </a>
+            <a class="btn-geo-secondary" href="{% url 'properties:amenity_search' %}" style="padding:8px 12px;font-size:12px">
+              <i class="bi bi-stars"></i> Tiện ích
+            </a>
+          </div>
 
           <!-- Chuyển giao diện -->
           <button class="nav-icon-btn" id="themeToggle" title="Chuyển giao diện" aria-label="Chuyển giao diện">
@@ -981,12 +989,11 @@
       </div>
 
       <div class="footer-bottom">
-        <p>© {% now "Y" %} GeoEstate · Xây dựng với Django + PostGIS · Bảo lưu mọi quyền.</p>
+        <p>© {% now "Y" %} GeoEstate · Xây dựng với Django + PostGIS.</p>
         <p>
           Nhấn
           <code style="font-size:11px;background:var(--bg-3);border:1px solid var(--border);border-radius:4px;padding:2px 6px;color:var(--gold)">⌘K</code>
-          để tìm kiếm ·
-          <a href="#">Bảo mật</a> · <a href="#">Điều khoản</a>
+          để tìm kiếm nhanh
         </p>
       </div>
 
@@ -1094,6 +1101,17 @@
       document.querySelectorAll('.fade-up').forEach(el => {
         el.style.animationPlayState = 'paused';
         io.observe(el);
+      });
+    }
+
+  })();
+  </script>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>
+
+observe(el);
       });
     }
 
