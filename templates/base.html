@@ -827,9 +827,17 @@
           </a>
 
           {% if request.user.is_authenticated %}
-            <a class="btn-geo-secondary" href="{% url 'accounts:profile' %}" style="padding:9px 14px;font-size:13px;border-radius:999px">
-              <i class="bi bi-person"></i> Tài khoản
-            </a>
+            <div class="dropdown">
+              <a class="btn-geo-secondary dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" style="padding:9px 14px;font-size:13px;border-radius:999px">
+                <i class="bi bi-person"></i> Tài khoản
+              </a>
+              <ul class="dropdown-menu dropdown-menu-end border-0 shadow-sm" style="border-radius:14px;padding:10px;min-width:220px">
+                <li><a class="dropdown-item" href="{% url 'accounts:profile' %}">Hồ sơ</a></li>
+                <li><a class="dropdown-item" href="{% url 'leads:dashboard_home' %}">Bảng điều khiển</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item text-danger" href="{% url 'accounts:logout' %}">Đăng xuất</a></li>
+              </ul>
+            </div>
             {% if request.user.is_staff or request.user.is_superuser %}
             <a class="btn-geo-secondary" href="/admin/" style="padding:9px 14px;font-size:13px;border-radius:999px">
               <i class="bi bi-shield-lock"></i> Quản trị
