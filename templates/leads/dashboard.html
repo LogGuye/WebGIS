@@ -61,7 +61,20 @@
   </div>
 
   <div class="row g-4 mb-4">
-    <div class="col-lg-5">
+    <div class="col-lg-4">
+      <div class="card-geo p-4 h-100">
+        <h5 style="color:var(--text);margin-bottom:16px">Pipeline khách hàng</h5>
+        <div class="d-flex flex-column gap-2">
+          <div class="d-flex justify-content-between"><span style="color:var(--text-dim)">Mới</span><span class="badge-gold">{{ pipeline_summary.new|default:0 }}</span></div>
+          <div class="d-flex justify-content-between"><span style="color:var(--text-dim)">Đang tư vấn</span><span class="badge-gold">{{ pipeline_summary.consulting|default:0 }}</span></div>
+          <div class="d-flex justify-content-between"><span style="color:var(--text-dim)">Đã hẹn xem</span><span class="badge-gold">{{ pipeline_summary.viewing|default:0 }}</span></div>
+          <div class="d-flex justify-content-between"><span style="color:var(--text-dim)">Đang thương lượng</span><span class="badge-gold">{{ pipeline_summary.negotiating|default:0 }}</span></div>
+          <div class="d-flex justify-content-between"><span style="color:var(--text-dim)">Đã chốt</span><span class="badge-gold">{{ pipeline_summary.won|default:0 }}</span></div>
+          <div class="d-flex justify-content-between"><span style="color:var(--text-dim)">Đã hủy</span><span class="badge-gold">{{ pipeline_summary.lost|default:0 }}</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-4">
       <div class="card-geo p-4 h-100">
         <h5 style="color:var(--text);margin-bottom:16px">Việc cần xử lý</h5>
         {% for label, value in pending_tasks %}
@@ -74,7 +87,7 @@
         {% endfor %}
       </div>
     </div>
-    <div class="col-lg-7">
+    <div class="col-lg-4">
       <div class="card-geo p-4 h-100">
         <h5 style="color:var(--text);margin-bottom:16px">Khách tiềm năng gần đây</h5>
         <div class="table-responsive">

@@ -36,6 +36,7 @@ def lead_form(request):
                     property_interest=property_interest,
                     notes=notes,
                     alert_enabled=alert_enabled,
+                    pipeline_stage=Lead.PipelineStage.NEW,
                 )
                 agent, distance_km = tool_assign_lead_to_nearest_agent(point)
                 if request.user.is_authenticated and hasattr(request.user, "profile") and request.user.profile.role == UserProfile.Role.AGENT and request.user.profile.linked_agent:
@@ -155,5 +156,8 @@ def dashboard(request):
         "avg_price_all": active_qs.aggregate(avg=Avg("price")).get("avg"),
         "avg_area_all": active_qs.aggregate(avg=Avg("area")).get("avg"),
         "recent_leads": lead_qs.select_related("assigned_agent").order_by("-created_at")[:5],
+    }
+    return render(request, "leads/dashboard.html", context)
+eads": lead_qs.select_related("assigned_agent").order_by("-created_at")[:5],
     }
     return render(request, "leads/dashboard.html", context)
