@@ -627,8 +627,8 @@
           <div class="agent-row">
             <div class="agent-avatar">👤</div>
             <div>
-              <div class="agent-name">{{ property.agent.name }}</div>
-              <div class="agent-role">Chuyên viên bất động sản</div>
+              <div class="agent-name"><a href="{% url 'accounts:agent_public_profile' property.agent.pk %}" style="color:inherit;text-decoration:none">{{ property.agent.name }}</a></div>
+              <div class="agent-role">Tư vấn bất động sản</div>
               <div class="agent-contacts">
                 {% if property.agent.phone %}
                 <a class="agent-contact-item" href="tel:{{ property.agent.phone }}">

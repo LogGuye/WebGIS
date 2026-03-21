@@ -57,3 +57,18 @@ def profile_view(request):
         messages.success(request, "Đã cập nhật hồ sơ.")
         return redirect("accounts:profile")
     return render(request, "accounts/profile.html", {"form": form, "profile": profile})
+
+
+def agent_public_profile(request, pk):
+    agent = get_object_or_404(Agent, pk=pk)
+    properties = Property.objects.filter(agent=agent, listing_status=Property.ListingStatus.ACTIVE).prefetch_related("images")[:6]
+    lead_count = Lead.objects.filter(assigned_agent=agent).count()
+    active_count = Property.objects.filter(agent=agent, listing_status=Property.ListingStatus.ACTIVE).count()
+    sold_count = Property.objects.filter(agent=agent, listing_status=Property.ListingStatus.SOLD).count()
+    return render(request, "accounts/agent_public_profile.html", {
+        "agent": agent,
+        "properties": properties,
+        "lead_count": lead_count,
+        "active_count": active_count,
+        "sold_count": sold_count,
+    })

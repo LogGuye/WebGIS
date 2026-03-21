@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% load property_format %}
+{% block title %}{{ agent.name }} | GeoEstate{% endblock %}
+{% block content %}
+<div class="container py-5">
+  <div class="card-geo p-4 p-md-5 mb-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-4">
+      <div class="d-flex gap-3 align-items-start">
+        <div style="width:72px;height:72px;border-radius:18px;background:rgba(224,60,49,.12);display:grid;place-items:center;font-size:28px">👤</div>
+        <div>
+          <p class="section-eyebrow" style="margin-bottom:6px">Hồ sơ môi giới</p>
+          <h1 class="section-heading mb-2">{{ agent.name }}</h1>
+          <div style="color:var(--text-muted)">{{ agent.email }} · {{ agent.phone }}</div>
+        </div>
+      </div>
+      <div class="d-flex flex-wrap gap-2">
+        <a class="btn-geo-secondary" href="tel:{{ agent.phone }}"><i class="bi bi-telephone"></i> Gọi ngay</a>
+        <a class="btn-admin" href="mailto:{{ agent.email }}"><i class="bi bi-envelope"></i> Gửi email</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4 mb-4">
+    <div class="col-md-4"><div class="card-geo p-4"><div class="stat-num">{{ active_count }}</div><div class="stat-lbl">Tin đang bán</div></div></div>
+    <div class="col-md-4"><div class="card-geo p-4"><div class="stat-num">{{ sold_count }}</div><div class="stat-lbl">Tin đã bán</div></div></div>
+    <div class="col-md-4"><div class="card-geo p-4"><div class="stat-num">{{ lead_count }}</div><div class="stat-lbl">Khách đang phụ trách</div></div></div>
+  </div>
+
+  <div class="card-geo p-4 p-md-5">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+      <h4 style="color:var(--text);margin:0">Bất động sản đang phụ trách</h4>
+      <span class="stat-pill">Hiển thị tối đa 6 tin</span>
+    </div>
+    <div class="row g-3">
+      {% for p in properties %}
+      <div class="col-md-6 col-xl-4">
+        <div style="background:var(--bg-3);border:1px solid var(--border);border-radius:16px;padding:16px;height:100%">
+          <div style="color:var(--gold);font-size:12px;font-weight:600;margin-bottom:6px">{{ p.get_property_type_display }}</div>
+          <div style="color:var(--text);font-weight:600;margin-bottom:6px">{{ p.title }}</div>
+          <div style="color:var(--text-muted);font-size:13px;margin-bottom:8px">{{ p.address }}</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+            <span style="color:var(--gold);font-weight:700">{{ p.price|price_vn }}</span>
+            <a href="{% url 'properties:detail' p.pk %}" class="btn-geo-secondary" style="padding:7px 12px;font-size:12px">Xem chi tiết</a>
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <div class="col-12"><p style="color:var(--text-muted);margin:0">Môi giới này chưa có tin đang bán công khai.</p></div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endblock %}
