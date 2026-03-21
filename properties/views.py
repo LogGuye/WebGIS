@@ -284,17 +284,19 @@ def property_create(request):
         elif form.is_valid():
             listing_status = Property.ListingStatus.PENDING if role == UserProfile.Role.AGENT else form.cleaned_data.get("listing_status", Property.ListingStatus.ACTIVE)
             prop = form.save(agent=linked_agent, listing_status=listing_status)
+            upload_files = request.FILES.getlist("images")
+            for idx, uploaded in enumerate(upload_files):
+                PropertyImage.objects.create(
+                    property=prop,
+                    image=uploaded,
+                    caption=prop.title,
+                    is_primary=(idx == 0),
+                    sort_order=idx,
+                )
             if role == UserProfile.Role.AGENT:
-                messages.success(request, "Đăng tin thành công. Tin của bạn đang ở trạng thái chờ duyệt.")
+                messages.success(request, "Đăng tin thành công. Tin của bạn đang ở trạng thái chờ duyệt." + (" Ảnh đã được tải lên." if upload_files else ""))
             else:
-                messages.success(request, "Đăng tin thành công.")
-            return redirect("properties:detail", pk=prop.pk)
-        else:
-            messages.error(request, "Vui lòng kiểm tra lại thông tin đăng tin.")
-
-    return render(request, "properties/property_create.html", {"form": form})
-operties/property_create.html", {"form": form})
-           messages.success(request, "Đăng tin thành công.")
+                messages.success(request, "Đăng tin thành công." + (" Ảnh đã được tải lên." if upload_files else ""))
             return redirect("properties:detail", pk=prop.pk)
         else:
             messages.error(request, "Vui lòng kiểm tra lại thông tin đăng tin.")
