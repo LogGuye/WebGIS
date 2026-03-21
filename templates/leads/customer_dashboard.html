@@ -14,7 +14,7 @@
   <div class="row g-4 mb-4">
     <div class="col-md-6 col-xl-3"><div class="card-geo p-4"><div class="stat-num">{{ wishlist_total }}</div><div class="stat-lbl">Đã lưu</div></div></div>
     <div class="col-md-6 col-xl-3"><div class="card-geo p-4"><div class="stat-num">{{ compare_total }}</div><div class="stat-lbl">Đang so sánh</div></div></div>
-    <div class="col-md-6 col-xl-3"><div class="card-geo p-4"><div class="stat-num">{{ featured_total }}</div><div class="stat-lbl">Tin nổi bật</div></div></div>
+    <div class="col-md-6 col-xl-3"><div class="card-geo p-4"><div class="stat-num">{{ saved_search_total|default:0 }}</div><div class="stat-lbl">Tìm kiếm đã lưu</div></div></div>
     <div class="col-md-6 col-xl-3"><div class="card-geo p-4"><div class="stat-num">{{ active_total }}</div><div class="stat-lbl">Tin đang bán</div></div></div>
   </div>
 

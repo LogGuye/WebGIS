@@ -83,6 +83,7 @@ def customer_dashboard(request):
         "recommended_properties": recommended,
         "wishlist_total": wishlist_qs.count(),
         "compare_total": compare_qs.count(),
+        "saved_search_total": getattr(request.user, 'saved_searches', []).count() if hasattr(request.user, 'saved_searches') else 0,
         "featured_total": Property.objects.filter(listing_status=Property.ListingStatus.ACTIVE, is_featured=True).count(),
         "active_total": Property.objects.filter(listing_status=Property.ListingStatus.ACTIVE).count(),
     }

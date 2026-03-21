@@ -643,6 +643,11 @@
         </div>
 
         <div class="topbar-right">
+          {% if request.user.is_authenticated %}
+          <button type="button" class="btn-card-view" data-bs-toggle="modal" data-bs-target="#saveSearchModal">
+            <i class="bi bi-bookmark-plus"></i> Lưu bộ lọc
+          </button>
+          {% endif %}
           <select class="sort-select" id="sortSelect" name="sort" form="filterForm">
             <option value="default" {% if filters.sort == 'default' %}selected{% endif %}>Mặc định</option>
             <option value="newest" {% if filters.sort == 'newest' %}selected{% endif %}>Mới nhất</option>

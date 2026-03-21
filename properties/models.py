@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.gis.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -95,3 +96,23 @@ class PropertyChangeLog(models.Model):
 
     def __str__(self):
         return f"{self.property.title} - {self.action}"
+
+
+class SavedSearch(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="saved_searches")
+    name = models.CharField(max_length=120)
+    query = models.CharField(max_length=255, blank=True)
+    property_type = models.CharField(max_length=20, blank=True)
+    listing_status = models.CharField(max_length=20, blank=True)
+    price_min = models.DecimalField(max_digits=14, decimal_places=2, null=True, blank=True)
+    price_max = models.DecimalField(max_digits=14, decimal_places=2, null=True, blank=True)
+    area_min = models.FloatField(null=True, blank=True)
+    area_max = models.FloatField(null=True, blank=True)
+    alerts_enabled = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return self.name

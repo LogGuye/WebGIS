@@ -15,7 +15,7 @@ from core.gis_tools import (
     tool_similar_properties,
 )
 from .forms import PropertyCreateForm
-from .models import Amenity, Property
+from .models import Amenity, Property, SavedSearch
 
 
 SORT_OPTIONS = {
@@ -110,6 +110,7 @@ def property_list(request):
     qs, filters = _apply_property_filters(request, _base_property_queryset(request))
     paginator = Paginator(qs, 9)
     page_obj = paginator.get_page(request.GET.get("page") or 1)
+    saved_searches = SavedSearch.objects.filter(user=request.user)[:5] if request.user.is_authenticated else []
 
     context = {
         "properties": page_obj.object_list,
@@ -121,6 +122,7 @@ def property_list(request):
         "total_count": paginator.count,
         "map_properties": list(qs[:300].values("id", "title", "price", "area", "address", "property_type", "location")),
         "heatmap_points": [[prop.location.y, prop.location.x, float(prop.price or 0)] for prop in qs[:300] if prop.location],
+        "saved_searches": saved_searches,
     }
     return render(request, "properties/property_list.html", context)
 
@@ -152,6 +154,34 @@ def _get_session_ids(request, key):
 def _save_session_ids(request, key, ids):
     request.session[key] = ids
     request.session.modified = True
+
+
+@login_required
+def saved_search_create(request):
+    if request.method == "POST":
+        name = (request.POST.get("name") or "").strip() or "Bộ lọc đã lưu"
+        SavedSearch.objects.create(
+            user=request.user,
+            name=name,
+            query=(request.POST.get("q") or "").strip(),
+            property_type=request.POST.get("type") or "",
+            listing_status=request.POST.get("status") or "",
+            price_min=request.POST.get("price_min") or None,
+            price_max=request.POST.get("price_max") or None,
+            area_min=request.POST.get("area_min") or None,
+            area_max=request.POST.get("area_max") or None,
+            alerts_enabled=True,
+        )
+        messages.success(request, "Đã lưu bộ tìm kiếm.")
+    return redirect(request.META.get("HTTP_REFERER") or "properties:list")
+
+
+@login_required
+def saved_search_delete(request, pk):
+    search = get_object_or_404(SavedSearch, pk=pk, user=request.user)
+    search.delete()
+    messages.success(request, "Đã xóa bộ tìm kiếm đã lưu.")
+    return redirect(request.META.get("HTTP_REFERER") or "properties:list")
 
 
 @login_required
