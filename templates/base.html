@@ -772,7 +772,7 @@
             </a>
           </li>
           <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle {% if request.resolver_match.url_name == 'nearby_search' or request.resolver_match.url_name == 'amenity_search' %}active{% endif %}"
+            <a class="nav-link dropdown-toggle {% if request.resolver_match.url_name == 'list' or request.resolver_match.url_name == 'nearby_search' or request.resolver_match.url_name == 'amenity_search' %}active{% endif %}"
                href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
               Khám phá
             </a>
@@ -780,10 +780,10 @@
               <li><a class="dropdown-item" href="{% url 'properties:list' %}">Tất cả bất động sản</a></li>
               <li><a class="dropdown-item" href="{% url 'properties:nearby_search' %}">Tìm quanh đây</a></li>
               <li><a class="dropdown-item" href="{% url 'properties:amenity_search' %}">Tiện ích lân cận</a></li>
+              <li><a class="dropdown-item" href="{% url 'properties:compare' %}">So sánh hiện tại</a></li>
             </ul>
           </li>
           {% if request.user.is_authenticated %}
-          <li class="nav-item">
             <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' or request.resolver_match.url_name == 'dashboard_home' or request.resolver_match.url_name == 'customer_dashboard' %}active{% endif %}"
                href="{% url 'leads:dashboard_home' %}">
               Bảng điều khiển
@@ -839,13 +839,7 @@
               </ul>
             </div>
             {% if request.user.is_staff or request.user.is_superuser %}
-            <a class="btn-geo-secondary" href="/admin/" style="padding:9px 14px;font-size:13px;border-radius:999px">
-              <i class="bi bi-shield-lock"></i> Quản trị
-            </a>
-            <a class="btn-admin" href="/admin/">
-              <i class="bi bi-shield-lock"></i>
-              Quản trị hệ thống
-            </a>
+            
             {% elif is_agent_role %}
             <a class="btn-admin" href="{% url 'properties:create' %}">
               <i class="bi bi-building-add"></i>

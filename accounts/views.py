@@ -1,10 +1,13 @@
 from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
+
+from leads.models import Lead
+from properties.models import Property
 
 from .forms import LoginForm, ProfileForm, RegisterForm
-from .models import UserProfile
+from .models import Agent, UserProfile
 
 
 def _role_home(user):

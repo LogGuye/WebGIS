@@ -245,15 +245,15 @@ class Command(BaseCommand):
                 prop.amenities.set(random.sample(amenity_pool, k=min(random.randint(2, 5), len(amenity_pool))))
 
             image_name = {
-                "apartment": "apartment.svg",
-                "house": "house.svg",
-                "land": "land.svg",
-            }.get(property_type, "apartment.svg")
+                "apartment": "apartment.jpg",
+                "house": "house.jpg",
+                "land": "land.jpg",
+            }.get(property_type, "apartment.jpg")
             image_path = seed_dir / image_name
             if image_path.exists():
                 with image_path.open("rb") as fh:
                     prop_image = PropertyImage(property=prop, is_primary=True, sort_order=0, caption=title)
-                    prop_image.image.save(f"{property_type}-{idx + 1}.svg", File(fh), save=True)
+                    prop_image.image.save(f"{property_type}-{idx + 1}.jpg", File(fh), save=True)
 
             created_properties.append(prop)
 

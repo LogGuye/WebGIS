@@ -29,6 +29,28 @@ def price_vn(value):
 
 
 @register.filter
+def price_per_m2(price, area):
+    if price in (None, "") or area in (None, ""):
+        return "-"
+    try:
+        amount = Decimal(str(price))
+        total_area = Decimal(str(area))
+    except (InvalidOperation, ValueError, TypeError):
+        return "-"
+    if total_area == 0:
+        return "-"
+    per_sqm = (amount / total_area).quantize(Decimal("1"))
+    return f"{int(per_sqm):,}".replace(",", ".") + " đ/m²"
+
+
+@register.filter
+def comma_to_dot(value):
+    if value in (None, ""):
+        return value
+    return str(value).replace(",", ".")
+
+
+@register.filter
 def vnd_int(value):
     if value in (None, ""):
         return "-"

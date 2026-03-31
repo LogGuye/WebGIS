@@ -1,24 +1,248 @@
 {% extends "base.html" %}
 {% load humanize property_format %}
 {% block title %}So sánh bất động sản | GeoEstate{% endblock %}
+{% block head %}
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  .compare-hero {
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: var(--radius-xl);
+    padding: 30px;
+    margin-bottom: 28px;
+    display: grid;
+    gap: 18px;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    align-items: center;
+  }
+  .compare-hero h1 {
+    margin: 0;
+    font-size: clamp(2rem, 3vw, 2.5rem);
+  }
+  .compare-hero-note {
+    color: var(--text-muted);
+    margin: 0;
+  }
+  .compare-hero-pills {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .compare-pill {
+    padding: 6px 14px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-weight: 600;
+    font-size: 0.85rem;
+    background: var(--bg-3);
+  }
+  .compare-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 22px;
+    margin-bottom: 32px;
+  }
+  .compare-card {
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+  }
+  .compare-card-media {
+    position: relative;
+    height: 220px;
+    background: linear-gradient(135deg, var(--bg-2) 0%, var(--bg-3) 100%);
+  }
+  .compare-card-media img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .compare-card-head {
+    padding: 16px 20px 0;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .compare-card-title {
+    margin: 0;
+    font-size: 1.3rem;
+    font-weight: 700;
+  }
+  .compare-card-badges {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .compare-card-badge {
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.2);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .compare-card-body {
+    padding: 0 20px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .compare-card-price {
+    font-family: 'Space Grotesk', 'Outfit', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--gold);
+  }
+  .compare-card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 16px;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+  .compare-card-meta span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .compare-card-desc {
+    color: var(--text-dim);
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 48px;
+  }
+  .compare-card-contact {
+    font-size: 13px;
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .compare-card-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 6px;
+  }
+  .compare-card-actions .btn-geo-primary,
+  .compare-card-actions .btn-geo-secondary {
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+  .compare-table-wrapper {
+    overflow-x: auto;
+    border-radius: var(--radius-xl);
+    background: var(--bg-card);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .compare-table {
+    min-width: 880px;
+    border-collapse: collapse;
+    width: 100%;
+  }
+  .compare-table th,
+  .compare-table td {
+    padding: 14px 18px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    vertical-align: top;
+  }
+  .compare-table thead th {
+    border-bottom: 2px solid rgba(255,255,255,0.1);
+    text-align: left;
+    font-weight: 600;
+  }
+  .compare-table tbody th {
+    background: rgba(255,255,255,0.02);
+    font-weight: 600;
+    width: 210px;
+  }
+  .compare-table td {
+    min-width: 220px;
+  }
+</style>
+{% endblock %}
 {% block content %}
 <div class="container py-5">
-  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+  <div class="compare-hero">
     <div>
       <p class="section-eyebrow">Khu vực so sánh</p>
       <h1 class="section-heading mb-0">So sánh bất động sản</h1>
+     
     </div>
-    <div class="d-flex gap-2 flex-wrap align-items-center">
-      <span class="stat-pill">Tối đa 3 bất động sản</span>
-      <a href="{% url 'properties:list' %}" class="btn-geo-secondary">
-        <i class="bi bi-arrow-left"></i> Quay lại danh sách bất động sản
+    <div class="compare-hero-pills">
+      <span class="compare-pill">Tối đa 3 tin</span>
+      <span class="compare-pill">{{ properties|length }} tin đang so sánh</span>
+      <span class="compare-pill">Dữ liệu cập nhật theo bộ lọc</span>
+    </div>
+    <div class="d-flex gap-2 align-items-center flex-wrap">
+      <a class="btn-geo-secondary" href="{% url 'properties:list' %}">
+        <i class="bi bi-arrow-left"></i> Quay lại danh sách
       </a>
     </div>
   </div>
 
   {% if properties %}
-  <div class="table-responsive card-geo p-3">
-    <table class="table align-middle" style="color:var(--text)">
+  <div class="compare-grid">
+    {% for p in properties %}
+    <article class="compare-card">
+      <div class="compare-card-media">
+        {% if p.primary_image_url %}
+        <img src="{{ p.primary_image_url }}" alt="{{ p.title|escape }}" loading="lazy" />
+        {% else %}
+        <span class="prop-thumb-icon" aria-hidden="true">
+          {% if p.property_type == 'apartment' %}<i class="bi bi-building"></i>
+          {% elif p.property_type == 'house' %}<i class="bi bi-house"></i>
+          {% elif p.property_type == 'land' %}<i class="bi bi-tree-fill"></i>
+          {% elif p.property_type == 'villa' %}<i class="bi bi-houses"></i>
+          {% else %}<i class="bi bi-braces"></i>{% endif %}
+        </span>
+        {% endif %}
+      </div>
+      <div class="compare-card-head">
+        <div>
+          <h3 class="compare-card-title">{{ p.title }}</h3>
+          <div class="compare-card-badges">
+            <span class="compare-card-badge">{{ p.get_property_type_display }}</span>
+            <span class="compare-card-badge">{{ p.get_listing_status_display }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="compare-card-body">
+        <div class="compare-card-price">
+          {% if p.price %}{{ p.price|price_vn }}{% else %}<span style="font-size:0.95rem;color:var(--text-muted)">Liên hệ</span>{% endif %}
+        </div>
+        <div class="compare-card-meta">
+          {% if p.area %}
+          <span><i class="bi bi-aspect-ratio"></i> {{ p.area|floatformat:0|intcomma|comma_to_dot }} m²</span>
+          {% endif %}
+          <span><i class="bi bi-calculator"></i> {% if p.price and p.area %}{{ p.price|price_per_m2:p.area }}{% else %}-{% endif %}</span>
+          <span><i class="bi bi-person-badge"></i> {% if p.agent %}{{ p.agent.name }}{% else %}Chưa gắn môi giới{% endif %}</span>
+        </div>
+        <p class="compare-card-desc">{{ p.description|default_if_none:""|striptags|truncatechars:140 }}</p>
+        <div class="compare-card-contact">
+          <span>{{ p.address }}</span>
+          <span>Tiện ích: {{ p.amenities.count }}</span>
+        </div>
+        <div class="compare-card-actions">
+          <a class="btn-geo-primary" href="{% url 'properties:detail' p.pk %}"><i class="bi bi-eye"></i> Xem chi tiết</a>
+          <a class="btn-geo-secondary" href="{% url 'properties:compare_toggle' p.pk %}"><i class="bi bi-x"></i> Xóa khỏi so sánh</a>
+        </div>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+
+  <div class="compare-table-wrapper">
+    <table class="table compare-table align-middle">
       <thead>
         <tr>
           <th>Thuộc tính</th>
@@ -29,65 +253,45 @@
       </thead>
       <tbody>
         <tr>
-          <th>Loại</th>
-          {% for p in properties %}
-          <td>{{ p.get_property_type_display }}</td>
-          {% endfor %}
-        </tr>
-
-        <tr>
-          <th>Trạng thái</th>
-          {% for p in properties %}
-          <td>{{ p.get_listing_status_display }}</td>
-          {% endfor %}
-        </tr>
-
-        <tr>
           <th>Giá</th>
           {% for p in properties %}
           <td>{{ p.price|price_vn }}</td>
           {% endfor %}
         </tr>
-
+        <tr>
+          <th>Giá/m²</th>
+          {% for p in properties %}
+          <td>{% if p.price and p.area %}{{ p.price|price_per_m2:p.area }}{% else %}-{% endif %}</td>
+          {% endfor %}
+        </tr>
         <tr>
           <th>Diện tích</th>
           {% for p in properties %}
-          <td>{{ p.area }} m²</td>
+          <td>{{ p.area|default:'-' }} m²</td>
           {% endfor %}
         </tr>
-
+        <tr>
+          <th>Môi giới</th>
+          {% for p in properties %}
+          <td>{% if p.agent %}{{ p.agent.name }}<br><small>{{ p.agent.phone }}</small>{% else %}-{% endif %}</td>
+          {% endfor %}
+        </tr>
+        <tr>
+          <th>Tiện ích</th>
+          {% for p in properties %}
+          <td>{{ p.amenities.count }}</td>
+          {% endfor %}
+        </tr>
         <tr>
           <th>Địa chỉ</th>
           {% for p in properties %}
           <td>{{ p.address }}</td>
           {% endfor %}
         </tr>
-
         <tr>
-          <th>Môi giới</th>
+          <th>Mô tả ngắn</th>
           {% for p in properties %}
-          <td>{% if p.agent %}{{ p.agent.name }}{% else %}-{% endif %}</td>
-          {% endfor %}
-        </tr>
-
-        <tr>
-          <th>Số tiện ích</th>
-          {% for p in properties %}
-          <td>{{ p.amenities.count }}</td>
-          {% endfor %}
-        </tr>
-
-        <tr>
-          <th>Thao tác</th>
-          {% for p in properties %}
-          <td class="d-flex gap-2 flex-wrap">
-            <a href="{% url 'properties:detail' p.pk %}" class="btn-geo-primary" style="padding:7px 12px;font-size:12px">
-              Xem chi tiết
-            </a>
-            <a href="{% url 'properties:compare_toggle' p.pk %}" class="btn-geo-secondary" style="padding:7px 12px;font-size:12px">
-              Bỏ khỏi so sánh
-            </a>
-          </td>
+          <td>{{ p.description|default_if_none:""|striptags|truncatechars:160 }}</td>
           {% endfor %}
         </tr>
       </tbody>

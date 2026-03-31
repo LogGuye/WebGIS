@@ -29,7 +29,7 @@
         </div>
         <div class="d-flex gap-2 mt-auto">
           <a href="{% url 'properties:detail' p.pk %}" class="btn-geo-primary" style="padding:9px 16px;font-size:13px">Xem chi tiết</a>
-          <a href="{% url 'properties:compare_toggle' p.pk %}" class="btn-geo-secondary" style="padding:9px 16px;font-size:13px">So sánh</a>
+          <a href="{% url 'properties:compare_toggle' p.pk %}?destination=compare" class="btn-geo-secondary" style="padding:9px 16px;font-size:13px">So sánh</a>
         </div>
       </div>
     </div>

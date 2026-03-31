@@ -344,6 +344,28 @@
 
   .action-btn:hover { border-color: var(--gold-border); color: var(--gold); background: var(--gold-dim); }
 
+  .compare-note {
+    margin-top: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-3);
+    font-size: 13px;
+    color: var(--text);
+  }
+
+  .compare-note strong {
+    display: block;
+    font-weight: 600;
+  }
+
+  .compare-note.limit {
+    border-color: rgba(234, 179, 8, 0.5);
+  }
+
   /* ── Similar properties ── */
   .similar-grid {
     display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px;
@@ -582,8 +604,7 @@
             <div class="price-eyebrow">Giá chào bán</div>
             <div class="price-main">
               {% if property.price %}
-                {{ property.price|floatformat:0 }}
-                <span style="font-size:1rem;font-weight:400;color:var(--text-muted)"> VNĐ</span>
+                {{ property.price|price_vn }}
               {% else %}
                 <span style="color:var(--text-muted);font-size:1.2rem">Liên hệ để biết giá</span>
               {% endif %}
@@ -591,7 +612,9 @@
             {% if property.price and property.area %}
             <div class="price-per-m2">
               <i class="bi bi-calculator" style="color:var(--gold)"></i>
-              {{ property.price|floatformat:0 }} / m²
+              {% with per_m2=property.price|price_per_m2:property.area %}
+                {{ per_m2 }}
+              {% endwith %}
             </div>
             {% endif %}
           </div>
@@ -603,6 +626,7 @@
             <a href="{% url 'properties:nearby_search' %}?lat={{ property.location.y }}&lng={{ property.location.x }}&radius=2" class="cta-secondary">
               <i class="bi bi-geo-alt"></i> Xem khu vực lân cận
             </a>
+            {% url 'properties:compare_toggle' property.pk as compare_toggle_url %}
             <div class="action-row">
               <button class="action-btn" onclick="navigator.share ? navigator.share({title:'{{ property.title }}',url:window.location.href}) : navigator.clipboard.writeText(window.location.href).then(()=>alert('Đã sao chép liên kết!'))">
                 <i class="bi bi-share"></i> Chia sẻ
@@ -610,13 +634,22 @@
               <a class="action-btn" id="btnSave" href="{% url 'properties:wishlist_toggle' property.pk %}">
                 <i class="bi {% if is_in_wishlist %}bi-bookmark-fill{% else %}bi-bookmark{% endif %}"></i> {% if is_in_wishlist %}Đã lưu{% else %}Lưu{% endif %}
               </a>
-              <a class="action-btn" href="{% url 'properties:compare_toggle' property.pk %}">
+              <a class="action-btn" href="{{ compare_toggle_url }}{% if compare_count >= 1 and not is_in_compare %}?destination=compare{% endif %}">
                 <i class="bi bi-columns-gap"></i> {% if is_in_compare %}Đang so sánh{% else %}So sánh{% endif %}
               </a>
               <button class="action-btn" onclick="window.print()">
                 <i class="bi bi-printer"></i> In
               </button>
             </div>
+            {% if compare_count == 1 %}
+            <div class="compare-note">
+              <i class="bi bi-columns-gap-fill" style="color:var(--gold)"></i>
+              <div>
+                <strong>Đã lưu 1 bất động sản vào so sánh.</strong>
+                <span style="font-size:13px;color:var(--text-muted)">Chọn thêm bất động sản thứ hai để xem bảng so sánh 1-1.</span>
+              </div>
+            </div>
+            {% endif %}
           </div>
         </div>
 

@@ -3,6 +3,9 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    path("admin-api/properties/", views.admin_properties_collection, name="admin_properties_collection"),
+    path("admin-api/properties/<int:pk>/", views.admin_property_record, name="admin_property_record"),
+    path("compare-status/", views.compare_status, name="compare_status"),
     path("", views.property_list, name="list"),
     path("create/", views.property_create, name="create"),
     path("<int:pk>/edit/", views.property_edit, name="edit"),

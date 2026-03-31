@@ -1,0 +1,11 @@
+  /* ── Mở sidebar bộ lọc trên mobile ── */
+  const mobileToggle = document.getElementById('mobileFilterToggle');
+  const sidebar      = document.getElementById('filterSidebar');
+
+  mobileToggle && mobileToggle.addEventListener('click', () => {
+    sidebar.classList.toggle('open');
+    mobileToggle.innerHTML = sidebar.classList.contains('open')
+      ? '<i class="bi bi-x-lg"></i> Đóng'
+      : '<i class="bi bi-sliders"></i> Bộ lọc';
+  });
+

@@ -1,261 +1,177 @@
 {% extends "base.html" %}
-{% load property_format %}
+{% load humanize property_format %}
 {% block title %}Bảng điều khiển | GeoEstate{% endblock %}
+{% block head %}
+<style>
+  .dashboard-hero { display:grid; grid-template-columns: repeat(auto-fit,minmax(220px,1fr)); gap:14px; margin-bottom:24px; }
+  .dashboard-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-xl); padding:18px 22px; box-shadow:var(--shadow-card); }
+  .dashboard-card h3 { margin:0 0 12px; font-size:1rem; color:var(--text); }
+  .dashboard-card strong { font-size:1.9rem; display:block; font-family:'Space Grotesk', 'Outfit'; color:var(--gold); }
+  .dashboard-grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(280px,1fr)); gap:18px; }
+  .dashboard-section { margin-top:32px; }
+  .dashboard-section-header { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; }
+  .dashboard-section-title { margin:0; font-size:1.2rem; font-weight:600; }
+  .stat-chip { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.15); font-size:13px; }
+  .list-card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius-lg); padding:16px; }
+  .list-card h4 { margin:0 0 10px; font-size:1rem; }
+  .data-row { display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,.05); font-size:13px; }
+  .data-row:last-child { border-bottom:none; }
+</style>
+{% endblock %}
 {% block content %}
 <div class="container py-5">
-  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
-    <div>
-      <p class="section-eyebrow">{% if dashboard_role == 'admin' %}Tổng quan vận hành{% else %}Khu vực làm việc của môi giới{% endif %}</p>
-      <h1 class="section-heading mb-2">{% if dashboard_role == 'admin' %}Bảng điều khiển quản trị{% else %}Bảng điều khiển môi giới{% endif %}</h1>
-      <p style="color:var(--text-muted);margin:0">{{ dashboard_note }}</p>
-    </div>
+  <div class="dashboard-hero">
     {% if dashboard_role == 'admin' %}
-    <a href="/admin/properties/property/" class="btn-geo-primary"><i class="bi bi-sliders"></i> Quản lý hệ thống</a>
+    <div class="dashboard-card">
+      <h3>Tổng số bất động sản</h3>
+      <strong>{{ property_total }}</strong>
+      <p style="color:var(--text-muted);margin:0">Toàn bộ tin trong hệ thống.</p>
+    </div>
+    <div class="dashboard-card">
+      <h3>Lead/alert</h3>
+      <strong>{{ alert_total }}</strong>
+      <p style="color:var(--text-muted);margin:0">Lead đang bật cảnh báo.</p>
+    </div>
+    <div class="dashboard-card">
+      <h3>Môi giới</h3>
+      <strong>{{ agent_total }}</strong>
+      <p style="color:var(--text-muted);margin:0">Số môi giới đang hoạt động.</p>
+    </div>
+    {% elif dashboard_role == 'agent' %}
+    <div class="dashboard-card">
+      <h3>Tin của bạn</h3>
+      <strong>{{ property_total }}</strong>
+      <p style="color:var(--text-muted);margin:0">Chỉ hiện tin bạn đang phụ trách.</p>
+    </div>
+    <div class="dashboard-card">
+      <h3>Khách hàng</h3>
+      <strong>{{ lead_total }}</strong>
+      <p style="color:var(--text-muted);margin:0">Lead được gán trực tiếp.</p>
+    </div>
+    <div class="dashboard-card">
+      <h3>Tin nổi bật</h3>
+      <strong>{{ featured_total }}</strong>
+      <p style="color:var(--text-muted);margin:0">Tin nổi bật trong vùng bạn quản lý.</p>
+    </div>
     {% else %}
-    <a href="{% url 'properties:create' %}" class="btn-geo-primary"><i class="bi bi-building-add"></i> Đăng tin mới</a>
+    <div class="dashboard-card">
+      <h3>Wishlist</h3>
+      <strong>{{ wishlist_total }}</strong>
+      <p style="color:var(--text-muted);margin:0">Tin bạn đã lưu.</p>
+    </div>
+    <div class="dashboard-card">
+      <h3>Lưu tìm kiếm</h3>
+      <strong>{{ saved_search_total }}</strong>
+      <p style="color:var(--text-muted);margin:0">Bộ lọc đang theo dõi.</p>
+    </div>
+    <div class="dashboard-card">
+      <h3>So sánh</h3>
+      <strong>{{ compare_total }}</strong>
+      <p style="color:var(--text-muted);margin:0">So sánh đang lưu trong session.</p>
+    </div>
     {% endif %}
   </div>
+  {% if dashboard_role == 'admin' %}
+  <div class="d-flex justify-content-end mb-3">
+    <a class="btn-geo-primary" href="{% url 'admin_console' %}" style="padding:10px 20px;">
+      <i class="bi bi-layers"></i> Vào Console quản trị
+    </a>
+  </div>
+  {% endif %}
+
+  {% if dashboard_role == 'admin' %}
+  <div class="dashboard-grid">
+    <div class="dashboard-card">
+      <div class="dashboard-section-header">
+        <h3 class="dashboard-section-title">Tình trạng tin</h3>
+        <span class="stat-chip">{{ pending_total }} tin chờ duyệt</span>
+      </div>
+      <div class="data-row"><span>Đang bán</span><strong>{{ active_total }}</strong></div>
+      <div class="data-row"><span>Đã bán</span><strong>{{ sold_total }}</strong></div>
+      <div class="data-row"><span>Ẩn tin</span><strong>{{ hidden_total }}</strong></div>
+    </div>
+    <div class="dashboard-card">
+      <h3 class="dashboard-section-title">Giá/diện tích</h3>
+      <div class="data-row"><span>Giá trung bình</span><strong>{% if avg_price %}{{ avg_price|price_vn }}{% else %}-{% endif %}</strong></div>
+      <div class="data-row"><span>Diện tích trung bình</span><strong>{% if avg_area %}{{ avg_area|floatformat:0|comma_to_dot }} m²{% else %}-{% endif %}</strong></div>
+      <div class="data-row"><span>Giá/m² trung bình</span><strong>{% if avg_price and avg_area %}{{ avg_price|price_per_m2:avg_area }}{% else %}-{% endif %}</strong></div>
+    </div>
+    <div class="dashboard-card">
+      <h3 class="dashboard-section-title">Pipeline</h3>
+      {% for stage,count in pipeline_summary.items %}
+      <div class="data-row"><span>{{ stage }}</span><strong>{{ count }}</strong></div>
+      {% endfor %}
+    </div>
+  </div>
+  {% elif dashboard_role == 'agent' %}
+  <div class="dashboard-grid">
+    <div class="dashboard-card">
+      <h3 class="dashboard-section-title">Trạng thái tin cá nhân</h3>
+      <div class="data-row"><span>Đang bán</span><strong>{{ active_total }}</strong></div>
+      <div class="data-row"><span>Chờ duyệt</span><strong>{{ pending_total }}</strong></div>
+      <div class="data-row"><span>Đã bán</span><strong>{{ sold_total }}</strong></div>
+    </div>
+    <div class="dashboard-card">
+      <h3 class="dashboard-section-title">Lead cần xử lý</h3>
+      {% for label,value in pending_tasks %}
+      <div class="data-row"><span>{{ label }}</span><strong>{{ value }}</strong></div>
+      {% endfor %}
+    </div>
+    <div class="dashboard-card">
+      <h3 class="dashboard-section-title">Lịch &amp; hoạt động</h3>
+      <div class="data-row"><span>Lịch sắp tới</span><strong>{{ upcoming_appointments|length }}</strong></div>
+      <div class="data-row"><span>Tiện ích</span><strong>{{ property_total|intcomma }}</strong></div>
+    </div>
+  </div>
+  {% else %}
+  <div class="dashboard-grid">
+    <div class="dashboard-card">
+      <h3 class="dashboard-section-title">Saved searches</h3>
+      <div class="data-row"><span>Cảnh báo mới</span><strong>{{ saved_search_alert_total }}</strong></div>
+      <div class="data-row"><span>Tổng saved</span><strong>{{ saved_search_total }}</strong></div>
+    </div>
+    <div class="dashboard-card">
+      <h3 class="dashboard-section-title">Danh sách yêu thích</h3>
+      <div class="data-row"><span>Wishlist</span><strong>{{ wishlist_total }}</strong></div>
+      <div class="data-row"><span>So sánh</span><strong>{{ compare_total }}</strong></div>
+    </div>
+    <div class="dashboard-card">
+      <h3 class="dashboard-section-title">Hành động tiếp theo</h3>
+      <div class="data-row"><span>So sánh</span><strong><a class="btn-geo-secondary" href="{% url 'properties:compare' %}" style="padding:4px 10px;font-size:12px">Xem nhanh</a></strong></div>
+      <div class="data-row"><span>Wishlist</span><strong><a class="btn-geo-primary" href="{% url 'properties:wishlist' %}" style="padding:4px 10px;font-size:12px">Mở wishlist</a></strong></div>
+    </div>
+  </div>
+  {% endif %}
 
   {% if dashboard_role == 'agent' and linked_agent %}
-  <div class="card-geo p-4 mb-4">
-    <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
-      <div>
-        <div class="section-eyebrow" style="margin-bottom:6px">Hồ sơ môi giới liên kết</div>
-        <div style="color:var(--text);font-weight:700;font-size:1.2rem">{{ linked_agent.name }}</div>
-        <div style="color:var(--text-muted);margin-top:4px">{{ linked_agent.email }} · {{ linked_agent.phone }}</div>
+  <div class="dashboard-section">
+    <div class="dashboard-section-header">
+      <h3 class="dashboard-section-title">Tin của {{ linked_agent.name }}</h3>
+      <span class="stat-chip">Chỉ có bạn chỉnh</span>
+    </div>
+    <div class="list-card">
+      {% for property in recent_properties %}
+      <div class="data-row">
+        <span>{{ property.title }}</span>
+        <strong>{{ property.price|price_vn }}</strong>
       </div>
-      <div class="stat-pill">Đang phụ trách khu vực riêng</div>
+      {% endfor %}
     </div>
   </div>
   {% endif %}
 
-  <div class="card-geo p-4 mb-4">
-    <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
-      <div>
-        <div class="section-eyebrow" style="margin-bottom:6px">Quyền hiện tại</div>
-        <div style="color:var(--text-muted)">
-          {% if dashboard_role == 'admin' %}
-          Quản trị có quyền xem, thêm, sửa, xóa toàn bộ dữ liệu và truy cập đầy đủ khu quản trị.
-          {% else %}
-          Môi giới chỉ làm việc trên khách hàng và bất động sản được giao/phụ trách.
-          {% endif %}
-        </div>
-      </div>
-      <div class="d-flex flex-wrap gap-2">
-        {% for href, label in dashboard_actions %}
-        <a href="{{ href }}" class="btn-geo-secondary" style="padding:8px 14px;font-size:12px">{{ label }}</a>
-        {% endfor %}
-      </div>
+  <div class="dashboard-section">
+    <div class="dashboard-section-header">
+      <h3 class="dashboard-section-title">Gợi ý hành động</h3>
+      <span class="stat-chip">Cập nhật liên tục</span>
     </div>
-  </div>
-
-  <div class="row g-4 mb-4">
-    <div class="col-md-6 col-xl-3"><div class="card-geo p-4"><div class="stat-num">{{ property_total }}</div><div class="stat-lbl">Bất động sản</div></div></div>
-    <div class="col-md-6 col-xl-3"><div class="card-geo p-4"><div class="stat-num">{{ active_total }}</div><div class="stat-lbl">Đang bán</div></div></div>
-    <div class="col-md-6 col-xl-3"><div class="card-geo p-4"><div class="stat-num">{{ sold_total }}</div><div class="stat-lbl">Đã bán</div></div></div>
-    <div class="col-md-6 col-xl-3"><div class="card-geo p-4"><div class="stat-num">{{ hidden_total }}</div><div class="stat-lbl">Ẩn tin</div></div></div>
-    <div class="col-md-6 col-xl-3"><div class="card-geo p-4"><div class="stat-num">{{ featured_total }}</div><div class="stat-lbl">Tin nổi bật</div></div></div>
-    <div class="col-md-6 col-xl-3"><div class="card-geo p-4"><div class="stat-num">{{ lead_total }}</div><div class="stat-lbl">Khách tiềm năng</div></div></div>
-    <div class="col-md-6 col-xl-3"><div class="card-geo p-4"><div class="stat-num">{{ alert_total }}</div><div class="stat-lbl">Đã bật cảnh báo</div></div></div>
-    <div class="col-md-6 col-xl-3"><div class="card-geo p-4"><div class="stat-num">{{ agent_total }}</div><div class="stat-lbl">Môi giới</div></div></div>
-  </div>
-
-  <div class="row g-4 mb-4">
-    <div class="col-lg-4">
-      <div class="card-geo p-4 h-100">
-        <h5 style="color:var(--text);margin-bottom:16px">Pipeline khách hàng</h5>
-        <div class="d-flex flex-column gap-2">
-          <div class="d-flex justify-content-between"><span style="color:var(--text-dim)">Mới</span><span class="badge-gold">{{ pipeline_summary.new|default:0 }}</span></div>
-          <div class="d-flex justify-content-between"><span style="color:var(--text-dim)">Đang tư vấn</span><span class="badge-gold">{{ pipeline_summary.consulting|default:0 }}</span></div>
-          <div class="d-flex justify-content-between"><span style="color:var(--text-dim)">Đã hẹn xem</span><span class="badge-gold">{{ pipeline_summary.viewing|default:0 }}</span></div>
-          <div class="d-flex justify-content-between"><span style="color:var(--text-dim)">Đang thương lượng</span><span class="badge-gold">{{ pipeline_summary.negotiating|default:0 }}</span></div>
-          <div class="d-flex justify-content-between"><span style="color:var(--text-dim)">Đã chốt</span><span class="badge-gold">{{ pipeline_summary.won|default:0 }}</span></div>
-          <div class="d-flex justify-content-between"><span style="color:var(--text-dim)">Đã hủy</span><span class="badge-gold">{{ pipeline_summary.lost|default:0 }}</span></div>
-        </div>
+    <div class="list-card">
+      {% for lead in recent_leads %}
+      <div class="data-row">
+        <span>{{ lead.name }} · {{ lead.pipeline_stage }}</span>
+        <strong>{{ lead.budget|price_vn }}</strong>
       </div>
-    </div>
-    <div class="col-lg-4">
-      <div class="card-geo p-4 h-100">
-        <h5 style="color:var(--text);margin-bottom:16px">Việc cần xử lý</h5>
-        {% for label, value in pending_tasks %}
-        <div class="d-flex justify-content-between align-items-center py-2 border-bottom" style="border-color:var(--border)!important">
-          <span style="color:var(--text-dim)">{{ label }}</span>
-          <span class="badge-gold">{{ value }}</span>
-        </div>
-        {% empty %}
-        <p style="color:var(--text-muted)">Chưa có việc cần xử lý.</p>
-        {% endfor %}
-      </div>
-    </div>
-    <div class="col-lg-4">
-      <div class="card-geo p-4 h-100">
-        <h5 style="color:var(--text);margin-bottom:16px">Khách tiềm năng gần đây</h5>
-        <div class="table-responsive">
-          <table class="table" style="color:var(--text)">
-            <thead><tr><th>Khách hàng</th><th>Ngân sách</th><th>Nhu cầu</th><th>Môi giới</th></tr></thead>
-            <tbody>
-              {% for lead in recent_leads %}
-              <tr>
-                <td>{{ lead.name }}</td>
-                <td>{{ lead.budget|price_vn }}</td>
-                <td>{{ lead.property_interest|default:'-' }}</td>
-                <td>
-                  <form method="post" action="{% url 'leads:lead_stage_update' lead.pk %}" class="d-flex gap-2 align-items-center">
-                    {% csrf_token %}
-                    <select name="pipeline_stage" class="form-geo" style="min-width:150px;padding:6px 10px;height:auto">
-                      {% for value, label in lead.PipelineStage.choices %}
-                      <option value="{{ value }}" {% if lead.pipeline_stage == value %}selected{% endif %}>{{ label }}</option>
-                      {% endfor %}
-                    </select>
-                    <button type="submit" class="btn-geo-secondary" style="padding:6px 10px;font-size:12px">Lưu</button>
-                  </form>
-                </td>
-                <td>{% if lead.assigned_agent %}{{ lead.assigned_agent.name }}{% else %}-{% endif %}</td>
-              </tr>
-              {% empty %}
-              <tr><td colspan="4" style="color:var(--text-muted)">Chưa có khách tiềm năng nào.</td></tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  {% if dashboard_role == 'admin' %}
-  <div class="row g-4 mb-4">
-    <div class="col-lg-12">
-      <div class="card-geo p-4 h-100">
-        <h5 style="color:var(--text);margin-bottom:16px">Tin chờ duyệt</h5>
-        <div class="table-responsive">
-          <table class="table" style="color:var(--text)">
-            <thead><tr><th>Tiêu đề</th><th>Môi giới</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
-            <tbody>
-              {% for item in pending_properties %}
-              <tr>
-                <td>{{ item.title }}</td>
-                <td>{% if item.agent %}{{ item.agent.name }}{% else %}-{% endif %}</td>
-                <td>{{ item.get_listing_status_display }}</td>
-                <td>
-                  <form method="post" action="{% url 'leads:listing_stage_update' item.pk %}" class="d-flex gap-2 align-items-center">
-                    {% csrf_token %}
-                    <select name="listing_status" class="form-geo" style="min-width:140px;padding:6px 10px;height:auto">
-                      {% for value, label in listing_statuses %}
-                      <option value="{{ value }}" {% if item.listing_status == value %}selected{% endif %}>{{ label }}</option>
-                      {% endfor %}
-                    </select>
-                    <button type="submit" class="btn-geo-secondary" style="padding:6px 10px;font-size:12px">Lưu</button>
-                  </form>
-                </td>
-              </tr>
-              {% empty %}
-              <tr><td colspan="4" style="color:var(--text-muted)">Không có tin nào đang chờ duyệt.</td></tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-  {% endif %}
-
-  {% if dashboard_role == 'admin' %}
-  <div class="row g-4 mb-4">
-    <div class="col-lg-12">
-      <div class="card-geo p-4 h-100">
-        <h5 style="color:var(--text);margin-bottom:16px">Tin đăng gần đây</h5>
-        <div class="table-responsive">
-          <table class="table" style="color:var(--text)">
-            <thead><tr><th>Tiêu đề</th><th>Trạng thái</th><th>Môi giới</th><th>Thao tác</th></tr></thead>
-            <tbody>
-              {% for item in recent_properties %}
-              <tr>
-                <td>{{ item.title }}</td>
-                <td>{{ item.get_listing_status_display }}</td>
-                <td>{% if item.agent %}{{ item.agent.name }}{% else %}-{% endif %}</td>
-                <td>
-                  <div class="d-flex gap-2 flex-wrap">
-                    <a href="{% url 'properties:edit' item.pk %}" class="btn-geo-secondary" style="padding:6px 10px;font-size:12px">Sửa</a>
-                    <a href="{% url 'properties:images_manage' item.pk %}" class="btn-geo-secondary" style="padding:6px 10px;font-size:12px">Ảnh</a>
-                    <a href="{% url 'properties:detail' item.pk %}" class="btn-geo-secondary" style="padding:6px 10px;font-size:12px">Xem</a>
-                  </div>
-                </td>
-              </tr>
-              {% empty %}
-              <tr><td colspan="4" style="color:var(--text-muted)">Chưa có tin đăng nào.</td></tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-  {% endif %}
-
-  <div class="row g-4 mb-4">
-    <div class="col-lg-12">
-      <div class="card-geo p-4 h-100">
-        <h5 style="color:var(--text);margin-bottom:16px">Lịch hẹn sắp tới</h5>
-        <div class="table-responsive">
-          <table class="table" style="color:var(--text)">
-            <thead><tr><th>Khách hàng</th><th>Bất động sản</th><th>Môi giới</th><th>Thời gian</th></tr></thead>
-            <tbody>
-              {% for item in upcoming_appointments %}
-              <tr>
-                <td>{{ item.lead.name }}</td>
-                <td>{{ item.property.title }}</td>
-                <td>{{ item.agent.name }}</td>
-                <td>{{ item.scheduled_at|date:"d/m/Y H:i" }}</td>
-              </tr>
-              {% empty %}
-              <tr><td colspan="4" style="color:var(--text-muted)">Chưa có lịch hẹn nào.</td></tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="row g-4">
-    <div class="col-lg-5">
-      <div class="card-geo p-4 h-100">
-        <h5 style="color:var(--text);margin-bottom:16px">Phân bổ theo loại bất động sản</h5>
-        {% for item in property_types %}
-        <div class="d-flex justify-content-between align-items-center py-2 border-bottom" style="border-color:var(--border)!important">
-          <span style="color:var(--text-dim)">{{ item.property_type }}</span>
-          <span class="badge-gold">{{ item.total }}</span>
-        </div>
-        {% empty %}
-        <p style="color:var(--text-muted)">Chưa có dữ liệu.</p>
-        {% endfor %}
-      </div>
-    </div>
-    <div class="col-lg-7">
-      <div class="card-geo p-4 h-100">
-        <h5 style="color:var(--text);margin-bottom:16px">Phân tích nhanh</h5>
-        <div class="row g-3 mb-4">
-          <div class="col-md-6"><div style="background:var(--bg-3);border:1px solid var(--border);border-radius:var(--radius-md);padding:16px"><div class="stat-lbl">Giá trung bình tin đang bán</div><div style="font-family:'Cormorant Garamond',serif;font-size:1.8rem;color:var(--gold)">{% if avg_price_all %}{{ avg_price_all|price_vn }}{% else %}-{% endif %}</div></div></div>
-          <div class="col-md-6"><div style="background:var(--bg-3);border:1px solid var(--border);border-radius:var(--radius-md);padding:16px"><div class="stat-lbl">Diện tích trung bình</div><div style="font-family:'Cormorant Garamond',serif;font-size:1.8rem;color:var(--gold)">{% if avg_area_all %}{{ avg_area_all|floatformat:1 }} m²{% else %}-{% endif %}</div></div></div>
-        </div>
-        <div class="table-responsive">
-          <table class="table" style="color:var(--text)">
-            <thead><tr><th>Loại</th><th>Số lượng</th><th>Giá trung bình</th><th>Diện tích TB</th></tr></thead>
-            <tbody>
-              {% for row in avg_price_by_type %}
-              <tr>
-                <td>{{ row.property_type }}</td>
-                <td>{{ row.total }}</td>
-                <td>{% if row.avg_price %}{{ row.avg_price|price_vn }}{% else %}-{% endif %}</td>
-                <td>{% if row.avg_area %}{{ row.avg_area|floatformat:1 }} m²{% else %}-{% endif %}</td>
-              </tr>
-              {% empty %}
-              <tr><td colspan="4" style="color:var(--text-muted)">Chưa có dữ liệu phân tích.</td></tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      {% endfor %}
     </div>
   </div>
 </div>

@@ -19,6 +19,7 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
 <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet" />
 <style>
   /* ══════════════════════════════════════════
      PROPERTY LIST — all colors via var() tokens
@@ -65,6 +66,7 @@
     border-radius: var(--radius-xl);
     overflow: hidden;
     box-shadow: var(--shadow-card);
+    position: relative;
   }
 
   .map-card-header {
@@ -90,12 +92,49 @@
     height: 420px;
     width: 100%;
     background: var(--bg-3);
+    position: relative;
+    overflow: hidden;
   }
 
   @media (max-width: 1024px) {
     .list-layout { grid-template-columns: 1fr; }
-    .filter-sidebar { display: none; }
-    .filter-sidebar.open { display: block; }
+    .filter-sidebar { display: none !important; }
+    body.filter-panel-open .filter-sidebar {
+      display: block !important;
+      position: fixed;
+      top: calc(var(--nav-h) + 16px);
+      left: 10px;
+      right: 10px;
+      margin: 0 auto;
+      width: min(420px, 100%);
+      max-height: calc(100vh - var(--nav-h) - 32px);
+      z-index: 1200;
+      box-shadow: 0 20px 60px rgba(0,0,0,.35);
+      transform: translateY(0);
+    }
+    .filter-panel {
+      max-height: 100%;
+      overflow-y: auto;
+    }
+    .filter-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .45);
+      backdrop-filter: blur(4px);
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity var(--transition);
+      z-index: 1180;
+    }
+    body.filter-panel-open .filter-backdrop {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+    body.filter-panel-open {
+      overflow: hidden;
+    }
   }
 
   /* ── Filter sidebar ── */
@@ -190,6 +229,14 @@
   .type-chip-radio.active .type-chip-dot::after {
     content: ''; width: 6px; height: 6px;
     background: #0C0F1A; border-radius: 50%;
+  }
+
+  .filter-sidebar {
+    transition: transform var(--transition);
+  }
+
+  .filter-panel {
+    max-height: 100%;
   }
 
   /* Price range inputs */
@@ -319,6 +366,19 @@
     flex-shrink: 0;
     background-size: cover;
     background-position: center;
+    overflow: hidden;
+  }
+
+  .prop-card-thumb.has-image {
+    background: var(--bg-2);
+  }
+
+  .prop-card-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
 
   .prop-card-thumb.has-image::before,
@@ -361,9 +421,12 @@
     padding-top: 12px; border-top: 1px solid var(--border); margin-top: auto;
   }
 
-  .prop-card-price {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.25rem; font-weight: 700; color: var(--gold);
+  .prop-card-price,
+  .prop-list-price {
+    font-family: 'Space Grotesk', 'Outfit', sans-serif;
+    font-size: 1.25rem; font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--gold);
   }
 
   .btn-card-view {
@@ -377,48 +440,190 @@
 
   .btn-card-view:hover { border-color: var(--gold-border); color: var(--gold); background: var(--gold-dim); }
 
-  /* ── List view ── */
-  .prop-list { display: flex; flex-direction: column; gap: 12px; }
-
-  .prop-list-item {
-    background: var(--bg-card); border: 1px solid var(--border);
-    border-radius: var(--radius-lg); overflow: hidden;
-    display: grid; grid-template-columns: 150px 1fr auto;
-    transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition);
+  /* ── Hero + Card layout ── */
+  .property-hero-panel {
+    margin-top: 24px;
+    background: var(--bg-card);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-xl);
+    padding: 20px 26px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 18px;
   }
 
-  .prop-list-item:hover {
-    border-color: var(--border-hover);
-    transform: translateX(4px);
-    box-shadow: var(--shadow-card);
+  .property-hero-panel h2 {
+    margin: 0;
+    font-size: 1.6rem;
+    font-family: 'Space Grotesk', 'Outfit', sans-serif;
+    color: var(--text);
   }
 
-  .prop-list-thumb {
+  .property-hero-panel p {
+    margin: 0;
+    color: var(--text-muted);
+  }
+
+  .property-hero-note {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+  }
+
+  .property-hero-stats {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .property-hero-stat {
+    flex: 1;
+    min-width: 130px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-md);
+    padding: 12px 14px;
+    background: var(--bg-3);
+  }
+
+  .property-hero-stat strong {
+    display: block;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--gold);
+    margin-top: 4px;
+  }
+
+  .property-card-list {
+    margin-top: 26px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 22px;
+  }
+
+  .property-card {
+    background: var(--bg-card);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.12);
+  }
+
+  .property-card-media {
+    position: relative;
+    height: 220px;
     background: linear-gradient(135deg, var(--bg-2) 0%, var(--bg-3) 100%);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 36px; position: relative; min-height: 110px;
-    background-size: cover;
-    background-position: center;
   }
 
-  .prop-list-body { padding: 14px 16px; display: flex; flex-direction: column; justify-content: center; min-width: 0; }
-
-  .prop-list-title {
-    font-size: 14.5px; font-weight: 600; color: var(--text); margin-bottom: 3px;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  .property-card-media img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
 
-  .prop-list-address { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
-
-  .prop-list-right {
-    display: flex; flex-direction: column; align-items: flex-end;
-    justify-content: center; padding: 14px 16px; gap: 8px;
-    border-left: 1px solid var(--border); min-width: 130px;
+  .property-card-badges {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
   }
 
-  .prop-list-price {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.2rem; font-weight: 700; color: var(--gold); white-space: nowrap;
+  .property-card-badges span {
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    background: rgba(0, 0, 0, 0.45);
+    color: #fff;
+  }
+
+  .property-card-content {
+    padding: 20px 24px 26px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex: 1;
+  }
+
+  .property-card-title-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .property-card-title {
+    margin: 0;
+    font-size: 1.35rem;
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--text);
+  }
+
+  .property-card-price {
+    font-family: 'Space Grotesk', 'Outfit', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--gold);
+    white-space: nowrap;
+  }
+
+  .property-card-address {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .property-card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .property-card-meta span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .property-card-description {
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.5;
+    min-height: 54px;
+  }
+
+  .property-card-actions {
+    margin-top: auto;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .property-card-actions .btn-geo-primary,
+  .property-card-actions .btn-geo-secondary {
+    padding: 9px 18px;
+    font-size: 13px;
+  }
+
+  @media (max-width: 768px) {
+    .property-card-media {
+      height: 200px;
+    }
+  }
+
+  @media (max-width: 576px) {
+    .property-card-actions {
+      flex-direction: column;
+    }
   }
 
   /* ── Empty state ── */
@@ -474,18 +679,24 @@
         <h1 class="page-title">Khám phá bất động sản</h1>
         <p class="page-desc">Khám phá các bất động sản nổi bật trên khắp TP.HCM.</p>
       </div>
-      <a href="{% url 'properties:nearby_search' %}" class="btn-geo-secondary" style="font-size:13px;padding:9px 18px;margin-top:8px">
-        <i class="bi bi-geo-alt"></i> Tìm kiếm lân cận
-      </a>
+      <div class="d-flex flex-wrap gap-2" style="margin-top:8px">
+        <a href="{% url 'properties:nearby_search' %}" class="btn-geo-secondary" style="font-size:13px;padding:9px 18px">
+          <i class="bi bi-geo-alt"></i> Tìm kiếm lân cận
+        </a>
+        <a href="{% url 'properties:compare' %}" class="btn-geo-primary" style="font-size:13px;padding:9px 18px">
+          <i class="bi bi-columns-gap"></i> So sánh hiện tại
+        </a>
+      </div>
     </div>
   </div>
 </div>
+
 
 <div class="container">
   <div class="list-layout">
 
     <!-- ══ SIDEBAR BỘ LỌC ══ -->
-    <aside class="filter-sidebar" id="filterSidebar">
+    <aside class="filter-sidebar" id="filterSidebar" role="complementary" aria-hidden="true">
       <div class="filter-sidebar-sticky">
         <form method="get" id="filterForm">
           <div class="filter-panel">
@@ -527,16 +738,6 @@
                   <span class="type-chip-radio-label">🌿 Đất</span>
                 </label>
               </div>
-            </div>
-
-            <!-- Trạng thái tin đăng -->
-            <div class="filter-section">
-              <div class="filter-section-label"><i class="bi bi-check2-square"></i> Trạng thái tin đăng</div>
-              <select name="status" class="field-input">
-                {% for value, label in listing_statuses %}
-                <option value="{{ value }}" {% if filters.status == value %}selected{% endif %}>{{ label }}</option>
-                {% endfor %}
-              </select>
             </div>
 
             <!-- Khoảng giá -->
@@ -627,6 +828,12 @@
           </div>
         </div>
         <div id="propertyMap"></div>
+        <div class="map-status" id="mapStatus" aria-live="polite" role="status">
+          <div class="map-status-content">
+            <span class="map-spinner" aria-hidden="true"></span>
+            <span class="map-status-message">Đang tải bản đồ...</span>
+          </div>
+        </div>
       </section>
 
       <!-- Thanh trên của kết quả -->
@@ -637,7 +844,7 @@
             tìm thấy {{ total_count|floatformat:0|intcomma }} bất động sản
           </span>
           <!-- Nút mở bộ lọc trên mobile -->
-          <button class="mobile-filter-btn" id="mobileFilterToggle">
+          <button type="button" class="mobile-filter-btn" id="mobileFilterToggle" aria-controls="filterSidebar" aria-expanded="false">
             <i class="bi bi-sliders"></i> Bộ lọc
           </button>
         </div>
@@ -657,60 +864,75 @@
             <option value="area_asc" {% if filters.sort == 'area_asc' %}selected{% endif %}>Diện tích: Nhỏ nhất trước</option>
           </select>
 
-          <div class="view-toggle">
-            <button class="view-btn active" id="btnGrid" title="Chế độ lưới"><i class="bi bi-grid-3x3-gap"></i></button>
-            <button class="view-btn" id="btnList" title="Chế độ danh sách"><i class="bi bi-list-ul"></i></button>
+        </div>
+      </div>
+
+      <div class="property-hero-panel fade-up">
+        <div>
+          <p class="property-hero-eyebrow">Khám phá</p>
+          <h2>Đang hiển thị {{ total_count|floatformat:0|intcomma|comma_to_dot }} bất động sản</h2>
+          <p class="property-hero-note">Các kết quả bên dưới được cập nhật theo bộ lọc hiện tại và có thể thay đổi khi bạn rê bản đồ hoặc điều chỉnh bộ lọc.</p>
+        </div>
+        <div class="property-hero-stats">
+          <div class="property-hero-stat">
+            <span>Giá trung bình</span>
+            <strong>{% if avg_price %}{{ avg_price|price_vn }}{% else %}-{% endif %}</strong>
+          </div>
+          <div class="property-hero-stat">
+            <span>Diện tích trung bình</span>
+            <strong>{% if avg_area %}{{ avg_area|floatformat:0|intcomma|comma_to_dot }} m²{% else %}-{% endif %}</strong>
+          </div>
+          <div class="property-hero-stat">
+            <span>Giá/m² trung bình</span>
+            <strong>{% if avg_price and avg_area %}{{ avg_price|price_per_m2:avg_area }}{% else %}-{% endif %}</strong>
           </div>
         </div>
       </div>
 
-      <!-- ── CHẾ ĐỘ LƯỚI ── -->
-      <div class="prop-grid fade-up delay-1" id="gridView">
+      <div class="property-card-list fade-up delay-1">
         {% for p in properties %}
-        <div class="prop-card"
-             data-price="{{ p.price|default:0 }}"
-             data-area="{{ p.area|default:0 }}">
-
-          <div class="prop-card-thumb {% if p.primary_image_url %}has-image{% endif %}" {% if p.primary_image_url %}style="background-image:url('{{ p.primary_image_url }}')"{% endif %}>
-            {% if not p.primary_image_url %}{% with t=p.get_property_type_display|lower %}
-              {% if "apartment" in t %}🏢
-              {% elif "house" in t %}🏠
-              {% elif "land" in t %}🌿
-              {% elif "villa" in t %}🏡
-              {% else %}🏗️
-              {% endif %}
-            {% endwith %}{% endif %}
-            <span class="badge-gold" style="position:absolute;top:10px;left:10px;z-index:1">
-              {{ p.get_property_type_display }}
+        <article class="property-card" data-price="{{ p.price|default:0 }}" data-area="{{ p.area|default:0 }}" tabindex="0" role="link" onclick="window.location.href='{% url 'properties:detail' p.pk %}'">
+          <div class="property-card-media">
+            {% if p.primary_image_url %}
+            <img class="property-card-img" src="{{ p.primary_image_url }}" alt="{{ p.title|escape }}" loading="lazy" />
+            {% else %}
+            <span class="prop-thumb-icon" aria-hidden="true">
+              {% if p.property_type == 'apartment' %}<i class="bi bi-building"></i>
+              {% elif p.property_type == 'house' %}<i class="bi bi-house"></i>
+              {% elif p.property_type == 'land' %}<i class="bi bi-tree-fill"></i>
+              {% elif p.property_type == 'villa' %}<i class="bi bi-houses"></i>
+              {% else %}<i class="bi bi-braces"></i>{% endif %}
             </span>
+            {% endif %}
+            <div class="property-card-badges">
+              <span>{{ p.get_property_type_display }}</span>
+              <span>{{ p.get_listing_status_display }}</span>
+            </div>
+            <a class="property-card-wishlist" href="{% url 'properties:wishlist_toggle' p.pk %}" title="Thêm/bớt yêu thích" onclick="event.stopPropagation();">
+              <i class="bi bi-heart"></i>
+            </a>
           </div>
-
-          <div class="prop-card-body">
-            <div class="prop-card-title">{{ p.title }}</div>
-            <div class="prop-card-address">
-              <i class="bi bi-geo-alt" style="color:var(--gold)"></i> {{ p.address }}
-            </div>
-            <div class="prop-card-tags">
-              {% if p.area %}
-              <span class="prop-tag"><i class="bi bi-aspect-ratio"></i> {{ p.area }} m²</span>
-              {% endif %}
-              {% if p.bedrooms %}
-              <span class="prop-tag"><i class="bi bi-door-open"></i> {{ p.bedrooms }} phòng ngủ</span>
-              {% endif %}
-              {% if p.bathrooms %}
-              <span class="prop-tag"><i class="bi bi-droplet"></i> {{ p.bathrooms }} phòng tắm</span>
-              {% endif %}
-            </div>
-            <div class="prop-card-footer">
-              <div class="prop-card-price">
-                {% if p.price %}{{ p.price|price_vn }}{% else %}<span style="color:var(--text-muted);font-size:.9rem">Liên hệ để biết giá</span>{% endif %}
+          <div class="property-card-content">
+            <div class="property-card-title-row">
+              <h3 class="property-card-title">{{ p.title }}</h3>
+              <div class="property-card-price">
+                {% if p.price %}{{ p.price|price_vn }}{% else %}<span style="color:var(--text-muted);font-size:.95rem">Liên hệ</span>{% endif %}
               </div>
-              <a class="btn-card-view" href="{% url 'properties:detail' p.pk %}">
-                <i class="bi bi-eye"></i> Xem
-              </a>
             </div>
+            <div class="property-card-address">
+              <i class="bi bi-geo-alt" style="color:var(--gold)"></i>
+              {{ p.address }}
+            </div>
+            <div class="property-card-meta">
+              {% if p.area %}
+              <span><i class="bi bi-aspect-ratio"></i> {{ p.area|floatformat:0|intcomma|comma_to_dot }} m²</span>
+              {% endif %}
+              <span><i class="bi bi-currency-dollar"></i> {% if p.price and p.area %}{{ p.price|price_per_m2:p.area }}{% else %}-{% endif %}</span>
+              <span><i class="bi bi-person-badge"></i> {% if p.agent %}{{ p.agent.name }}{% else %}Chưa gắn môi giới{% endif %}</span>
+            </div>
+            <p class="property-card-description">{{ p.description|default_if_none:""|striptags|truncatechars:140 }}</p>
           </div>
-        </div>
+        </article>
         {% empty %}
         <div class="empty-state">
           <div class="empty-icon">🏚️</div>
@@ -719,64 +941,6 @@
           <a href="{% url 'properties:list' %}" class="btn-geo-primary" style="display:inline-flex">
             <i class="bi bi-arrow-counterclockwise"></i> Xóa bộ lọc
           </a>
-        </div>
-        {% endfor %}
-      </div>
-
-      <!-- ── CHẾ ĐỘ DANH SÁCH (ẩn mặc định) ── -->
-      <div class="prop-list fade-up delay-1" id="listView" style="display:none">
-        {% for p in properties %}
-        <div class="prop-list-item"
-             data-price="{{ p.price|default:0 }}"
-             data-area="{{ p.area|default:0 }}">
-
-          <div class="prop-list-thumb {% if p.primary_image_url %}has-image{% endif %}" {% if p.primary_image_url %}style="background-image:url('{{ p.primary_image_url }}')"{% endif %}>
-            {% if not p.primary_image_url %}{% with t=p.get_property_type_display|lower %}
-              {% if "apartment" in t %}🏢
-              {% elif "house" in t %}🏠
-              {% elif "land" in t %}🌿
-              {% elif "villa" in t %}🏡
-              {% else %}🏗️
-              {% endif %}
-            {% endwith %}{% endif %}
-            <span class="badge-gold" style="position:absolute;bottom:8px;left:8px;font-size:9px;z-index:1">
-              {{ p.get_property_type_display }}
-            </span>
-          </div>
-
-          <div class="prop-list-body">
-            <div class="prop-list-title">{{ p.title }}</div>
-            <div class="prop-list-address">
-              <i class="bi bi-geo-alt me-1" style="color:var(--gold)"></i>{{ p.address }}
-            </div>
-            <div class="prop-card-tags">
-              {% if p.area %}
-              <span class="prop-tag"><i class="bi bi-aspect-ratio"></i> {{ p.area }} m²</span>
-              {% endif %}
-              {% if p.bedrooms %}
-              <span class="prop-tag">{{ p.bedrooms }} phòng ngủ</span>
-              {% endif %}
-              {% if p.bathrooms %}
-              <span class="prop-tag">{{ p.bathrooms }} phòng tắm</span>
-              {% endif %}
-            </div>
-          </div>
-
-          <div class="prop-list-right">
-            <div class="prop-list-price">
-              {% if p.price %}{{ p.price|price_vn }}{% else %}<span style="color:var(--text-muted)">Liên hệ để biết giá</span>{% endif %}
-            </div>
-            <a class="btn-card-view" href="{% url 'properties:detail' p.pk %}">
-              <i class="bi bi-eye"></i> Chi tiết
-            </a>
-          </div>
-
-        </div>
-        {% empty %}
-        <div class="empty-state">
-          <div class="empty-icon">🏚️</div>
-          <h5>Không tìm thấy bất động sản</h5>
-          <p>Hãy thử điều chỉnh bộ lọc hoặc xóa bộ lọc để xem toàn bộ tin đăng hiện có.</p>
         </div>
         {% endfor %}
       </div>
@@ -808,6 +972,7 @@
 
     </div><!-- /results -->
   </div><!-- /list-layout -->
+  <div class="filter-backdrop" id="filterBackdrop" aria-hidden="true"></div>
 </div><!-- /container -->
 
 {% endblock %}
@@ -818,30 +983,6 @@
 <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
 <script>
 (function () {
-
-  /* ── Chuyển chế độ xem: Lưới ↔ Danh sách ── */
-  const gridView = document.getElementById('gridView');
-  const listView = document.getElementById('listView');
-  const btnGrid  = document.getElementById('btnGrid');
-  const btnList  = document.getElementById('btnList');
-
-  btnGrid && btnGrid.addEventListener('click', () => {
-    gridView.style.display = 'grid';
-    listView.style.display = 'none';
-    btnGrid.classList.add('active'); btnList.classList.remove('active');
-    localStorage.setItem('geo_list_view', 'grid');
-  });
-
-  btnList && btnList.addEventListener('click', () => {
-    listView.style.display = 'flex';
-    gridView.style.display = 'none';
-    btnList.classList.add('active'); btnGrid.classList.remove('active');
-    localStorage.setItem('geo_list_view', 'list');
-  });
-
-  // Khôi phục chế độ xem đã lưu
-  const savedView = localStorage.getItem('geo_list_view');
-  if (savedView === 'list') btnList && btnList.click();
 
   /* ── Style radio chip loại ── */
   document.querySelectorAll('.type-chip-radio input[type="radio"]').forEach(radio => {
@@ -876,14 +1017,36 @@
   /* ── Mở sidebar bộ lọc trên mobile ── */
   const mobileToggle = document.getElementById('mobileFilterToggle');
   const sidebar      = document.getElementById('filterSidebar');
+  const filterBackdrop = document.getElementById('filterBackdrop');
+  const body = document.body;
 
-  mobileToggle && mobileToggle.addEventListener('click', () => {
-    sidebar.classList.toggle('open');
-    mobileToggle.innerHTML = sidebar.classList.contains('open')
+  const setFilterPanel = (show) => {
+    if (!sidebar || !mobileToggle) return;
+    sidebar.classList.toggle('open', show);
+    body.classList.toggle('filter-panel-open', show);
+    sidebar.setAttribute('aria-hidden', String(!show));
+    mobileToggle.setAttribute('aria-expanded', String(show));
+    mobileToggle.innerHTML = show
       ? '<i class="bi bi-x-lg"></i> Đóng'
       : '<i class="bi bi-sliders"></i> Bộ lọc';
-  });
+    if (show) {
+      const panel = sidebar.querySelector('.filter-panel');
+      if (panel) panel.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
+  const closeFilterPanel = () => setFilterPanel(false);
+  const toggleFilterPanel = () => setFilterPanel(!(sidebar && sidebar.classList.contains('open')));
+
+  mobileToggle && mobileToggle.addEventListener('click', toggleFilterPanel);
+  filterBackdrop && filterBackdrop.addEventListener('click', closeFilterPanel);
+
+  const filterForm = document.getElementById('filterForm');
+  filterForm && filterForm.addEventListener('submit', closeFilterPanel);
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') closeFilterPanel();
+  });
   /* ── Tag bộ lọc đang hoạt động ── */
   (function renderActiveFilters() {
     const params  = new URLSearchParams(window.location.search);
@@ -938,22 +1101,46 @@
 
   /* ── Bản đồ + cluster + tìm theo vùng ── */
   const mapEl = document.getElementById('propertyMap');
+  const mapStatusEl = document.getElementById('mapStatus');
   if (mapEl && window.L) {
-    const map = L.map(mapEl);
     const defaultCenter = [10.7769, 106.7009];
+    const map = L.map(mapEl).setView(defaultCenter, 12);
     const markerLayer = L.markerClusterGroup();
     let heatLayer = null;
-    const heatPoints = {{ heatmap_points|safe }};
+    const heatPoints = {{ heatmap_points|safe }} || [];
     const bboxInput = document.getElementById('bboxInput');
     const btnSearchArea = document.getElementById('btnSearchArea');
     const btnToggleHeatmap = document.getElementById('btnToggleHeatmap');
     const btnResetMapFilter = document.getElementById('btnResetMapFilter');
 
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    const cartoLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
       subdomains: 'abcd',
       maxZoom: 20,
       attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
     }).addTo(map);
+
+    const fallbackTile = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+    let fallbackApplied = false;
+
+    cartoLayer.on('tileerror', () => {
+      if (!fallbackApplied) {
+        fallbackApplied = true;
+        cartoLayer.setUrl(fallbackTile);
+        setMapStatus('Chuyển sang tile dự phòng để tiếp tục hiển thị bản đồ.', { loading: true });
+        setTimeout(() => setMapStatus('', { visible: false }), 2500);
+      }
+    });
+
+    function setMapStatus(message, { visible = true, error = false, loading = false } = {}) {
+      if (!mapStatusEl) return;
+      const content = mapStatusEl.querySelector('.map-status-message');
+      const spinner = mapStatusEl.querySelector('.map-spinner');
+      if (content) content.textContent = message;
+      if (spinner) spinner.style.opacity = loading ? '1' : '0';
+      mapStatusEl.classList.toggle('visible', visible && !!message);
+      mapStatusEl.classList.toggle('error', error);
+      mapStatusEl.setAttribute('aria-live', error ? 'assertive' : 'polite');
+    }
 
     function formatPrice(price) {
       if (price === null || price === undefined || Number.isNaN(price)) return 'Liên hệ để biết giá';
@@ -969,40 +1156,49 @@
     }
 
     async function loadMarkers() {
+      setMapStatus('Đang tải dữ liệu bản đồ…', { visible: true, error: false, loading: true });
       const url = `{% url 'properties:map_data' %}?${new URLSearchParams(window.location.search).toString()}`;
-      const response = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
-      const data = await response.json();
-      markerLayer.clearLayers();
-      const bounds = [];
+      try {
+        const response = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+        if (!response.ok) throw new Error(`Status ${response.status}`);
+        const data = await response.json();
+        markerLayer.clearLayers();
+        const bounds = [];
 
-      data.results.forEach(item => {
-        if (typeof item.lat !== 'number' || typeof item.lng !== 'number') return;
-        const marker = L.marker([item.lat, item.lng]);
-        marker.bindPopup(`
-          <div style="min-width:220px">
-            <strong>${item.title}</strong><br>
-            <div style="font-size:12px;color:#666;margin:6px 0">${item.address}</div>
-            <div style="font-size:12px;margin-bottom:6px">${item.property_type} · ${item.area || 'N/A'} m²</div>
-            <div style="font-weight:700;color:#b5892f;margin-bottom:8px">${formatPrice(item.price)}</div>
-            <a href="${item.detail_url}" style="font-size:12px">Xem chi tiết</a>
-          </div>
-        `);
-        markerLayer.addLayer(marker);
-        bounds.push([item.lat, item.lng]);
-      });
+        data.results.forEach(item => {
+          if (typeof item.lat !== 'number' || typeof item.lng !== 'number') return;
+          const marker = L.marker([item.lat, item.lng]);
+          marker.bindPopup(`
+            <div style="min-width:220px">
+              <strong>${item.title}</strong><br>
+              <div style="font-size:12px;color:#666;margin:6px 0">${item.address}</div>
+              <div style="font-size:12px;margin-bottom:6px">${item.property_type} · ${item.area || 'N/A'} m²</div>
+              <div style="font-weight:700;color:#b5892f;margin-bottom:8px">${formatPrice(item.price)}</div>
+              <a href="${item.detail_url}" style="font-size:12px">Xem chi tiết</a>
+            </div>
+          `);
+          markerLayer.addLayer(marker);
+          bounds.push([item.lat, item.lng]);
+        });
 
-      if (!map.hasLayer(markerLayer)) map.addLayer(markerLayer);
-      if (bounds.length) {
-        map.fitBounds(bounds, { padding: [30, 30] });
-      } else {
-        map.setView(defaultCenter, 12);
-      }
-
-      if (bboxInput && bboxInput.value) {
-        const parts = bboxInput.value.split(',').map(Number);
-        if (parts.length === 4 && parts.every(v => !Number.isNaN(v))) {
-          map.fitBounds([[parts[1], parts[0]], [parts[3], parts[2]]], { padding: [30, 30] });
+        if (!map.hasLayer(markerLayer)) map.addLayer(markerLayer);
+        if (bounds.length) {
+          map.fitBounds(bounds, { padding: [30, 30] });
+          setMapStatus('', { visible: false });
+        } else {
+          map.setView(defaultCenter, 12);
+          setMapStatus('Không có bất động sản trong phạm vi này.', { visible: true, error: false, loading: false });
         }
+
+        if (bboxInput && bboxInput.value) {
+          const parts = bboxInput.value.split(',').map(Number);
+          if (parts.length === 4 && parts.every(v => !Number.isNaN(v))) {
+            map.fitBounds([[parts[1], parts[0]], [parts[3], parts[2]]], { padding: [30, 30] });
+          }
+        }
+      } catch (error) {
+        console.error('Map load failed', error);
+        setMapStatus('Không thể tải bản đồ. Vui lòng thử lại.', { visible: true, error: true, loading: false });
       }
     }
 
@@ -1044,6 +1240,51 @@
 </script>
 
 <style>
+  .map-status {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(12, 15, 26, 0.55);
+    color: #fff;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity var(--transition);
+  }
+
+  .map-status.visible {
+    opacity: 1;
+  }
+
+  .map-status-content {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.6);
+    font-size: 13px;
+    letter-spacing: 0.02em;
+  }
+
+  .map-spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    border-top-color: #fbd38d;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .map-status.error .map-status-content {
+    background: rgba(185, 25, 25, 0.85);
+  }
+
   .quick-loc-btn {
     background: var(--bg-3); border: 1px solid var(--border);
     border-radius: 999px; padding: 5px 14px;

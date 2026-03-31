@@ -7,7 +7,7 @@ class PropertyImageUploadForm(forms.Form):
     images = forms.FileField(
         label="Ảnh bất động sản",
         required=False,
-        widget=forms.ClearableFileInput(attrs={"multiple": True, "class": "form-geo"}),
+        widget=forms.ClearableFileInput(attrs={"class": "form-geo"}),
     )
 
 

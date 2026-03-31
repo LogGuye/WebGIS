@@ -434,11 +434,11 @@
 <!-- ══ PAGE HERO ══ -->
 <div class="page-hero">
   <div class="container">
-    <p class="page-eyebrow">Client Acquisition</p>
-    <h1 class="page-title">Submit a Lead</h1>
+    <p class="page-eyebrow">Tiếp nhận khách hàng</p>
+    <h1 class="page-title">Gửi thông tin khách hàng</h1>
     <p class="page-desc">
-      Tell us about your property needs. We'll automatically match and assign
-      the nearest available agent to follow up with you.
+      Hãy cho chúng tôi biết nhu cầu bất động sản của bạn. Hệ thống sẽ tự động
+      tìm và gán môi giới gần nhất đang sẵn sàng để hỗ trợ bạn.
     </p>
   </div>
 </div>
@@ -464,7 +464,7 @@
             <div class="agent-avatar">👤</div>
             <div>
               <div class="agent-name">{{ assignment.agent.name }}</div>
-              <div class="agent-role">Assigned Agent</div>
+              <div class="agent-role">Môi giới được phân công</div>
               {% if assignment.agent.phone %}
               <a href="tel:{{ assignment.agent.phone }}"
                  style="font-size:12.5px;color:var(--gold);text-decoration:none;display:flex;align-items:center;gap:5px">
@@ -474,16 +474,16 @@
             </div>
             <div class="agent-dist-badge">
               <span class="agent-dist-num">{{ assignment.distance }}</span>
-              <span class="agent-dist-label">km away</span>
+              <span class="agent-dist-label">km cách bạn</span>
             </div>
           </div>
 
           <div style="display:flex;gap:10px;flex-wrap:wrap">
             <a href="{% url 'properties:list' %}" class="btn-geo-primary" style="font-size:13.5px;padding:10px 20px">
-              <i class="bi bi-grid-3x3-gap"></i> Browse Properties
+              <i class="bi bi-grid-3x3-gap"></i> Xem bất động sản
             </a>
             <a href="{% url 'core:home' %}" class="btn-geo-secondary" style="font-size:13.5px;padding:10px 20px">
-              <i class="bi bi-house"></i> Back to Home
+              <i class="bi bi-house"></i> Về trang chủ
             </a>
           </div>
         </div>
@@ -494,15 +494,15 @@
       {% if lead %}
       <div class="lead-summary">
         <div class="lead-summary-header">
-          <i class="bi bi-person-check-fill"></i> Lead Created
+          <i class="bi bi-person-check-fill"></i> Khách hàng đã được tạo
         </div>
         <div class="lead-summary-body">
           <div class="lead-row">
-            <span class="lead-row-key"><i class="bi bi-person me-2" style="color:var(--gold)"></i>Name</span>
+            <span class="lead-row-key"><i class="bi bi-person me-2" style="color:var(--gold)"></i>Họ tên</span>
             <span class="lead-row-val">{{ lead.name }}</span>
           </div>
           <div class="lead-row">
-            <span class="lead-row-key"><i class="bi bi-telephone me-2" style="color:var(--gold)"></i>Phone</span>
+            <span class="lead-row-key"><i class="bi bi-telephone me-2" style="color:var(--gold)"></i>Số điện thoại</span>
             <span class="lead-row-val">{{ lead.phone }}</span>
           </div>
           <div class="lead-row">
@@ -511,7 +511,7 @@
           </div>
           {% if lead.created_at %}
           <div class="lead-row">
-            <span class="lead-row-key"><i class="bi bi-clock me-2" style="color:var(--gold)"></i>Submitted</span>
+            <span class="lead-row-key"><i class="bi bi-clock me-2" style="color:var(--gold)"></i>Thời gian gửi</span>
             <span class="lead-row-val">{{ lead.created_at|date:"d M Y, H:i" }}</span>
           </div>
           {% endif %}
@@ -525,8 +525,8 @@
         <div class="form-card-header">
           <div class="form-card-header-icon">📋</div>
           <div>
-            <div class="form-card-title">Client Information</div>
-            <div class="form-card-subtitle">Fill in your details and preferred location</div>
+            <div class="form-card-title">Thông tin khách hàng</div>
+            <div class="form-card-subtitle">Điền thông tin và khu vực bạn quan tâm</div>
           </div>
         </div>
 
@@ -552,18 +552,18 @@
             {% csrf_token %}
 
             <!-- Section 1: Contact info -->
-            <div class="form-section-title"><i class="bi bi-person"></i> Contact Details</div>
+            <div class="form-section-title"><i class="bi bi-person"></i> Thông tin liên hệ</div>
 
             <div class="row g-3">
               <div class="col-md-6">
                 <div class="field-group">
                   <label class="field-label" for="idName">
-                    <i class="bi bi-person-fill"></i> Full Name <span class="field-required">*</span>
+                    <i class="bi bi-person-fill"></i> Họ và tên <span class="field-required">*</span>
                   </label>
                   <div class="input-icon-wrap">
                     <i class="bi bi-person"></i>
                     <input type="text" id="idName" name="name" class="field-input"
-                           placeholder="e.g. Nguyen Van A" required autocomplete="name" />
+                           placeholder="Ví dụ: Nguyễn Văn A" required autocomplete="name" />
                   </div>
                 </div>
               </div>
@@ -571,7 +571,7 @@
               <div class="col-md-6">
                 <div class="field-group">
                   <label class="field-label" for="idPhone">
-                    <i class="bi bi-telephone-fill"></i> Phone Number <span class="field-required">*</span>
+                    <i class="bi bi-telephone-fill"></i> Số điện thoại <span class="field-required">*</span>
                   </label>
                   <div class="input-icon-wrap">
                     <i class="bi bi-telephone"></i>
@@ -583,16 +583,16 @@
             </div>
 
             <!-- Section 2: Budget -->
-            <div class="form-section-title"><i class="bi bi-cash-coin"></i> Budget</div>
+            <div class="form-section-title"><i class="bi bi-cash-coin"></i> Ngân sách</div>
 
             <div class="field-group">
               <label class="field-label" for="idBudget">
-                <i class="bi bi-cash-stack"></i> Budget (VND) <span class="field-required">*</span>
+                <i class="bi bi-cash-stack"></i> Ngân sách (VND) <span class="field-required">*</span>
               </label>
               <div class="input-icon-wrap">
                 <i class="bi bi-currency-dollar"></i>
                 <input type="number" id="idBudget" name="budget" class="field-input"
-                       placeholder="e.g. 3000000000" step="500000000" required />
+                       placeholder="Ví dụ: 3000000000" step="500000000" required />
               </div>
               <div class="budget-presets">
                 <button type="button" class="budget-chip" data-val="1000000000">1 tỷ</button>
@@ -610,23 +610,23 @@
             <!-- Property type interest -->
             <div class="field-group">
               <label class="field-label">
-                <i class="bi bi-buildings"></i> Interested in
+                <i class="bi bi-buildings"></i> Loại bất động sản quan tâm
               </label>
               <div class="interest-chips" id="interestChips">
-                <div class="interest-chip" data-val="apartment">🏢 Apartment</div>
-                <div class="interest-chip" data-val="house">🏠 House</div>
-                <div class="interest-chip" data-val="land">🌿 Land</div>
-                <div class="interest-chip" data-val="villa">🏡 Villa</div>
+                <div class="interest-chip" data-val="apartment">🏢 Căn hộ</div>
+                <div class="interest-chip" data-val="house">🏠 Nhà ở</div>
+                <div class="interest-chip" data-val="land">🌿 Đất nền</div>
+                <div class="interest-chip" data-val="villa">🏡 Biệt thự</div>
               </div>
               <input type="hidden" name="property_interest" id="propertyInterest" value="{{ request.GET.property|default:'' }}" />
             </div>
 
             <!-- Section 3: Location -->
-            <div class="form-section-title"><i class="bi bi-geo-alt"></i> Desired Location</div>
+            <div class="form-section-title"><i class="bi bi-geo-alt"></i> Khu vực mong muốn</div>
 
             <!-- Quick location presets -->
             <div class="field-group">
-              <label class="field-label"><i class="bi bi-lightning-charge"></i> Quick select</label>
+              <label class="field-label"><i class="bi bi-lightning-charge"></i> Chọn nhanh</label>
               <div class="quick-locs">
                 <button type="button" class="quick-loc-btn" data-lat="10.7769" data-lng="106.7009">📍 Quận 1</button>
                 <button type="button" class="quick-loc-btn" data-lat="10.8020" data-lng="106.7330">📍 Thảo Điền</button>
@@ -642,21 +642,21 @@
             <div class="coord-pair">
               <div class="field-group">
                 <label class="field-label" for="idLat">
-                  <i class="bi bi-compass"></i> Latitude <span class="field-required">*</span>
+                  <i class="bi bi-compass"></i> Vĩ độ <span class="field-required">*</span>
                 </label>
                 <div class="input-icon-wrap">
                   <i class="bi bi-compass"></i>
                   <input type="text" id="idLat" name="lat" class="field-input"
-                         placeholder="e.g. 10.7769" required />
+                         placeholder="Ví dụ: 10.7769" required />
                 </div>
                 <div class="field-hint">
-                  <i class="bi bi-info-circle"></i> Decimal degrees (WGS84)
+                  <i class="bi bi-info-circle"></i> Hệ tọa độ thập phân (WGS84)
                 </div>
               </div>
 
               <div class="field-group">
                 <label class="field-label" for="idLng">
-                  <i class="bi bi-compass"></i> Longitude <span class="field-required">*</span>
+                  <i class="bi bi-compass"></i> Kinh độ <span class="field-required">*</span>
                 </label>
                 <div class="input-icon-wrap">
                   <i class="bi bi-compass"></i>
@@ -679,18 +679,18 @@
 
             <div class="field-group">
               <label class="field-label" for="idAlertEnabled">
-                <i class="bi bi-bell"></i> Saved alert
+                <i class="bi bi-bell"></i> Thông báo lưu sẵn
               </label>
               <label style="display:flex;align-items:center;gap:10px;color:var(--text-dim);font-size:13px">
                 <input type="checkbox" id="idAlertEnabled" name="alert_enabled" />
-                Notify me later when matching properties appear
+                Báo cho tôi sau khi có bất động sản phù hợp
               </label>
             </div>
 
             <!-- Notes -->
             <div class="field-group">
               <label class="field-label" for="idNotes">
-                <i class="bi bi-chat-left-text"></i> Additional notes
+                <i class="bi bi-chat-left-text"></i> Ghi chú thêm
               </label>
               <textarea id="idNotes" name="notes" class="field-input" rows="3"
                         placeholder="Ví dụ: ưu tiên gần trường học, quận mong muốn, thời gian dọn vào ở…"
@@ -699,7 +699,7 @@
 
             <!-- Submit -->
             <button type="submit" class="btn-submit" id="submitBtn">
-              <i class="bi bi-send-fill"></i> Submit Lead & Assign Agent
+              <i class="bi bi-send-fill"></i> Gửi thông tin & gán môi giới
             </button>
 
             <p style="text-align:center;font-size:11.5px;color:var(--text-muted);margin-top:12px">
@@ -720,24 +720,24 @@
         <!-- How it works -->
         <div class="info-card fade-up">
           <div class="info-card-header">
-            <div class="info-card-title"><i class="bi bi-info-circle"></i> How It Works</div>
+            <div class="info-card-title"><i class="bi bi-info-circle"></i> Cách hệ thống hoạt động</div>
           </div>
           <div class="info-card-body">
             <div class="how-step">
               <div class="how-step-num">1</div>
-              <div class="how-step-text"><strong>Fill in your details</strong> — contact info, budget, and desired location.</div>
+              <div class="how-step-text"><strong>Điền thông tin</strong> — nhập liên hệ, ngân sách và khu vực bạn muốn.</div>
             </div>
             <div class="how-step">
               <div class="how-step-num">2</div>
-              <div class="how-step-text"><strong>Spatial matching</strong> — our PostGIS engine finds the nearest available agent to your location.</div>
+              <div class="how-step-text"><strong>Ghép nối không gian</strong> — hệ thống PostGIS tìm môi giới gần nhất với vị trí của bạn.</div>
             </div>
             <div class="how-step">
               <div class="how-step-num">3</div>
-              <div class="how-step-text"><strong>Instant assignment</strong> — the agent receives your lead immediately and will contact you.</div>
+              <div class="how-step-text"><strong>Phân công ngay lập tức</strong> — môi giới nhận thông tin khách hàng và liên hệ với bạn nhanh chóng.</div>
             </div>
             <div class="how-step">
               <div class="how-step-num">4</div>
-              <div class="how-step-text"><strong>Property matching</strong> — your agent presents listings that fit your budget and preferences.</div>
+              <div class="how-step-text"><strong>Đề xuất bất động sản</strong> — môi giới gửi các lựa chọn phù hợp với ngân sách và nhu cầu của bạn.</div>
             </div>
           </div>
         </div>
@@ -752,29 +752,29 @@
               <div class="trust-item">
                 <div class="trust-icon">🔒</div>
                 <div class="trust-text">
-                  <strong>Data Privacy</strong>
-                  Your info is never shared without consent.
+                  <strong>Bảo mật dữ liệu</strong>
+                  Thông tin của bạn không bị chia sẻ nếu chưa có sự đồng ý.
                 </div>
               </div>
               <div class="trust-item">
                 <div class="trust-icon">⚡</div>
                 <div class="trust-text">
-                  <strong>Instant Matching</strong>
-                  Agent assigned in under 1 second.
+                  <strong>Ghép nối tức thì</strong>
+                  Môi giới được gán chỉ trong chưa đến 1 giây.
                 </div>
               </div>
               <div class="trust-item">
                 <div class="trust-icon">📍</div>
                 <div class="trust-text">
-                  <strong>GIS-Powered</strong>
-                  PostGIS spatial distance matching.
+                  <strong>Vận hành bằng GIS</strong>
+                  Ghép nối khoảng cách không gian bằng PostGIS.
                 </div>
               </div>
               <div class="trust-item">
                 <div class="trust-icon">🤝</div>
                 <div class="trust-text">
-                  <strong>No Obligation</strong>
-                  Free consultation, no commitment.
+                  <strong>Không ràng buộc</strong>
+                  Tư vấn miễn phí, không bắt buộc giao dịch.
                 </div>
               </div>
             </div>
@@ -784,11 +784,11 @@
         <!-- Contact alternative -->
         <div class="info-card fade-up delay-2" style="margin-bottom:0">
           <div class="info-card-header">
-            <div class="info-card-title"><i class="bi bi-headset"></i> Need Help?</div>
+            <div class="info-card-title"><i class="bi bi-headset"></i> Cần hỗ trợ?</div>
           </div>
           <div class="info-card-body">
             <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;line-height:1.6">
-              Prefer to speak to someone directly? Our team is available Mon–Sat, 8am–6pm.
+              Muốn trao đổi trực tiếp? Đội ngũ của chúng tôi làm việc từ Thứ 2 đến Thứ 7, 8:00 - 18:00.
             </p>
             <a href="tel:+84901234567" class="btn-geo-secondary"
                style="font-size:13px;padding:10px;width:100%;margin-bottom:8px">
@@ -820,8 +820,8 @@
   function formatBudget(val) {
     const n = parseFloat(val);
     if (!val || isNaN(n)) return '';
-    if (n >= 1e9)  return '≈ ' + (n / 1e9).toFixed(1)  + ' Billion VND';
-    if (n >= 1e6)  return '≈ ' + (n / 1e6).toFixed(0)  + ' Million VND';
+    if (n >= 1e9)  return '≈ ' + (n / 1e9).toFixed(1)  + ' tỷ VND';
+    if (n >= 1e6)  return '≈ ' + (n / 1e6).toFixed(0)  + ' triệu VND';
     return n.toLocaleString() + ' VND';
   }
 
@@ -845,8 +845,13 @@
   document.querySelectorAll('#interestChips .interest-chip').forEach(chip => {
     chip.addEventListener('click', () => {
       const val = chip.dataset.val;
-      if (selectedInterests.has(val)) { selectedInterests.delete(val); chip.classList.remove('active'); }
-      else { selectedInterests.add(val); chip.classList.add('active'); }
+      if (selectedInterests.has(val)) { 
+        selectedInterests.delete(val); 
+        chip.classList.remove('active'); 
+      } else { 
+        selectedInterests.add(val); 
+        chip.classList.add('active'); 
+      }
       if (interestHidden) interestHidden.value = [...selectedInterests].join(',');
     });
   });
@@ -864,8 +869,11 @@
   /* ── Geolocation ── */
   const geoBtn = document.getElementById('btnGeolocate');
   geoBtn && geoBtn.addEventListener('click', () => {
-    if (!navigator.geolocation) { alert('Geolocation not supported.'); return; }
-    geoBtn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Locating…';
+    if (!navigator.geolocation) { 
+      alert('Trình duyệt không hỗ trợ định vị.'); 
+      return; 
+    }
+    geoBtn.innerHTML = '<i class="bi bi-arrow-repeat spin"></i> Đang xác định vị trí…';
     geoBtn.disabled = true;
 
     navigator.geolocation.getCurrentPosition(pos => {
@@ -874,14 +882,14 @@
       document.getElementById('idLat').value = lat;
       document.getElementById('idLng').value = lng;
       updateMiniMap(lat, lng);
-      geoBtn.innerHTML = '<i class="bi bi-check-circle"></i> Set';
+      geoBtn.innerHTML = '<i class="bi bi-check-circle"></i> Đã đặt';
       setTimeout(() => {
         geoBtn.innerHTML = '<i class="bi bi-crosshair"></i> Vị trí của tôi';
         geoBtn.disabled = false;
       }, 2000);
     }, () => {
-      alert('Could not get location.');
-      geoBtn.innerHTML = '<i class="bi bi-crosshair"></i> My location';
+      alert('Không thể lấy vị trí hiện tại.');
+      geoBtn.innerHTML = '<i class="bi bi-crosshair"></i> Vị trí của tôi';
       geoBtn.disabled = false;
     });
   });
@@ -925,7 +933,7 @@
     const lng    = document.getElementById('idLng')?.value.trim();
 
     if (lat && lng) return 3;
-    if (budget)     return 2;
+    if (budget) return 2;
     if (name || phone) return 1;
     return 0;
   }
@@ -934,18 +942,17 @@
     const filled = getFilledStep();
     steps.forEach((step, i) => {
       step.classList.remove('active', 'done');
-      if (i < filled)      step.classList.add('done');
+      if (i < filled) step.classList.add('done');
       else if (i === filled) step.classList.add('active');
     });
   }
 
   form && form.querySelectorAll('.field-input').forEach(input => {
     input.addEventListener('input', updateSteps);
-    // Live validation feedback
     input.addEventListener('blur', () => {
       if (input.required) {
         const ok = input.value.trim().length > 0;
-        input.classList.toggle('is-valid',   ok);
+        input.classList.toggle('is-valid', ok);
         input.classList.toggle('is-invalid', !ok);
       }
     });
@@ -957,10 +964,14 @@
     let valid = true;
     requiredFields.forEach(f => {
       if (!f.value.trim()) {
-        f.classList.add('is-invalid'); valid = false;
+        f.classList.add('is-invalid');
+        valid = false;
       }
     });
-    if (!valid) { e.preventDefault(); return; }
+    if (!valid) { 
+      e.preventDefault(); 
+      return; 
+    }
     if (submitBtn) {
       submitBtn.disabled = true;
       submitBtn.innerHTML = '<i class="bi bi-hourglass-split spin"></i> Đang gửi...';
@@ -971,20 +982,13 @@
 </script>
 
 <style>
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .spin { display: inline-block; animation: spin .7s linear infinite; }
+  @keyframes spin { 
+    to { transform: rotate(360deg); } 
+  }
+
+  .spin { 
+    display: inline-block; 
+    animation: spin .7s linear infinite; 
+  }
 </style>
 {% endblock %}
-k %}
-%}
-}
-}
-}
-
-%}
-}
-(360deg); } }
-  .spin { display: inline-block; animation: spin .7s linear infinite; }
-</style>
-{% endblock %}
-
