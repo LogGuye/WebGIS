@@ -22,6 +22,7 @@ urlpatterns = [
     path("compare/", views.compare_view, name="compare"),
     path("<int:pk>/wishlist-toggle/", views.wishlist_toggle, name="wishlist_toggle"),
     path("<int:pk>/compare-toggle/", views.compare_toggle, name="compare_toggle"),
+    path("<int:pk>/rate-agent/", views.agent_review_submit, name="agent_review_submit"),
     path("<int:pk>/", views.property_detail, name="detail"),
     path("nearby/search/", views.nearby_search, name="nearby_search"),
     path("amenities/search/", views.amenity_search, name="amenity_search"),

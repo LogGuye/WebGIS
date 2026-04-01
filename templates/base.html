@@ -786,7 +786,7 @@
           {% if request.user.is_authenticated %}
             <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' or request.resolver_match.url_name == 'dashboard_home' or request.resolver_match.url_name == 'customer_dashboard' %}active{% endif %}"
                href="{% url 'leads:dashboard_home' %}">
-              Bảng điều khiển
+              {% if is_user_role %}Cá nhân hóa{% else %}Bảng điều khiển{% endif %}
             </a>
           </li>
           {% if is_agent_role %}
@@ -833,7 +833,15 @@
               </a>
               <ul class="dropdown-menu dropdown-menu-end border-0 shadow-sm" style="border-radius:14px;padding:10px;min-width:220px">
                 <li><a class="dropdown-item" href="{% url 'accounts:profile' %}">Hồ sơ</a></li>
+                {% if is_user_role %}
+                <li>
+                  <a class="dropdown-item" href="{% url 'leads:dashboard_home' %}">
+                    Cá nhân hóa
+                  </a>
+                </li>
+                {% else %}
                 <li><a class="dropdown-item" href="{% url 'leads:dashboard_home' %}">Bảng điều khiển</a></li>
+                {% endif %}
                 <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item text-danger" href="{% url 'accounts:logout' %}">Đăng xuất</a></li>
               </ul>

@@ -20,6 +20,37 @@ let activeEntity = adminMeta.entities?.[0] || null;
 let items = [];
 let editingId = null;
 
+const getCookie = (name) => {
+  if (!document.cookie) return null;
+  const cookies = document.cookie.split(";");
+  for (let cookie of cookies) {
+    const [key, value] = cookie.trim().split("=");
+    if (key === name) return decodeURIComponent(value);
+  }
+  return null;
+};
+
+const csrfToken =
+  document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") ||
+  getCookie("csrftoken");
+
+const logCsrfState = () => {
+  console.debug("[admin-console] CSRF state", {
+    csrfToken,
+    cookieToken: getCookie("csrftoken"),
+    tokensMatch: getCookie("csrftoken") === csrfToken,
+  });
+};
+
+const extractErrorDetail = async (response) => {
+  const data = await response.json().catch(() => ({}));
+  const detail = data.error || data.detail || response.statusText || "Đã có lỗi xảy ra.";
+  if (response.status === 403) {
+    console.warn("[admin-console] CSRF error", detail);
+  }
+  return detail;
+};
+
 const showToast = (message, variant = "success") => {
   if (!toastEl) return;
   toastEl.textContent = message;
@@ -233,20 +264,22 @@ const handleSubmit = async (event) => {
   const method = editingId ? "PUT" : "POST";
   const url = editingId ? `${activeEntity.endpoints.detail}${editingId}/` : activeEntity.endpoints.collection;
   try {
+    logCsrfState();
     const response = await fetch(url, {
       method,
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
+        "X-CSRFToken": csrfToken,
       },
       credentials: "same-origin",
       body: JSON.stringify(payload),
     });
     if (!response.ok) {
-      const data = await response.json().catch(() => ({}));
-      throw new Error(data.error || "Xảy ra lỗi khi lưu.");
+      const detail = await extractErrorDetail(response);
+      throw new Error(detail);
     }
-    const saved = await response.json();
+    await response.json().catch(() => ({}));
     showToast(editingId ? "Đã cập nhật." : "Đã tạo bản ghi.");
     resetForm(true);
     fetchList();
@@ -259,13 +292,18 @@ const handleDelete = async () => {
   if (!editingId || !activeEntity) return;
   if (!confirm("Xác nhận xóa bản ghi này?")) return;
   try {
+    logCsrfState();
     const response = await fetch(`${activeEntity.endpoints.detail}${editingId}/`, {
       method: "DELETE",
-      headers: { Accept: "application/json" },
+      headers: {
+        Accept: "application/json",
+        "X-CSRFToken": csrfToken,
+      },
       credentials: "same-origin",
     });
     if (!response.ok) {
-      throw new Error("Không thể xóa.");
+      const detail = await extractErrorDetail(response);
+      throw new Error(detail);
     }
     showToast("Đã xóa.");
     resetForm(true);

@@ -1,4 +1,5 @@
 import json
+import math
 
 from decimal import Decimal, InvalidOperation
 
@@ -12,7 +13,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
-from accounts.models import Agent, UserProfile
+from accounts.forms import AgentReviewForm
+from accounts.models import Agent, AgentReview, UserProfile
 from accounts.permissions import role_required
 from core.gis_tools import (
     tool_amenities_within_radius,
@@ -301,6 +303,28 @@ def property_detail(request, pk):
         if not (is_admin or is_owner_agent):
             return redirect("properties:list")
 
+    agent = prop.agent
+    agent_reviews_qs = agent.agent_reviews.select_related("reviewer") if agent else None
+    agent_avg_rating = None
+    agent_avg_rating_floor = 0
+    agent_review_count = 0
+    agent_recent_reviews = []
+    agent_user_review = None
+    agent_review_form = None
+
+    if agent_reviews_qs is not None:
+        stats = agent_reviews_qs.aggregate(avg=Avg("rating"))
+        agent_avg_rating = stats.get("avg")
+        agent_review_count = agent_reviews_qs.count()
+        agent_avg_rating_floor = math.floor(agent_avg_rating) if agent_avg_rating else 0
+        agent_recent_reviews = list(agent_reviews_qs[:3])
+        if request.user.is_authenticated:
+            agent_user_review = agent_reviews_qs.filter(reviewer=request.user).first()
+            if agent_user_review is None:
+                agent_review_form = AgentReviewForm()
+    else:
+        agent_review_form = None
+
     similar_properties = tool_similar_properties(prop, limit=4)
     location_score = tool_location_score(prop)
     wishlist_ids = [int(i) for i in _get_session_ids(request, "wishlist")]
@@ -313,7 +337,42 @@ def property_detail(request, pk):
         "is_in_wishlist": prop.pk in wishlist_ids,
         "is_in_compare": prop.pk in compare_ids,
         "compare_count": compare_count,
+        "agent_avg_rating": agent_avg_rating,
+        "agent_avg_rating_floor": agent_avg_rating_floor,
+        "agent_review_count": agent_review_count,
+        "agent_recent_reviews": agent_recent_reviews,
+        "agent_user_review": agent_user_review,
+        "agent_review_form": agent_review_form,
+        "agent_star_range": range(1, 6),
     })
+
+
+@login_required
+@require_http_methods(["POST"])
+def agent_review_submit(request, pk):
+    prop = get_object_or_404(Property.objects.select_related("agent"), pk=pk)
+    if not prop.agent:
+        messages.error(request, "Bất động sản chưa có môi giới phụ trách.")
+        return redirect("properties:detail", pk=pk)
+
+    form = AgentReviewForm(request.POST)
+    if form.is_valid():
+        AgentReview.objects.update_or_create(
+            agent=prop.agent,
+            property=prop,
+            reviewer=request.user,
+            defaults={
+                "rating": form.cleaned_data["rating"],
+                "comment": form.cleaned_data.get("comment", "").strip(),
+            },
+        )
+        messages.success(request, "Cảm ơn bạn đã đánh giá môi giới.")
+    else:
+        for errors in form.errors.values():
+            for error in errors:
+                messages.error(request, error)
+
+    return redirect("properties:detail", pk=pk)
 
 
 def nearby_search(request):

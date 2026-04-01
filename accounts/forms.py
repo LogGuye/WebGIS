@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import AuthenticationForm, UserCreationForm
 
-from .models import UserProfile
+from .models import AgentReview, UserProfile
 
 
 class RegisterForm(UserCreationForm):
@@ -75,4 +75,30 @@ class ProfileForm(forms.ModelForm):
             self.user.save()
             profile.save()
         return profile
+
+
+class AgentReviewForm(forms.ModelForm):
+    RATING_CHOICES = [(i, f"{i} sao") for i in range(1, 6)]
+
+    rating = forms.TypedChoiceField(
+        choices=RATING_CHOICES,
+        widget=forms.Select(attrs={"class": "form-geo agent-rating-select"}),
+        coerce=int,
+    )
+
+    class Meta:
+        model = AgentReview
+        fields = ("rating", "comment")
+        widgets = {
+            "comment": forms.Textarea(
+                attrs={"rows": 3, "class": "form-geo", "placeholder": "Chia sẻ cảm nhận của bạn về môi giới"}
+            )
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field in self.fields.values():
+            if "class" in field.widget.attrs:
+                continue
+            field.widget.attrs.setdefault("class", "form-geo")
 

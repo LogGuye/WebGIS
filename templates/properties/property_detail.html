@@ -288,6 +288,21 @@
     border-color: var(--gold-border); color: var(--gold); background: var(--gold-dim);
   }
 
+  .cta-tertiary {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 12px;
+    background: var(--bg-3); color: var(--text);
+    border: 1px solid var(--gold-border); border-radius: var(--radius-md);
+    font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 600;
+    cursor: pointer; text-decoration: none;
+    transition: all var(--transition); margin-bottom: 10px;
+  }
+
+  .cta-tertiary:hover {
+    background: var(--gold-dim); color: var(--gold);
+    box-shadow: 0 6px 18px rgba(200,169,110,.3);
+  }
+
   /* Agent card */
   .agent-card {
     background: var(--bg-card); border: 1px solid var(--border);
@@ -327,6 +342,107 @@
 
   .agent-contact-item:hover { color: var(--gold); }
   .agent-contact-item i { color: var(--gold); font-size: 13px; width: 16px; }
+
+  .agent-rating {
+    margin-top: 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+  }
+
+  .agent-rating-score {
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .agent-rating-stars {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+
+  .agent-rating-stars span {
+    font-size: 1rem;
+    color: var(--border);
+  }
+
+  .agent-rating-stars span.filled { color: #f5c342; }
+
+  .agent-rating-count {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-left: 6px;
+  }
+
+  .agent-rating-empty {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .agent-review-list {
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .agent-review-card {
+    padding: 12px 14px;
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+  }
+
+  .agent-review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+  }
+
+  .agent-review-score {
+    font-weight: 600;
+    color: var(--gold);
+  }
+
+  .agent-review-card p {
+    margin: 6px 0 0;
+    font-size: 13px;
+    color: var(--text);
+  }
+
+  .agent-review-form {
+    margin-top: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .agent-review-note {
+    margin-top: 16px;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .agent-review-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .agent-rating-select {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-3);
+    color: var(--text);
+    padding: 8px 12px;
+    font-size: 13px;
+    font-family: 'Outfit', sans-serif;
+  }
 
   /* Share / save row */
   .action-row {
@@ -626,6 +742,11 @@
             <a href="{% url 'properties:nearby_search' %}?lat={{ property.location.y }}&lng={{ property.location.x }}&radius=2" class="cta-secondary">
               <i class="bi bi-geo-alt"></i> Xem khu vực lân cận
             </a>
+            {% if property.location %}
+            <a href="https://www.google.com/maps/dir/?api=1&destination={{ property.location.y|floatformat:6 }},{{ property.location.x|floatformat:6 }}&travelmode=driving" target="_blank" rel="noreferrer noopener" class="cta-tertiary">
+              <i class="bi bi-directions"></i> Mở chỉ đường Google Maps
+            </a>
+            {% endif %}
             {% url 'properties:compare_toggle' property.pk as compare_toggle_url %}
             <div class="action-row">
               <button class="action-btn" onclick="navigator.share ? navigator.share({title:'{{ property.title }}',url:window.location.href}) : navigator.clipboard.writeText(window.location.href).then(()=>alert('Đã sao chép liên kết!'))">
@@ -676,6 +797,65 @@
               </div>
             </div>
           </div>
+          {% if agent_review_count %}
+          <div class="agent-rating">
+            <div class="agent-rating-score">{{ agent_avg_rating|default:"0"|floatformat:1 }}</div>
+            <div>
+              <div class="agent-rating-stars">
+                {% for i in agent_star_range %}
+                <span class="{% if i <= agent_avg_rating_floor %}filled{% endif %}">★</span>
+                {% endfor %}
+              </div>
+              <div class="agent-rating-count">{{ agent_review_count }} đánh giá</div>
+            </div>
+          </div>
+          {% else %}
+          <div class="agent-rating agent-rating-empty">Chưa có đánh giá nào.</div>
+          {% endif %}
+
+          {% if agent_recent_reviews %}
+          <div class="agent-review-list">
+            {% for review in agent_recent_reviews %}
+            <article class="agent-review-card">
+              <div class="agent-review-header">
+                <strong>
+                  {% with reviewer_name=review.reviewer.get_full_name %}
+                    {% if reviewer_name %}
+                      {{ reviewer_name }}
+                    {% else %}
+                      {{ review.reviewer.username }}
+                    {% endif %}
+                  {% endwith %}
+                </strong>
+                <span class="agent-review-score">{{ review.rating }}★</span>
+                <small>{{ review.created_at|date:"SHORT_DATE_FORMAT" }}</small>
+              </div>
+              {% if review.comment %}
+              <p>{{ review.comment }}</p>
+              {% endif %}
+            </article>
+            {% endfor %}
+          </div>
+          {% endif %}
+
+          {% if request.user.is_authenticated %}
+            {% if agent_user_review %}
+            <div class="agent-review-note">Bạn đã đánh giá {{ agent_user_review.rating }} sao. Cảm ơn bạn!</div>
+            {% elif agent_review_form %}
+            <form method="post" action="{% url 'properties:agent_review_submit' property.pk %}" class="agent-review-form">
+              {% csrf_token %}
+              <div class="agent-review-inputs">
+                {{ agent_review_form.rating }}
+                {{ agent_review_form.comment }}
+              </div>
+              <button type="submit" class="cta-tertiary">
+                <i class="bi bi-star"></i> Gửi đánh giá
+              </button>
+            </form>
+            {% endif %}
+          {% else %}
+          <div class="agent-review-note">Đăng nhập để đánh giá môi giới.</div>
+          {% endif %}
         </div>
         {% endif %}
 
