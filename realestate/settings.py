@@ -118,3 +118,8 @@ if os.name == 'nt':  # Windows
 else:
     GDAL_LIBRARY_PATH = os.environ.get('GDAL_LIBRARY_PATH')
     GEOS_LIBRARY_PATH = os.environ.get('GEOS_LIBRARY_PATH')
+    
+EMAIL_HOST = 'sandbox.smtp.mailtrap.io'
+EMAIL_HOST_USER = '8f4a5faf708472'
+EMAIL_HOST_PASSWORD = '9837ace7980cdd'
+EMAIL_PORT = '2525'
