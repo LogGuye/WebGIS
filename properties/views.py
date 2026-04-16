@@ -746,3 +746,5 @@ def admin_property_record(request, pk):
     if amenity_ids is not None:
         instance.amenities.set(Amenity.objects.filter(pk__in=amenity_ids))
     return JsonResponse(_serialize_property(instance))
+def about(request):
+    return render(request, 'properties/about.html')  # Đảm bảo template 'about.html' tồn tại trong thư mục templates/properties

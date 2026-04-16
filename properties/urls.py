@@ -26,4 +26,5 @@ urlpatterns = [
     path("<int:pk>/", views.property_detail, name="detail"),
     path("nearby/search/", views.nearby_search, name="nearby_search"),
     path("amenities/search/", views.amenity_search, name="amenity_search"),
+    path("about/", views.about, name="about"),
 ]

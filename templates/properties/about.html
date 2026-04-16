@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+
+{% block head %}
+<title>Giới thiệu Web GIS Quản Lý Nhà Đất</title>
+<style>
+    /* Tổng thể */
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        background-color: #f4f7f6;
+        margin: 0;
+    }
+
+    /* Container chính để giới hạn chiều rộng nội dung */
+    .container {
+        max-width: 1000px;
+        margin: 40px auto;
+        padding: 0 20px;
+    }
+
+    /* Header & Nav */
+    header {
+        color: white;
+        padding: 40px 20px;
+        text-align: center;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    header h1 {
+        margin: 0 0 15px 0;
+        font-size: 2.5rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    nav ul {
+        list-style: none;
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+    }
+
+    nav ul li a {
+        color: rgba(255, 255, 255, 0.9);
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        padding: 5px 10px;
+        border-bottom: 2px solid transparent;
+    }
+
+    nav ul li a:hover {
+        color: #fff;
+        border-bottom: 2px solid #fff;
+    }
+
+    /* Sections */
+    section {
+        background: white;
+        padding: 30px;
+        margin-bottom: 30px;
+        border-radius: 12px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        transition: transform 0.3s ease;
+    }
+
+    section:hover {
+        transform: translateY(-5px);
+    }
+
+    h2 {
+        padding-left: 15px;
+        margin-top: 0;
+    }
+
+    /* List styling */
+    .features ul {
+        list-style: none;
+        padding: 0;
+    }
+
+    .features ul li {
+        padding: 10px 0 10px 30px;
+        position: relative;
+    }
+
+    .features ul li::before {
+        content: '✓';
+        position: absolute;
+        left: 0;
+        font-weight: bold;
+    }
+
+    /* Liên hệ */
+    .contact ul {
+        list-style: none;
+        padding: 0;
+    }
+
+    .contact a {
+        text-decoration: none;
+        font-weight: bold;
+    }
+
+    .contact a:hover {
+        text-decoration: underline;
+    }
+
+    /* Footer (Nếu base.html chưa có) */
+    footer {
+        background-color: #263238;
+        color: #cfd8dc;
+        text-align: center;
+        padding: 20px 0;
+        margin-top: 50px;
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 600px) {
+        nav ul {
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        header h1 {
+            font-size: 1.8rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="container">
+    <section class="intro">
+        <h2>Về Web GIS Quản Lý Nhà Đất</h2>
+        <p>Hệ thống Web GIS của chúng tôi cung cấp nền tảng quản lý nhà đất thông minh, sử dụng công nghệ bản đồ địa lý (GIS) để giúp người dùng tìm kiếm, phân tích, và quản lý các bất động sản một cách hiệu quả.</p>
+        <p>Với Web GIS, bạn có thể xem bản đồ, tìm kiếm các bất động sản, và phân tích dữ liệu về các khu vực dựa trên các yếu tố như giá cả, diện tích, vị trí, và các tiện ích xung quanh.</p>
+    </section>
+
+    <section class="features">
+        <h2>Chức Năng Nổi Bật</h2>
+        <ul>
+            <li>Hiển thị bản đồ các khu vực bất động sản với tính năng zoom và di chuyển dễ dàng.</li>
+            <li>Tìm kiếm bất động sản theo nhiều tiêu chí như vị trí, giá trị, diện tích và loại hình nhà đất.</li>
+            <li>Phân tích dữ liệu bất động sản qua các lớp bản đồ và công cụ GIS mạnh mẽ.</li>
+            <li>Thông tin chi tiết về từng bất động sản, bao gồm hình ảnh và thông số kỹ thuật.</li>
+            <li>Hệ thống bản đồ tương tác giúp người dùng dễ dàng so sánh các khu vực.</li>
+        </ul>
+    </section>
+
+    <section class="mission">
+        <h2>Sứ Mệnh</h2>
+        <p>Mang đến giải pháp quản lý nhà đất hiệu quả, giúp các nhà đầu tư và người mua nhà đưa ra quyết định chính xác dựa trên <strong>dữ liệu không gian</strong> thực tế.</p>
+    </section>
+
+
+</div>
+{% endblock %}

@@ -764,13 +764,19 @@
       <div class="collapse navbar-collapse ms-4" id="navMenu">
 
         <!-- Liên kết bên trái -->
-        <ul class="navbar-nav me-auto align-items-lg-center">
+        <ul class="navbar-nav me-auto align-items-lg-center"> <li class="nav-item">
+            <a class="nav-link {% if request.resolver_match.url_name == 'about' %}active{% endif %}"
+               href="{% url 'properties:about' %}">
+              Giới thiệu
+            </a>
+          </li>
           <li class="nav-item">
             <a class="nav-link {% if request.resolver_match.url_name == 'list' %}active{% endif %}"
                href="{% url 'properties:list' %}">
               Nhà đất bán
             </a>
           </li>
+         
           <li class="nav-item dropdown">
             <a class="nav-link dropdown-toggle {% if request.resolver_match.url_name == 'list' or request.resolver_match.url_name == 'nearby_search' or request.resolver_match.url_name == 'amenity_search' %}active{% endif %}"
                href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
