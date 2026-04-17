@@ -1,128 +1,324 @@
-# Hệ thống Web Quản lý & Phân phối Bất động sản (Django + PostGIS)
-# <img width="2542" height="1187" alt="image" src="https://github.com/user-attachments/assets/a45dd238-533a-4c54-ad22-182ec54edf2b" />
+# GeoEstate / WebGIS Real Estate Platform
 
-## Giới thiệu & mục tiêu
-- Ứng dụng quản lý danh mục BĐS, agent môi giới, lead và tiện ích xung quanh; hỗ trợ tìm kiếm theo khoảng cách và tự động phân phối lead cho agent gần nhất.
-- Sử dụng GIS (PostGIS + GeoDjango) để:
-  - Lưu trữ toạ độ chuẩn WGS84 (SRID 4326, PointField geography=True).
-  - Tính khoảng cách địa lý (Distance + D(km=...)) cho Nearby Search, Amenity Search và phân phối lead.
+Ứng dụng web quản lý, tìm kiếm và phân tích bất động sản xây bằng **Django + GeoDjango + PostGIS**.
 
-## Kiến trúc MVT trong Django
-- **Models (ORM):** `accounts.Agent`, `properties.Property`, `properties.Amenity`, `leads.Lead`, `leads.Appointment`.
-- **Views (Controller):**
-  - `core.views.home`
-  - `properties.views.property_list/detail/nearby_search/amenity_search`
-  - `leads.views.lead_form`
-- **Templates (View):** trong thư mục `templates/` kế thừa `base.html`.
-- **URL router:** `realestate/urls.py` include tới `core`, `properties`, `leads` (namespaces).
+Project hiện đã vượt mức demo CRUD cơ bản và có các khối chức năng chính:
+- quản lý bất động sản, môi giới, lead và tiện ích lân cận
+- tìm kiếm theo bản đồ, bán kính và khu vực
+- dashboard thống kê
+- wishlist / compare
+- auth + role + permission nền
+- import CSV
+- seed dữ liệu TP.HCM nhìn thật hơn
+- gallery ảnh property + media upload
 
-## Yêu cầu môi trường
-- Python 3.11+ khuyến nghị.
-- PostgreSQL 14+/PostGIS 3+ (có extension `postgis`).
-- GDAL/GEOS đã cài trong hệ thống để GeoDjango hoạt động.
+---
 
-## Cài đặt & cấu hình
-1. Clone project và tạo virtualenv.
-2. Cài dependency:
-   ```bash
-   pip install -r requirements.txt
-   ```
-3. Tạo database PostGIS:
-   ```sql
-   CREATE DATABASE realestate;
-   \c realestate;
-   CREATE EXTENSION postgis;
-   ```
-4. Tạo file `.env` từ mẫu:
-   ```bash
-   cp .env.example .env
-   ```
-   Sửa các biến:
-   - `SECRET_KEY`: chuỗi bí mật của Django.
-   - `DEBUG`: true/false.
-   - `DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DB_PORT`
-   - `ALLOWED_HOSTS`: ví dụ `localhost,127.0.0.1`.
-5. Chạy migrate:
-   ```bash
-   python manage.py migrate
-   ```
-6. Tạo tài khoản admin:
-   ```bash
-   python manage.py createsuperuser
-   ```
-7. Seed dữ liệu demo:
-   ```bash
-   python manage.py seed_demo_data
-   ```
-8. Chạy server:
-   ```bash
-   python manage.py runserver
-   ```
+## 1. Tính năng hiện có
 
-## Hướng dẫn sử dụng web (templates)
-- **Home** `/` : tổng quan số liệu.
-- **Property list** `/properties/` : lọc theo loại (apartment/house/land), giá min/max, diện tích min/max.
-- **Property detail** `/properties/<id>/` : thông tin chi tiết, link quay lại.
-- **Nearby Search** `/properties/nearby/search/?lat=21.0285&lng=105.8542&radius=5&type=house`  
-  Nhập lat/lng & bán kính (km) để xem BĐS trong vùng, sắp xếp theo khoảng cách, hiển thị km.
-- **Lead Form** `/leads/lead-form/` : nhập tên, sđt, budget, lat/lng mong muốn; hệ thống tạo Lead và tự gán agent gần nhất, hiển thị tên agent + khoảng cách.
-- **Amenity Search** `/properties/amenities/search/?lat=21.0285&lng=105.8542&radius=3&amenity_type=park` : trả danh sách tiện ích gần.
+### Bất động sản
+- Danh sách bất động sản với:
+  - search keyword
+  - filter theo loại hình
+  - filter theo giá / diện tích
+  - filter theo trạng thái tin
+  - sort theo giá / diện tích / mới nhất
+  - pagination
+- Trang chi tiết bất động sản với:
+  - gallery ảnh
+  - thông tin môi giới
+  - điểm vị trí (location score)
+  - map hiển thị vị trí
+  - tiện ích lân cận
+  - đề xuất bất động sản tương tự
 
-## Django Admin (CRUD)
-- Truy cập `/admin/` đăng nhập với superuser.
-- Quản lý:
-  - `Property` (có list_display: title, type, price, area, agent)
-  - `Agent` (name, phone, email)
-  - `Lead` (name, phone, budget, assigned_agent)
-  - `Amenity` (name, amenity_type)
-  - `Appointment` (lead, property, agent, scheduled_at)
-  - Đã cấu hình `search_fields`, `list_filter` hợp lý; dùng `OSMGeoAdmin` cho trường Point.
+### GIS / bản đồ
+- Bản đồ Leaflet trên trang list
+- Marker clustering
+- Heatmap cơ bản
+- Search theo vùng map (`bbox`)
+- Nearby Search theo:
+  - vị trí hiện tại
+  - địa điểm cụ thể
+  - preset location
+- Amenity Search theo:
+  - vị trí hiện tại
+  - địa điểm cụ thể
+  - preset location
 
-## GIS Tools (service layer)
-File `core/gis_tools.py`:
-- `tool_nearby_properties(lat, lng, radius_km, filters)`  
-  - **Input:** lat, lng (float), radius_km (float), filters {property_type, price_min, price_max, area_min, area_max}.  
-  - **Output:** QuerySet Property đã annotate `distance` (km), sắp xếp tăng dần, lọc trong bán kính bằng `location__distance_lte` với `D(km=radius)`.
-- `tool_assign_lead_to_nearest_agent(lead_location: Point)`  
-  - **Input:** GeoDjango Point (SRID 4326).  
-  - **Output:** tuple (agent gần nhất, distance_km) hoặc (None, None) nếu không có agent.
-- `tool_amenities_within_radius(lat, lng, radius_km, amenity_type)`  
-  - **Input:** lat, lng, radius_km, amenity_type optional.  
-  - **Output:** QuerySet Amenity annotate distance, order by distance.
+### CRM / vận hành
+- Lead form
+- Tự động gán lead cho môi giới gần nhất
+- Dashboard thống kê:
+  - tổng số property
+  - active / sold / hidden
+  - featured
+  - lead / alert / agent
+  - giá và diện tích trung bình theo loại
+- Changelog cơ bản cho property
+- Import property từ CSV trong admin
 
-## Cấu trúc thư mục
+### Người dùng
+- Đăng ký
+- Đăng nhập
+- Đăng xuất
+- Hồ sơ người dùng
+- Role nền:
+  - user
+  - agent
+  - admin
+- Permission cơ bản:
+  - guest bị chặn các route yêu cầu login
+  - dashboard giới hạn theo role
+  - agent chỉ thấy dữ liệu liên quan khi có `linked_agent`
+
+### Tương tác người dùng
+- Wishlist
+- Compare tối đa 3 property
+- Saved alert nền cơ bản qua lead form (`alert_enabled`)
+
+---
+
+## 2. Kiến trúc chính
+
+### Apps
+- `core/`
+  - home view
+  - GIS helper tools
+- `accounts/`
+  - `Agent`
+  - `UserProfile`
+  - auth / role / permission
+- `properties/`
+  - `Property`
+  - `Amenity`
+  - `PropertyImage`
+  - `PropertyChangeLog`
+  - property list/detail/search/map logic
+- `leads/`
+  - `Lead`
+  - `Appointment`
+  - dashboard + lead handling
+- `realestate/`
+  - settings / urls / wsgi / asgi
+
+### Stack
+- Python / Django
+- GeoDjango + PostGIS
+- Leaflet + Leaflet MarkerCluster + Leaflet Heat
+- Bootstrap Icons / custom templates
+
+---
+
+## 3. Cấu hình môi trường
+
+### Yêu cầu
+- Python 3.11+
+- PostgreSQL + PostGIS
+- GDAL / GEOS cho GeoDjango
+
+### Cài dependency
+```bash
+pip install -r requirements.txt
 ```
+
+### Lưu ý
+`requirements.txt` hiện có thêm:
+- `Pillow` cho upload ảnh property
+
+---
+
+## 4. Database & migrate
+
+### Tạo database PostGIS
+Ví dụ:
+```sql
+CREATE DATABASE realestate;
+\c realestate;
+CREATE EXTENSION postgis;
+```
+
+### Chạy migrate
+```bash
+python manage.py migrate
+```
+
+### Tạo admin
+```bash
+python manage.py createsuperuser
+```
+
+---
+
+## 5. Chạy project
+
+```bash
+python manage.py runserver
+```
+
+Project mặc định sẽ chạy tại:
+```text
+http://127.0.0.1:8000/
+```
+
+---
+
+## 6. Seed dữ liệu thật hơn
+
+Project có command seed dữ liệu TP.HCM nhìn thật hơn:
+
+```bash
+python manage.py seed_realistic_data
+```
+
+Nếu muốn xóa dữ liệu cũ rồi seed lại sạch:
+
+```bash
+python manage.py seed_realistic_data --reset
+```
+
+Có thể custom số lượng:
+
+```bash
+python manage.py seed_realistic_data --reset --properties 50 --agents 8 --amenities 60 --leads 20
+```
+
+### Seed hiện tạo
+- agent tên Việt + email + phone
+- amenity theo khu vực TP.HCM
+- property với địa chỉ / giá / diện tích / trạng thái hợp lý hơn
+- lead mẫu
+- ảnh minh họa sample cho property
+- featured property được set tự động
+
+---
+
+## 7. Media / ảnh
+
+### Đã cấu hình
+- `MEDIA_URL = "/media/"`
+- `MEDIA_ROOT = BASE_DIR / "media"`
+- dev server phục vụ media khi `DEBUG=True`
+
+### Property images
+Model:
+- `PropertyImage`
+  - `image`
+  - `caption`
+  - `is_primary`
+  - `sort_order`
+
+### Admin
+- upload ảnh trực tiếp trong admin property bằng inline
+
+---
+
+## 8. Các route quan trọng
+
+### Công khai
+- `/`
+- `/properties/`
+- `/properties/<id>/`
+- `/properties/nearby/search/`
+- `/properties/amenities/search/`
+- `/accounts/login/`
+- `/accounts/register/`
+
+### Cần login
+- `/properties/wishlist/`
+- `/properties/compare/`
+- `/leads/lead-form/`
+- `/accounts/profile/`
+
+### Giới hạn theo role
+- `/leads/dashboard/`
+  - agent / admin
+
+### Admin
+- `/admin/`
+
+---
+
+## 9. Auth & permission
+
+### Auth
+- Django auth chuẩn
+- register/login/logout/profile
+
+### Role model
+`accounts.UserProfile`
+- `user`
+- `agent`
+- `admin`
+- có thể link sang `Agent`
+
+### Permission hiện có
+- guest bị redirect về login ở các route yêu cầu auth
+- user thường không vào dashboard role-based
+- agent nếu có `linked_agent` sẽ bị giới hạn dữ liệu theo agent đó
+
+---
+
+## 10. GIS helper chính
+
+File: `core/gis_tools.py`
+
+### Có các hàm chính
+- `tool_nearby_properties(...)`
+- `tool_amenities_within_radius(...)`
+- `tool_assign_lead_to_nearest_agent(...)`
+- `tool_location_score(...)`
+- `tool_similar_properties(...)`
+
+---
+
+## 11. Thư mục quan trọng
+
+```text
 manage.py
-realestate/           # settings, urls, wsgi/asgi
-accounts/             # Agent model + admin + migrations
-properties/           # Property, Amenity + views/urls/admin + migrations
-leads/                # Lead, Appointment + views/urls/admin + migrations
-core/                 # home view, GIS tools, seed command
-templates/            # base.html, core/, properties/, leads/
-static/css/styles.css
+realestate/
+accounts/
+properties/
+leads/
+core/
+templates/
+media/
 requirements.txt
-.env.example
+README.md
 ```
 
-## Troubleshooting
-- **psycopg2 / libpq lỗi:** đảm bảo đã cài `libpq-dev`/`postgresql-client` và `pip install psycopg2-binary`.
-- **Missing postgis extension:** chạy `CREATE EXTENSION postgis;` trong DB; kiểm tra quyền.
-- **GDAL/GEOS not found:** cài gói hệ thống (`gdal-bin libgdal-dev libgeos-dev` tùy OS) rồi cài lại môi trường.
-- **SRID lỗi hoặc phép đo không chính xác:** đảm bảo các PointField dùng `geography=True, srid=4326` và dữ liệu lat/lng (không phải lng/lat).
+---
 
-## Demo lat/lng gợi ý (Hà Nội)
-- Hoàn Kiếm: lat `21.0285`, lng `105.8542`
-- Cầu Giấy: lat `21.0333`, lng `105.7899`
-- Dùng radius 3–5 km để thấy kết quả seed.
+## 12. Trạng thái hiện tại
 
-## Ghi chú
-- Không lưu mật khẩu/secret trong repo; dùng `.env`.
-- Có thể thêm screenshot vào thư mục `docs/` (đặt tên `home.png`, `property-list.png`, ...).
+Project hiện ở mức **MVP khá đầy đủ**, phù hợp để:
+- demo môn học / đồ án
+- tiếp tục polish UI/UX
+- mở rộng API
+- thêm upload ảnh thật / cloud storage
+- thêm notification thật
+- thêm phân quyền sâu hơn
 
+---
 
+## 13. Việc nên làm tiếp
 
-# <img width="2523" height="634" alt="image" src="https://github.com/user-attachments/assets/5be08eff-0145-4736-b45d-8db3c4416fbf" />
-# <img width="2523" height="634" alt="image" src="https://github.com/user-attachments/assets/cd680ba1-f421-4e8b-9f23-00bfdd21e98a" />
-# <img width="2523" height="825" alt="image" src="https://github.com/user-attachments/assets/4eac4faf-1713-4512-981a-a2118e73cdb3" />
+Nếu muốn nâng cấp tiếp, ưu tiên hợp lý là:
+1. polish UI/UX toàn site
+2. test role agent/admin thật bằng account thực
+3. thêm API (DRF)
+4. thêm notification thật
+5. thêm permission sâu hơn cho CRUD theo owner/agent
+6. tối ưu import CSV và validation
 
+---
 
+## 14. Ghi chú
+
+- Nếu có thay đổi lớn về feature, nhớ cập nhật lại README này.
+- Nếu chạy trên máy mới, hãy kiểm tra đủ:
+  - PostGIS
+  - GDAL / GEOS
+  - Pillow
+  - migrate
+  - seed data

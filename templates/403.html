@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}403 - Truy cập bị từ chối{% endblock %}
+
+{% block content %}
+<div class="container py-5 text-center">
+    <div class="error-container py-5">
+        <h1 class="display-1 fw-bold text-danger">403</h1>
+        <div class="error-icon mb-4">
+            <i class="fas fa-user-shield fa-5x text-danger"></i>
+        </div>
+        <h2 class="mb-3">Khu vực hạn chế!</h2>
+        <p class="lead mb-5">Tài khoản của bạn không có đủ quyền hạn để truy cập vào phân khu này.</p>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="{% url 'core:home' %}" class="btn-geo-primary">
+                <i class="fas fa-home me-2"></i>Về trang chủ
+            </a>
+            {% if not user.is_authenticated %}
+            <a href="{% url 'accounts:login' %}" class="btn-geo-outline">
+                <i class="fas fa-sign-in-alt me-2"></i>Đăng nhập ngay
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

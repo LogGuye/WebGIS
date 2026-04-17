@@ -1,0 +1,13 @@
+@media (max-width: 1024px) {
+    .list-layout { grid-template-columns: 1fr; }
+    .filter-sidebar { display: none; }
+    .filter-sidebar.open { display: block; }
+  }
+
+  /* ── Filter sidebar ── */
+  .filter-sidebar-sticky { position: sticky; top: calc(var(--nav-h) + 16px); }
+
+  .filter-panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);

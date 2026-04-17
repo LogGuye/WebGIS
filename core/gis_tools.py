@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.contrib.gis.geos import Point
 from django.contrib.gis.measure import D
 from django.contrib.gis.db.models.functions import Distance
@@ -62,3 +64,42 @@ def tool_amenities_within_radius(lat, lng, radius_km, amenity_type=None):
     if amenity_type:
         qs = qs.filter(amenity_type=amenity_type)
     return qs.order_by("distance")
+
+
+def tool_location_score(property_obj):
+    """Simple heuristic location score based on nearby amenities within 3 km."""
+    if not property_obj.location:
+        return 0
+
+    ref = property_obj.location
+    nearby = Amenity.objects.annotate(distance=Distance("location", ref)).filter(location__distance_lte=(ref, D(km=3)))
+    counts = {key: 0 for key, _ in Amenity.AmenityType.choices}
+    for amenity in nearby:
+        counts[amenity.amenity_type] = counts.get(amenity.amenity_type, 0) + 1
+
+    weighted = (
+        min(counts.get(Amenity.AmenityType.SCHOOL, 0), 3) * 15
+        + min(counts.get(Amenity.AmenityType.HOSPITAL, 0), 2) * 18
+        + min(counts.get(Amenity.AmenityType.PARK, 0), 2) * 10
+        + min(counts.get(Amenity.AmenityType.MALL, 0), 2) * 12
+        + min(counts.get(Amenity.AmenityType.SUPERMARKET, 0), 3) * 10
+        + min(counts.get(Amenity.AmenityType.TRANSPORT, 0), 2) * 15
+    )
+    return min(weighted, 100)
+
+
+def tool_similar_properties(property_obj, limit=4):
+    """Recommend similar properties using type, status, price band and area band."""
+    qs = Property.objects.filter(listing_status=Property.ListingStatus.ACTIVE).exclude(pk=property_obj.pk)
+    qs = qs.filter(property_type=property_obj.property_type)
+
+    if property_obj.price:
+        price_min = property_obj.price * Decimal("0.7")
+        price_max = property_obj.price * Decimal("1.3")
+        qs = qs.filter(price__gte=price_min, price__lte=price_max)
+    if property_obj.area:
+        area_min = property_obj.area * 0.7
+        area_max = property_obj.area * 1.3
+        qs = qs.filter(area__gte=area_min, area__lte=area_max)
+
+    return qs.order_by("-is_featured", "-created_at")[:limit]

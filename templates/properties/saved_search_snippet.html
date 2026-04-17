@@ -1,0 +1,30 @@
+{% if request.user.is_authenticated and saved_searches %}
+<div class="card-geo p-4 mb-4 fade-up">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <h5 style="color:var(--text);margin:0">Tìm kiếm đã lưu</h5>
+    <span class="stat-pill">{{ saved_searches|length }} bộ lọc gần đây</span>
+  </div>
+  <div class="d-flex flex-column gap-2">
+    {% for item, count in saved_search_alert_items %}
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2" style="background:var(--bg-3);border:1px solid var(--border);border-radius:14px;padding:12px 14px">
+      <div>
+        <div style="color:var(--text);font-weight:600">{{ item.name }}</div>
+        <div style="color:var(--text-muted);font-size:12px">
+          {% if item.property_type %}{{ item.property_type|default:'Mọi loại' }} · {% endif %}
+          {% if item.query %}"{{ item.query }}" · {% endif %}
+          {% if item.price_min %}từ {{ item.price_min }}{% endif %}
+          {% if item.price_max %} đến {{ item.price_max }}{% endif %}
+        </div>
+      </div>
+      <div class="d-flex gap-2 align-items-center flex-wrap">
+        <span class="stat-pill">{{ count }} tin mới</span>
+        <a href="{% url 'properties:list' %}?q={{ item.query|urlencode }}&type={{ item.property_type|urlencode }}&status={{ item.listing_status|urlencode }}&price_min={{ item.price_min|default:''|urlencode }}&price_max={{ item.price_max|default:''|urlencode }}&area_min={{ item.area_min|default:''|urlencode }}&area_max={{ item.area_max|default:''|urlencode }}" class="btn-geo-secondary" style="padding:7px 12px;font-size:12px">Mở lại</a>
+        <a href="{% url 'properties:saved_search_seen' item.pk %}" class="btn-geo-secondary" style="padding:7px 12px;font-size:12px">Đánh dấu đã xem</a>
+        <a href="{% url 'properties:saved_search_delete' item.pk %}" class="btn-geo-secondary" style="padding:7px 12px;font-size:12px">Xóa</a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+

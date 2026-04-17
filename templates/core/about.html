@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Giới thiệu | GeoEstate{% endblock %}
+
+{% block breadcrumb %}
+<div class="breadcrumb-strip">
+  <div class="container">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'core:home' %}"><i class="bi bi-house me-1"></i>Trang chủ</a></li>
+        <li class="breadcrumb-item active">Giới thiệu</li>
+      </ol>
+    </nav>
+  </div>
+</div>
+{% endblock %}
+
+{% block head %}
+<style>
+  /* ══════════════════════════════════════════
+     TRANG GIỚI THIỆU - GEOESTATE
+  ══════════════════════════════════════════ */
+  .page-hero { background: var(--bg-2); border-bottom: 1px solid var(--border); padding: 48px 0 40px; margin-bottom: 40px; }
+  
+  .about-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    align-items: center;
+    margin-bottom: 40px;
+  }
+  .about-grid.reverse { grid-template-columns: 1fr 1fr; direction: rtl; }
+  .about-grid.reverse > * { direction: ltr; }
+  
+  @media (max-width: 992px) {
+    .about-grid, .about-grid.reverse { grid-template-columns: 1fr; }
+  }
+
+  .about-text p { color: var(--text-dim); line-height: 1.8; font-size: 15px; margin-bottom: 16px; }
+  .about-list { list-style: none; padding: 0; margin-top: 20px; }
+  .about-list li { margin-bottom: 12px; color: var(--text-dim); line-height: 1.6; display: flex; gap: 10px; }
+  
+  .about-media {
+    position: relative;
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    aspect-ratio: 4/3;
+    background: var(--bg-3);
+  }
+  .about-media img { width: 100%; height: 100%; object-fit: cover; }
+
+  /* --- CÔNG CỤ CHỈNH SỬA ADMIN --- */
+  #editor-toolbar {
+    position: fixed; bottom: 30px; right: 30px; z-index: 9999;
+    background: var(--bg-card); padding: 20px; border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card), 0 0 0 1px var(--gold-border);
+    display: flex; flex-direction: column; gap: 12px; width: 220px;
+  }
+  
+  .edit-active .about-title, .edit-active p, .edit-active li {
+    outline: 2px dashed var(--gold);
+    background: var(--gold-dim);
+    padding: 4px;
+    border-radius: 4px;
+  }
+  
+  .delete-block-btn {
+    display: none; position: absolute; top: 15px; right: 15px;
+    background: #dc3545; color: white; border: none; border-radius: var(--radius-sm);
+    padding: 6px 12px; cursor: pointer; z-index: 10; font-size: 12px; font-weight: bold;
+  }
+  
+  .delete-img-btn {
+    display: none; position: absolute; bottom: 15px; right: 15px;
+    background: rgba(12, 15, 26, 0.8); color: var(--gold); border: 1px solid var(--gold-border);
+    padding: 8px; border-radius: 50%; width: 36px; height: 36px; cursor: pointer;
+  }
+
+  .about-section { position: relative; padding: 20px; border: 1px solid transparent; transition: all 0.3s; }
+  .edit-active .about-section { border-color: rgba(255,255,255,0.1); border-radius: var(--radius-xl); margin-bottom: 20px; }
+  .edit-active .delete-block-btn, .edit-active .delete-img-btn { display: block; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+{% if request.user.is_staff or request.user.is_superuser %}
+<div id="editor-toolbar">
+    <div style="text-align: center; margin-bottom: 5px; color: var(--gold); font-weight: 600; letter-spacing: 1px; font-size: 12px;">
+      <i class="bi bi-tools"></i> TRÌNH CHỈNH SỬA
+    </div>
+    <button class="btn-geo-primary w-100" onclick="toggleEditMode()" id="btnEdit">Bật chỉnh sửa</button>
+    <button class="btn-geo-secondary w-100" onclick="addNewSection()">Thêm phần mới</button>
+    <small style="font-size: 11px; color: var(--text-muted); text-align: center; line-height: 1.4;">
+      Nhấp vào văn bản để sửa.<br>Nhấp vào ảnh để đổi ảnh.
+    </small>
+</div>
+{% endif %}
+
+<div class="page-hero">
+  <div class="container text-center">
+    <p class="section-eyebrow">Về chúng tôi</p>
+    <h1 class="section-heading mb-0">Nền tảng GeoEstate</h1>
+    <p class="text-muted mt-2">Hệ thống Quản lý và Phân phối Bất động sản tích hợp bản đồ WebGIS.</p>
+  </div>
+</div>
+
+<div class="container" id="editor-container">
+
+  <article class="about-section">
+    <button class="delete-block-btn" onclick="this.parentElement.remove()"><i class="bi bi-trash"></i> Xóa khối</button>
+    <div class="about-grid">
+      <div class="about-text">
+        <h2 class="section-heading mb-3 about-title">🌍 Lời mở đầu</h2>
+        <p>
+          Trong thời đại số hóa, việc tìm kiếm bất động sản không chỉ dừng lại ở những dòng văn bản khô khan. Khách hàng cần một góc nhìn thực tế, trực quan về vị trí, tiện ích xung quanh và tiềm năng phát triển của khu vực.
+        </p>
+        <p>
+          <strong>GeoEstate</strong> ra đời nhằm giải quyết bài toán đó. Bằng việc ứng dụng công nghệ <strong>WebGIS (Hệ thống thông tin địa lý trên nền web)</strong>, chúng tôi mang bản đồ số lên trình duyệt, giúp bạn "nhìn tận mắt, soi tận nơi" ngôi nhà tương lai của mình.
+        </p>
+      </div>
+      <div class="about-media">
+        <img src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Lời mở đầu" class="editable-img">
+        <button class="delete-img-btn" onclick="removeImg(this)" title="Xóa ảnh"><i class="bi bi-trash"></i></button>
+      </div>
+    </div>
+  </article>
+
+  <article class="about-section">
+    <button class="delete-block-btn" onclick="this.parentElement.remove()"><i class="bi bi-trash"></i> Xóa khối</button>
+    <div class="about-grid reverse">
+      <div class="about-text">
+        <h2 class="section-heading mb-3 about-title">🤝 Chúng tôi là ai?</h2>
+        <p>
+          Chúng tôi là nền tảng kết nối trực tiếp giữa <strong>Người mua, Môi giới và Nhà đầu tư</strong>. GeoEstate cung cấp một môi trường minh bạch, nơi mọi thông tin bất động sản đều được gắn tọa độ không gian chính xác.
+        </p>
+        <p>
+          Hệ thống được phát triển bởi sinh viên Khoa Công nghệ Thông tin - Trường Đại học Tài nguyên và Môi trường TP.HCM (HCMUNRE), với cốt lõi là cơ sở dữ liệu không gian PostGIS và framework Django mạnh mẽ.
+        </p>
+      </div>
+      <div class="about-media">
+        <img src="https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Chúng tôi là ai" class="editable-img">
+        <button class="delete-img-btn" onclick="removeImg(this)" title="Xóa ảnh"><i class="bi bi-trash"></i></button>
+      </div>
+    </div>
+  </article>
+
+  <article class="about-section">
+    <button class="delete-block-btn" onclick="this.parentElement.remove()"><i class="bi bi-trash"></i> Xóa khối</button>
+    <div class="about-grid">
+      <div class="about-text">
+        <h2 class="section-heading mb-3 about-title">💎 Giá trị cốt lõi</h2>
+        <p>GeoEstate hoạt động dựa trên 3 tiêu chí quan trọng nhất để mang lại trải nghiệm tìm nhà hoàn hảo:</p>
+        <ul class="about-list">
+          <li><strong>📍 Không gian (Spatial):</strong> Mọi tin đăng đều được số hóa lên bản đồ, tính toán khoảng cách thực tế đến trường học, bệnh viện.</li>
+          <li><strong>⚖️ Minh bạch (Transparent):</strong> Thông tin giá cả, diện tích, môi giới được hiển thị rõ ràng, xác thực.</li>
+          <li><strong>⚡ Tiện ích (Convenient):</strong> Công cụ so sánh, tính điểm vị trí (Location Score) và tìm kiếm bán kính (Buffer Zone) thông minh.</li>
+        </ul>
+      </div>
+      <div class="about-media">
+        <img src="https://images.unsplash.com/photo-1582407947304-fd86f028f716?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Giá trị cốt lõi" class="editable-img">
+        <button class="delete-img-btn" onclick="removeImg(this)" title="Xóa ảnh"><i class="bi bi-trash"></i></button>
+      </div>
+    </div>
+  </article>
+
+</div>
+
+<div class="container text-center" style="margin-top: 40px; padding-bottom: 80px;">
+    <a href="{% url 'properties:list' %}" class="btn-geo-primary mx-2"><i class="bi bi-search"></i> Khám phá bất động sản</a>
+    <a href="{% url 'properties:nearby_search' %}" class="btn-geo-secondary mx-2"><i class="bi bi-geo-alt"></i> Bản đồ lân cận</a>
+</div>
+
+{% if request.user.is_staff or request.user.is_superuser %}
+<script>
+    let isEditing = false;
+
+    function toggleEditMode() {
+        isEditing = !isEditing;
+        const container = document.getElementById('editor-container');
+        const btn = document.getElementById('btnEdit');
+        const editableTexts = document.querySelectorAll('.about-title, .about-text p, .about-text li');
+
+        if (isEditing) {
+            container.classList.add('edit-active');
+            editableTexts.forEach(el => el.contentEditable = "true");
+            btn.innerHTML = '<i class="bi bi-check-circle"></i> Hoàn tất chỉnh sửa';
+            btn.classList.replace('btn-geo-primary', 'btn-geo-secondary');
+            btn.style.borderColor = 'var(--gold)';
+            btn.style.color = 'var(--gold)';
+        } else {
+            container.classList.remove('edit-active');
+            editableTexts.forEach(el => el.contentEditable = "false");
+            btn.innerHTML = 'Bật chỉnh sửa';
+            btn.classList.replace('btn-geo-secondary', 'btn-geo-primary');
+            btn.style.borderColor = '';
+            btn.style.color = '';
+            
+            // CHÚ Ý: Tại đây bạn có thể gọi AJAX (fetch) để lấy `container.innerHTML` 
+            // và gửi lên backend Django lưu vào Database nếu muốn thay đổi vĩnh viễn!
+        }
+    }
+
+    document.addEventListener('click', function(e) {
+        if (isEditing && e.target.classList.contains('editable-img')) {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = ev => {
+                const file = ev.target.files[0];
+                if(file) {
+                    const reader = new FileReader();
+                    reader.onload = event => { e.target.src = event.target.result; };
+                    reader.readAsDataURL(file);
+                }
+            };
+            input.click();
+        }
+    });
+
+    function removeImg(btn) {
+        if(confirm("Bạn có chắc muốn xóa ảnh này?")) {
+            btn.previousElementSibling.src = "https://via.placeholder.com/800x600/0c0f1a/b5892f?text=Nhấp+vào+đây+để+tải+ảnh+lên";
+            btn.previousElementSibling.alt = "Chưa có ảnh";
+        }
+    }
+
+    function addNewSection() {
+        const container = document.getElementById('editor-container');
+        const newSection = document.createElement('article');
+        
+        // Đảo chiều luân phiên các khối (Trái - Phải)
+        const isReverse = container.children.length % 2 !== 0 ? 'reverse' : '';
+        
+        newSection.className = "about-section";
+        newSection.innerHTML = `
+            <button class="delete-block-btn" onclick="this.parentElement.remove()"><i class="bi bi-trash"></i> Xóa khối</button>
+            <div class="about-grid ${isReverse}">
+              <div class="about-text">
+                <h2 class="section-heading mb-3 about-title" contenteditable="true">✨ Tiêu đề mới</h2>
+                <p contenteditable="true">Bôi đen văn bản này và nhập nội dung giới thiệu mới của bạn vào đây...</p>
+              </div>
+              <div class="about-media">
+                <img src="https://via.placeholder.com/800x600/0c0f1a/b5892f?text=Nhấp+vào+đây+để+tải+ảnh+lên" class="editable-img">
+                <button class="delete-img-btn" onclick="removeImg(this)" title="Xóa ảnh"><i class="bi bi-trash"></i></button>
+              </div>
+            </div>
+        `;
+        container.appendChild(newSection);
+        if (!isEditing) toggleEditMode(); // Tự động bật chế độ sửa nếu đang tắt
+        
+        // Cuộn xuống cuối
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+    }
+</script>
+{% endif %}
+
+{% endblock %}

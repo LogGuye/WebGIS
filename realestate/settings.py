@@ -19,8 +19,10 @@ def env_bool(key, default="false"):
 SECRET_KEY = env("SECRET_KEY", "django-insecure-change-me")
 
 DEBUG = env_bool("DEBUG", "true")
-
 ALLOWED_HOSTS = env("ALLOWED_HOSTS", "*").split(",")
+
+# DEBUG = False
+# ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
 
 INSTALLED_APPS = [
@@ -61,6 +63,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "accounts.permissions.role_context",
             ],
         },
     },
@@ -99,12 +102,26 @@ USE_TZ = True
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+LOGIN_REDIRECT_URL = "/"
+LOGOUT_REDIRECT_URL = "/"
+LOGIN_URL = "/accounts/login/"
 
 # GeoDjango settings
 SRID_DEFAULT = 4326
 
-
-GDAL_LIBRARY_PATH = os.environ.get('GDAL_LIBRARY_PATH')
-GEOS_LIBRARY_PATH = os.environ.get('GEOS_LIBRARY_PATH')
+if os.name == 'nt':  # Windows
+    OSGEO4W_BIN = r'C:\OSGeo4W\bin'  # ← paste your path here from "where gdal.exe"
+    GDAL_LIBRARY_PATH = os.path.join(OSGEO4W_BIN, 'gdal312.dll')
+    GEOS_LIBRARY_PATH = os.path.join(OSGEO4W_BIN, 'geos_c.dll')
+else:
+    GDAL_LIBRARY_PATH = os.environ.get('GDAL_LIBRARY_PATH')
+    GEOS_LIBRARY_PATH = os.environ.get('GEOS_LIBRARY_PATH')
+    
+EMAIL_HOST = 'sandbox.smtp.mailtrap.io'
+EMAIL_HOST_USER = '8f4a5faf708472'
+EMAIL_HOST_PASSWORD = '9837ace7980cdd'
+EMAIL_PORT = '2525'

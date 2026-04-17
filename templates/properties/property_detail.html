@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load property_format %}
 {% block title %}{{ property.title }} | GeoEstate{% endblock %}
 
 {% block breadcrumb %}
@@ -16,6 +17,7 @@
 {% endblock %}
 
 {% block head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
 <style>
   /* ══════════════════════════════════════════
      PROPERTY DETAIL — all colors via var()
@@ -35,6 +37,8 @@
     background: linear-gradient(135deg, var(--bg-2) 0%, var(--bg-3) 50%, var(--bg-2) 100%);
     display: flex; align-items: center; justify-content: center;
     font-size: 96px; position: relative;
+    background-size: cover;
+    background-position: center;
   }
 
   /* Decorative corner accent */
@@ -57,6 +61,22 @@
     position: absolute; bottom: 20px; left: 0; right: 0;
     display: flex; align-items: center; gap: 10px;
     padding: 0 32px; z-index: 2; flex-wrap: wrap;
+  }
+
+  .detail-gallery-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+    margin-top: 16px;
+  }
+
+  .gallery-thumb {
+    height: 90px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    background-size: cover;
+    background-position: center;
+    background-color: var(--bg-3);
   }
 
   /* ── Main layout ── */
@@ -185,13 +205,9 @@
     background: var(--bg-3); position: relative;
   }
 
-  .map-embed-wrap iframe {
-    width: 100%; height: 100%; border: none;
-    filter: brightness(.82) saturate(.55) hue-rotate(185deg);
-    transition: filter var(--transition);
+  #detailMap {
+    width: 100%; height: 100%;
   }
-
-  [data-theme="light"] .map-embed-wrap iframe { filter: brightness(.95) saturate(.75); }
 
   /* ── Sidebar ── */
   .detail-sidebar { }
@@ -272,6 +288,21 @@
     border-color: var(--gold-border); color: var(--gold); background: var(--gold-dim);
   }
 
+  .cta-tertiary {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 12px;
+    background: var(--bg-3); color: var(--text);
+    border: 1px solid var(--gold-border); border-radius: var(--radius-md);
+    font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 600;
+    cursor: pointer; text-decoration: none;
+    transition: all var(--transition); margin-bottom: 10px;
+  }
+
+  .cta-tertiary:hover {
+    background: var(--gold-dim); color: var(--gold);
+    box-shadow: 0 6px 18px rgba(200,169,110,.3);
+  }
+
   /* Agent card */
   .agent-card {
     background: var(--bg-card); border: 1px solid var(--border);
@@ -312,6 +343,107 @@
   .agent-contact-item:hover { color: var(--gold); }
   .agent-contact-item i { color: var(--gold); font-size: 13px; width: 16px; }
 
+  .agent-rating {
+    margin-top: 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+  }
+
+  .agent-rating-score {
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .agent-rating-stars {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+
+  .agent-rating-stars span {
+    font-size: 1rem;
+    color: var(--border);
+  }
+
+  .agent-rating-stars span.filled { color: #f5c342; }
+
+  .agent-rating-count {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-left: 6px;
+  }
+
+  .agent-rating-empty {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .agent-review-list {
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .agent-review-card {
+    padding: 12px 14px;
+    background: var(--bg-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+  }
+
+  .agent-review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+  }
+
+  .agent-review-score {
+    font-weight: 600;
+    color: var(--gold);
+  }
+
+  .agent-review-card p {
+    margin: 6px 0 0;
+    font-size: 13px;
+    color: var(--text);
+  }
+
+  .agent-review-form {
+    margin-top: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .agent-review-note {
+    margin-top: 16px;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .agent-review-inputs {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .agent-rating-select {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-3);
+    color: var(--text);
+    padding: 8px 12px;
+    font-size: 13px;
+    font-family: 'Outfit', sans-serif;
+  }
+
   /* Share / save row */
   .action-row {
     display: flex; gap: 8px; margin-top: 12px;
@@ -327,6 +459,28 @@
   }
 
   .action-btn:hover { border-color: var(--gold-border); color: var(--gold); background: var(--gold-dim); }
+
+  .compare-note {
+    margin-top: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg-3);
+    font-size: 13px;
+    color: var(--text);
+  }
+
+  .compare-note strong {
+    display: block;
+    font-weight: 600;
+  }
+
+  .compare-note.limit {
+    border-color: rgba(234, 179, 8, 0.5);
+  }
 
   /* ── Similar properties ── */
   .similar-grid {
@@ -370,44 +524,54 @@
 
 {% block content %}
 
-<!-- ══ HERO IMAGE ══ -->
+<!-- ══ ẢNH HERO ══ -->
 <div class="detail-hero">
-  <div class="detail-hero-image">
-    {% with t=property.get_property_type_display|lower %}
+  <div class="detail-hero-image" {% if property.primary_image_url %}style="background-image:url('{{ property.primary_image_url }}')"{% endif %}>
+    {% if not property.primary_image_url %}{% with t=property.get_property_type_display|lower %}
       {% if "apartment" in t %}🏢
       {% elif "house" in t %}🏠
       {% elif "land" in t %}🌿
       {% elif "villa" in t %}🏡
       {% else %}🏗️
       {% endif %}
-    {% endwith %}
+    {% endwith %}{% endif %}
 
     <div class="hero-badge-strip">
       <span class="badge-gold">{{ property.get_property_type_display }}</span>
       {% if property.is_featured %}
-      <span class="badge-outline"><i class="bi bi-star-fill me-1" style="font-size:9px"></i>Featured</span>
+      <span class="badge-outline"><i class="bi bi-star-fill me-1" style="font-size:9px"></i>Nổi bật</span>
       {% endif %}
       <span style="background:var(--bg-card);backdrop-filter:blur(10px);border:1px solid var(--border);border-radius:999px;padding:4px 12px;font-size:11px;color:var(--text-muted);display:flex;align-items:center;gap:6px">
         <i class="bi bi-eye" style="color:var(--gold)"></i>
-        Listed property
+        Bất động sản đang đăng bán
       </span>
     </div>
   </div>
 </div>
 
+{% if property.images.all %}
+<div class="container" style="margin-top:18px">
+  <div class="detail-gallery-strip">
+    {% for img in property.images.all %}
+    <div class="gallery-thumb" style="background-image:url('{{ img.image.url }}')" title="{{ img.caption|default:property.title }}"></div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
 <div class="container">
   <div class="detail-layout">
 
-    <!-- ══ LEFT: MAIN CONTENT ══ -->
+    <!-- ══ TRÁI: NỘI DUNG CHÍNH ══ -->
     <div>
 
-      <!-- Back link -->
+      <!-- Nút quay lại -->
       <a href="{% url 'properties:list' %}" class="btn-geo-secondary d-inline-flex mb-24"
          style="font-size:13px;padding:8px 16px;margin-bottom:20px">
-        <i class="bi bi-arrow-left"></i> Back to listings
+        <i class="bi bi-arrow-left"></i> Quay lại danh sách
       </a>
 
-      <!-- Headline card -->
+      <!-- Card tiêu đề -->
       <div class="detail-card fade-up">
         <div class="detail-card-body">
           <div class="prop-headline">
@@ -428,53 +592,58 @@
             </div>
           </div>
 
-          <!-- Key stats -->
+          <!-- Thông số chính -->
           <div class="stats-grid">
             {% if property.area %}
             <div class="stat-box">
               <div class="stat-box-icon">📐</div>
               <div class="stat-box-val">{{ property.area }}</div>
-              <div class="stat-box-label">Area m²</div>
+              <div class="stat-box-label">Diện tích m²</div>
             </div>
             {% endif %}
             {% if property.bedrooms %}
             <div class="stat-box">
               <div class="stat-box-icon">🛏</div>
               <div class="stat-box-val">{{ property.bedrooms }}</div>
-              <div class="stat-box-label">Bedrooms</div>
+              <div class="stat-box-label">Phòng ngủ</div>
             </div>
             {% endif %}
             {% if property.bathrooms %}
             <div class="stat-box">
               <div class="stat-box-icon">🚿</div>
               <div class="stat-box-val">{{ property.bathrooms }}</div>
-              <div class="stat-box-label">Bathrooms</div>
+              <div class="stat-box-label">Phòng tắm</div>
             </div>
             {% endif %}
             {% if property.floors %}
             <div class="stat-box">
               <div class="stat-box-icon">🏗️</div>
               <div class="stat-box-val">{{ property.floors }}</div>
-              <div class="stat-box-label">Floors</div>
+              <div class="stat-box-label">Số tầng</div>
             </div>
             {% endif %}
             {% if property.year_built %}
             <div class="stat-box">
               <div class="stat-box-icon">📅</div>
               <div class="stat-box-val">{{ property.year_built }}</div>
-              <div class="stat-box-label">Year built</div>
+              <div class="stat-box-label">Năm xây dựng</div>
             </div>
             {% endif %}
+            <div class="stat-box">
+              <div class="stat-box-icon">📍</div>
+              <div class="stat-box-val">{{ location_score }}</div>
+              <div class="stat-box-label">Điểm vị trí</div>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Description -->
+      <!-- Mô tả -->
       {% if property.description %}
       <div class="detail-card fade-up delay-1">
         <div class="detail-card-header">
           <div class="detail-card-header-icon">📝</div>
-          <div class="detail-card-title">Description</div>
+          <div class="detail-card-title">Mô tả</div>
         </div>
         <div class="detail-card-body">
           <p class="desc-text">{{ property.description }}</p>
@@ -482,12 +651,12 @@
       </div>
       {% endif %}
 
-      <!-- Amenities -->
+      <!-- Tiện ích -->
       <div class="detail-card fade-up delay-2">
         <div class="detail-card-header">
           <div class="detail-card-header-icon">⭐</div>
           <div class="detail-card-title">
-            Nearby Amenities
+            Tiện ích lân cận
             {% with cnt=property.amenities.all|length %}
               {% if cnt %}<span style="margin-left:8px;font-size:10px;color:var(--text-muted)">({{ cnt }})</span>{% endif %}
             {% endwith %}
@@ -513,31 +682,27 @@
             </div>
             {% empty %}
             <p style="color:var(--text-muted);font-size:14px;margin:0">
-              <i class="bi bi-info-circle me-2"></i>No amenities linked yet.
+              <i class="bi bi-info-circle me-2"></i>Chưa có tiện ích nào được liên kết.
             </p>
             {% endfor %}
           </div>
         </div>
       </div>
 
-      <!-- Map location -->
+      <!-- Bản đồ vị trí -->
       {% if property.location %}
       <div class="detail-card fade-up delay-3">
         <div class="detail-card-header">
           <div class="detail-card-header-icon">🗺️</div>
-          <div class="detail-card-title">Location on Map</div>
+          <div class="detail-card-title">Vị trí trên bản đồ</div>
         </div>
         <div class="detail-card-body">
           <div class="map-embed-wrap">
-            <iframe
-              src="https://www.openstreetmap.org/export/embed.html?bbox={{ property.location.x|add:'-0.015' }},{{ property.location.y|add:'-0.012' }},{{ property.location.x|add:'0.015' }},{{ property.location.y|add:'0.012' }}&layer=mapnik&marker={{ property.location.y }},{{ property.location.x }}"
-              allowfullscreen loading="lazy"
-              title="Property location">
-            </iframe>
+            <div id="detailMap"></div>
           </div>
           <div style="margin-top:10px;font-size:12px;color:var(--text-muted);display:flex;align-items:center;gap:6px">
             <i class="bi bi-geo-alt" style="color:var(--gold)"></i>
-            Coordinates: {{ property.location.y|floatformat:6 }}, {{ property.location.x|floatformat:6 }}
+            Tọa độ: {{ property.location.y|floatformat:6 }}, {{ property.location.x|floatformat:6 }}
           </div>
         </div>
       </div>
@@ -545,60 +710,79 @@
 
     </div>
 
-    <!-- ══ RIGHT: SIDEBAR ══ -->
+    <!-- ══ PHẢI: SIDEBAR ══ -->
     <div class="detail-sidebar">
       <div class="sidebar-sticky">
 
-        <!-- Price card -->
+        <!-- Card giá -->
         <div class="price-card fade-up">
           <div class="price-card-top">
-            <div class="price-eyebrow">Asking price</div>
+            <div class="price-eyebrow">Giá chào bán</div>
             <div class="price-main">
               {% if property.price %}
-                {{ property.price|floatformat:0 }}
-                <span style="font-size:1rem;font-weight:400;color:var(--text-muted)"> VND</span>
+                {{ property.price|price_vn }}
               {% else %}
-                <span style="color:var(--text-muted);font-size:1.2rem">Price on request</span>
+                <span style="color:var(--text-muted);font-size:1.2rem">Liên hệ để biết giá</span>
               {% endif %}
             </div>
             {% if property.price and property.area %}
             <div class="price-per-m2">
               <i class="bi bi-calculator" style="color:var(--gold)"></i>
-              {{ property.price|floatformat:0 }} / m²
+              {% with per_m2=property.price|price_per_m2:property.area %}
+                {{ per_m2 }}
+              {% endwith %}
             </div>
             {% endif %}
           </div>
 
           <div class="price-card-body">
             <a href="{% url 'leads:lead_form' %}?property={{ property.pk }}" class="cta-primary">
-              <i class="bi bi-person-lines-fill"></i> Enquire Now
+              <i class="bi bi-person-lines-fill"></i> Liên hệ ngay
             </a>
             <a href="{% url 'properties:nearby_search' %}?lat={{ property.location.y }}&lng={{ property.location.x }}&radius=2" class="cta-secondary">
-              <i class="bi bi-geo-alt"></i> Find nearby properties
+              <i class="bi bi-geo-alt"></i> Xem khu vực lân cận
             </a>
+            {% if property.location %}
+            <a href="https://www.google.com/maps/dir/?api=1&destination={{ property.location.y|floatformat:6 }},{{ property.location.x|floatformat:6 }}&travelmode=driving" target="_blank" rel="noreferrer noopener" class="cta-tertiary">
+              <i class="bi bi-directions"></i> Mở chỉ đường Google Maps
+            </a>
+            {% endif %}
+            {% url 'properties:compare_toggle' property.pk as compare_toggle_url %}
             <div class="action-row">
-              <button class="action-btn" onclick="navigator.share ? navigator.share({title:'{{ property.title }}',url:window.location.href}) : navigator.clipboard.writeText(window.location.href).then(()=>alert('Link copied!'))">
-                <i class="bi bi-share"></i> Share
+              <button class="action-btn" onclick="navigator.share ? navigator.share({title:'{{ property.title }}',url:window.location.href}) : navigator.clipboard.writeText(window.location.href).then(()=>alert('Đã sao chép liên kết!'))">
+                <i class="bi bi-share"></i> Chia sẻ
               </button>
-              <button class="action-btn" id="btnSave">
-                <i class="bi bi-bookmark"></i> Save
-              </button>
+              <a class="action-btn" id="btnSave" href="{% url 'properties:wishlist_toggle' property.pk %}">
+                <i class="bi {% if is_in_wishlist %}bi-bookmark-fill{% else %}bi-bookmark{% endif %}"></i> {% if is_in_wishlist %}Đã lưu{% else %}Lưu{% endif %}
+              </a>
+              <a class="action-btn" href="{{ compare_toggle_url }}{% if compare_count >= 1 and not is_in_compare %}?destination=compare{% endif %}">
+                <i class="bi bi-columns-gap"></i> {% if is_in_compare %}Đang so sánh{% else %}So sánh{% endif %}
+              </a>
               <button class="action-btn" onclick="window.print()">
-                <i class="bi bi-printer"></i> Print
+                <i class="bi bi-printer"></i> In
               </button>
             </div>
+            {% if compare_count == 1 %}
+            <div class="compare-note">
+              <i class="bi bi-columns-gap-fill" style="color:var(--gold)"></i>
+              <div>
+                <strong>Đã lưu 1 bất động sản vào so sánh.</strong>
+                <span style="font-size:13px;color:var(--text-muted)">Chọn thêm bất động sản thứ hai để xem bảng so sánh 1-1.</span>
+              </div>
+            </div>
+            {% endif %}
           </div>
         </div>
 
-        <!-- Agent card -->
+        <!-- Card môi giới -->
         {% if property.agent %}
         <div class="agent-card fade-up delay-1">
-          <div class="agent-card-label">Listing Agent</div>
+          <div class="agent-card-label">Môi giới phụ trách</div>
           <div class="agent-row">
             <div class="agent-avatar">👤</div>
             <div>
-              <div class="agent-name">{{ property.agent.name }}</div>
-              <div class="agent-role">Real Estate Agent</div>
+              <div class="agent-name"><a href="{% url 'accounts:agent_public_profile' property.agent.pk %}" style="color:inherit;text-decoration:none">{{ property.agent.name }}</a></div>
+              <div class="agent-role">Tư vấn bất động sản</div>
               <div class="agent-contacts">
                 {% if property.agent.phone %}
                 <a class="agent-contact-item" href="tel:{{ property.agent.phone }}">
@@ -613,14 +797,73 @@
               </div>
             </div>
           </div>
+          {% if agent_review_count %}
+          <div class="agent-rating">
+            <div class="agent-rating-score">{{ agent_avg_rating|default:"0"|floatformat:1 }}</div>
+            <div>
+              <div class="agent-rating-stars">
+                {% for i in agent_star_range %}
+                <span class="{% if i <= agent_avg_rating_floor %}filled{% endif %}">★</span>
+                {% endfor %}
+              </div>
+              <div class="agent-rating-count">{{ agent_review_count }} đánh giá</div>
+            </div>
+          </div>
+          {% else %}
+          <div class="agent-rating agent-rating-empty">Chưa có đánh giá nào.</div>
+          {% endif %}
+
+          {% if agent_recent_reviews %}
+          <div class="agent-review-list">
+            {% for review in agent_recent_reviews %}
+            <article class="agent-review-card">
+              <div class="agent-review-header">
+                <strong>
+                  {% with reviewer_name=review.reviewer.get_full_name %}
+                    {% if reviewer_name %}
+                      {{ reviewer_name }}
+                    {% else %}
+                      {{ review.reviewer.username }}
+                    {% endif %}
+                  {% endwith %}
+                </strong>
+                <span class="agent-review-score">{{ review.rating }}★</span>
+                <small>{{ review.created_at|date:"SHORT_DATE_FORMAT" }}</small>
+              </div>
+              {% if review.comment %}
+              <p>{{ review.comment }}</p>
+              {% endif %}
+            </article>
+            {% endfor %}
+          </div>
+          {% endif %}
+
+          {% if request.user.is_authenticated %}
+            {% if agent_user_review %}
+            <div class="agent-review-note">Bạn đã đánh giá {{ agent_user_review.rating }} sao. Cảm ơn bạn!</div>
+            {% elif agent_review_form %}
+            <form method="post" action="{% url 'properties:agent_review_submit' property.pk %}" class="agent-review-form">
+              {% csrf_token %}
+              <div class="agent-review-inputs">
+                {{ agent_review_form.rating }}
+                {{ agent_review_form.comment }}
+              </div>
+              <button type="submit" class="cta-tertiary">
+                <i class="bi bi-star"></i> Gửi đánh giá
+              </button>
+            </form>
+            {% endif %}
+          {% else %}
+          <div class="agent-review-note">Đăng nhập để đánh giá môi giới.</div>
+          {% endif %}
         </div>
         {% endif %}
 
-        <!-- Similar properties placeholder -->
+        <!-- Bất động sản tương tự -->
         <div class="detail-card fade-up delay-2" style="margin-bottom:0">
           <div class="detail-card-header">
             <div class="detail-card-header-icon">🏘️</div>
-            <div class="detail-card-title">Similar listings</div>
+            <div class="detail-card-title">Tin đăng tương tự</div>
           </div>
           <div class="detail-card-body">
             {% if similar_properties %}
@@ -635,7 +878,7 @@
                 <div class="similar-body">
                   <div class="similar-title">{{ sp.title }}</div>
                   {% if sp.price %}
-                  <div class="similar-price">{{ sp.price|floatformat:0 }} đ</div>
+                  <div class="similar-price">{{ sp.price|price_vn }}</div>
                   {% endif %}
                 </div>
               </a>
@@ -643,7 +886,7 @@
             </div>
             {% else %}
             <p style="font-size:13px;color:var(--text-muted);margin:0">
-              <i class="bi bi-info-circle me-2"></i>No similar listings available.
+              <i class="bi bi-info-circle me-2"></i>Chưa có tin đăng tương tự.
             </p>
             {% endif %}
           </div>
@@ -658,42 +901,27 @@
 {% endblock %}
 
 {% block scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
 <script>
 (function () {
-  /* ── Save / bookmark toggle ── */
-  const saveBtn = document.getElementById('btnSave');
-  const STORAGE_KEY = 'geo_saved_properties';
-  const propId = '{{ property.pk }}';
+  const mapEl = document.getElementById('detailMap');
+  if (!mapEl || !window.L) return;
 
-  function getSaved() {
-    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
-    catch { return []; }
-  }
+  const lat = {{ property.location.y|floatformat:6 }};
+  const lng = {{ property.location.x|floatformat:6 }};
+  const map = L.map(mapEl, { scrollWheelZoom: false }).setView([lat, lng], 15);
 
-  function updateSaveBtn() {
-    if (!saveBtn) return;
-    const saved = getSaved();
-    const isSaved = saved.includes(propId);
-    saveBtn.innerHTML = isSaved
-      ? '<i class="bi bi-bookmark-fill" style="color:var(--gold)"></i> Saved'
-      : '<i class="bi bi-bookmark"></i> Save';
-    saveBtn.style.borderColor = isSaved ? 'var(--gold-border)' : '';
-    saveBtn.style.color       = isSaved ? 'var(--gold)' : '';
-    saveBtn.style.background  = isSaved ? 'var(--gold-dim)' : '';
-  }
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    subdomains: 'abcd',
+    maxZoom: 20,
+    attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+  }).addTo(map);
 
-  if (saveBtn) {
-    updateSaveBtn();
-    saveBtn.addEventListener('click', () => {
-      let saved = getSaved();
-      const idx = saved.indexOf(propId);
-      if (idx === -1) saved.push(propId);
-      else saved.splice(idx, 1);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
-      updateSaveBtn();
-    });
-  }
+  L.marker([lat, lng]).addTo(map)
+    .bindPopup({% if property.title %}`{{ property.title|escapejs }}`{% else %}'Vị trí bất động sản'{% endif %})
+    .openPopup();
 
+  setTimeout(() => map.invalidateSize(), 250);
 })();
 </script>
 {% endblock %}
