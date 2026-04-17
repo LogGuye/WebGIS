@@ -3,6 +3,9 @@
 {% block title %}Admin Console · GeoEstate{% endblock %}
 {% block head %}
 <link rel="stylesheet" href="{% static 'css/admin-console.css' %}" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
 {% endblock %}
 {% block content %}
 <div class="admin-console-shell">
@@ -55,4 +58,114 @@
 
 {{ admin_meta|json_script:"adminMeta" }}
 <script type="module" src="{% static 'js/admin-console-advanced.js' %}"></script>
+<script>
+    // Định nghĩa hàm để hiển thị toast
+    function showToast(message, type = 'info', duration = 3000) {
+        const toast = document.querySelector('[data-admin="toast"]');
+        toast.textContent = message;
+        toast.className = `admin-console-toast show ${type}`;
+        setTimeout(() => {
+            toast.className = 'admin-console-toast';
+        }, duration);
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+<script>
+    // 1. Định nghĩa các lớp bản đồ "thật" từ Google
+    var googleStreets = L.tileLayer('http://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+        maxZoom: 20,
+        subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+        attribution: 'Google Maps'
+    });
+
+    var googleSat = L.tileLayer('http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+        maxZoom: 20,
+        subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+        attribution: 'Google Satellite'
+    });
+
+    var googleHybrid = L.tileLayer('http://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+        maxZoom: 20,
+        subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+        attribution: 'Google Hybrid'
+    });
+
+    var googleTerrain = L.tileLayer('http://{s}.google.com/vt/lyrs=p&x={x}&y={y}&z={z}', {
+        maxZoom: 20,
+        subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+        attribution: 'Google Terrain'
+    });
+
+    // 2. Khởi tạo bản đồ
+    var map = L.map('map', {
+        center: [10.762622, 106.660172],
+        zoom: 13,
+        layers: [googleHybrid], 
+        zoomControl: false
+    });
+
+    // 3. Điều khiển lớp bản đồ
+    var baseMaps = {
+        "<span style='color: #2d3748'><i class='fas fa-road'></i> Đường phố</span>": googleStreets,
+        "<span style='color: #2d3748'><i class='fas fa-globe'></i> Vệ tinh</span>": googleSat,
+        "<span style='color: #2d3748'><i class='fas fa-map-marked-alt'></i> Hỗn hợp</span>": googleHybrid,
+        "<span style='color: #2d3748'><i class='fas fa-mountain'></i> Địa hình</span>": googleTerrain
+    };
+    
+    L.control.layers(baseMaps, null, { position: 'topright' }).addTo(map);
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+    var marker;
+    function placeMarker(latlng, moveCamera = false) {
+        if (marker) {
+            marker.setLatLng(latlng);
+        } else {
+            marker = L.marker(latlng, {
+                draggable: true,
+                icon: L.icon({
+                    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+                    iconSize: [25, 41],
+iconAnchor: [12, 41]
+                })
+            }).addTo(map);
+            marker.on('dragend', function() { updateInputs(marker.getLatLng()); });
+        }
+        if (moveCamera) map.panTo(latlng);
+        updateInputs(latlng);
+    }
+
+    function updateInputs(latlng) {
+        document.getElementById('lat').value = latlng.lat.toFixed(6);
+        document.getElementById('lng').value = latlng.lng.toFixed(6);
+    }
+
+    function syncMapFromInputs() {
+        var lat = parseFloat(document.getElementById('lat').value);
+        var lng = parseFloat(document.getElementById('lng').value);
+        if (!isNaN(lat) && !isNaN(lng)) { placeMarker([lat, lng], true); }
+    }
+
+    document.getElementById('lat').addEventListener('input', syncMapFromInputs);
+    document.getElementById('lng').addEventListener('input', syncMapFromInputs);
+    map.on('click', function(e) { placeMarker(e.latlng); });
+
+    var geocoder = L.Control.geocoder({
+        defaultMarkGeocode: false,
+        placeholder: "🔍 Tìm địa chỉ chi tiết...",
+        collapsed: false,
+        geocoder: L.Control.Geocoder.photon() 
+    })
+    .on('markgeocode', function(e) {
+        var center = e.geocode.center;
+        map.setView(center, 18); 
+        placeMarker(center);
+    })
+    .addTo(map);
+
+    var oldLat = "{{ old_data.lat }}";
+    var oldLng = "{{ old_data.lng }}";
+    if (oldLat && oldLng && oldLat !== "None" && oldLat !== "") {
+        placeMarker([parseFloat(oldLat), parseFloat(oldLng)], true);
+    }
+</script>
 {% endblock %}

@@ -50,7 +50,6 @@ class PropertyCreateForm(forms.ModelForm):
         model = Property
         fields = [
             "title",
-            "description",
             "property_type",
             "listing_status",
             "price",
@@ -60,7 +59,6 @@ class PropertyCreateForm(forms.ModelForm):
         ]
         labels = {
             "title": "Tiêu đề",
-            "description": "Mô tả",
             "property_type": "Loại bất động sản",
             "listing_status": "Trạng thái",
             "price": "Giá bán",
@@ -76,13 +74,7 @@ class PropertyCreateForm(forms.ModelForm):
         for field in self.fields.values():
             field.widget.attrs.setdefault("class", "form-geo")
 
-        self.fields["description"].widget = forms.Textarea(
-            attrs={
-                "class": "form-geo",
-                "rows": 5,
-                "placeholder": "Mô tả ngắn về bất động sản..."
-            }
-        )
+
         self.fields["title"].widget.attrs.setdefault(
             "placeholder", "Ví dụ: Nhà phố 2 mặt tiền tại Quận 7"
         )
