@@ -2,6 +2,7 @@ const metaScript = document.getElementById("adminMeta");
 if (!metaScript) {
   throw new Error("Không tìm thấy dữ liệu meta cho admin console.");
 }
+
 const adminMeta = JSON.parse(metaScript.textContent || "{}");
 const tabsContainer = document.getElementById("adminTabs");
 const tableHead = document.querySelector("[data-admin='table-head']");
@@ -20,20 +21,20 @@ let activeEntity = adminMeta.entities?.[0] || null;
 let items = [];
 let editingId = null;
 
+// Utility functions for cookies and CSRF token retrieval
 const getCookie = (name) => {
   if (!document.cookie) return null;
-  const cookies = document.cookie.split(";");
+  const cookies = document.cookie.split("; ");
   for (let cookie of cookies) {
-    const [key, value] = cookie.trim().split("=");
+    const [key, value] = cookie.split("=");
     if (key === name) return decodeURIComponent(value);
   }
   return null;
 };
 
-const csrfToken =
-  document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") ||
-  getCookie("csrftoken");
+const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute("content") || getCookie("csrftoken");
 
+// Log CSRF token state for debugging purposes
 const logCsrfState = () => {
   console.debug("[admin-console] CSRF state", {
     csrfToken,
@@ -42,6 +43,7 @@ const logCsrfState = () => {
   });
 };
 
+// Extract error details from the response to display helpful messages
 const extractErrorDetail = async (response) => {
   const data = await response.json().catch(() => ({}));
   const detail = data.error || data.detail || response.statusText || "Đã có lỗi xảy ra.";
@@ -51,16 +53,17 @@ const extractErrorDetail = async (response) => {
   return detail;
 };
 
+// Display toast messages with success or error types
 const showToast = (message, variant = "success") => {
   if (!toastEl) return;
   toastEl.textContent = message;
-  toastEl.className = "admin-console-toast";
-  toastEl.classList.add("active", variant);
+  toastEl.className = `admin-console-toast ${variant} active`;
   setTimeout(() => {
     toastEl.classList.remove("active", "success", "error");
   }, 3500);
 };
 
+// Render tabs dynamically based on entities defined in adminMeta
 const renderTabs = () => {
   if (!tabsContainer || !adminMeta.entities) return;
   tabsContainer.innerHTML = "";
@@ -78,8 +81,10 @@ const renderTabs = () => {
   });
 };
 
+// Get metadata for the selected entity
 const getEntityMeta = (key) => adminMeta.entities?.find((entity) => entity.key === key) || null;
 
+// Switch the active entity and re-render related components
 const switchEntity = (key) => {
   const entity = getEntityMeta(key);
   if (!entity) return;
@@ -95,6 +100,7 @@ const switchEntity = (key) => {
   fetchList();
 };
 
+// Fetch and render the list of records for the active entity
 const fetchList = async () => {
   if (!activeEntity) return;
   tableBody.innerHTML = "";
@@ -103,14 +109,10 @@ const fetchList = async () => {
   tableEmpty.style.display = "block";
   try {
     const response = await fetch(activeEntity.endpoints.collection, {
-      headers: {
-        Accept: "application/json",
-      },
+      headers: { Accept: "application/json" },
       credentials: "same-origin",
     });
-    if (!response.ok) {
-      throw new Error("Không thể tải dữ liệu.");
-    }
+    if (!response.ok) throw new Error("Không thể tải dữ liệu.");
     const payload = await response.json();
     items = payload.results || payload;
     renderTable();
@@ -120,6 +122,7 @@ const fetchList = async () => {
   }
 };
 
+// Render the table of records for the active entity
 const renderTable = () => {
   if (!activeEntity) return;
   const columns = activeEntity.columns || [];
@@ -133,18 +136,14 @@ const renderTable = () => {
   tableEmpty.style.display = "none";
   tableBody.innerHTML = items
     .map((item) => {
-      const cells = columns
-        .map((col) => {
-          let value = resolveField(item, col.key);
-          if (value === null || value === undefined) {
-            value = "—";
-          }
-          if (col.map && adminMeta.maps && adminMeta.maps[col.map]) {
-            value = adminMeta.maps[col.map][String(value)] || value;
-          }
-          return `<td>${value}</td>`;
-        })
-        .join("");
+      const cells = columns.map((col) => {
+        let value = resolveField(item, col.key);
+        if (value === null || value === undefined) value = "—";
+        if (col.map && adminMeta.maps && adminMeta.maps[col.map]) {
+          value = adminMeta.maps[col.map][String(value)] || value;
+        }
+        return `<td>${value}</td>`;
+      }).join("");
       return `
         <tr data-id="${item.id}">
           ${cells}
@@ -158,16 +157,12 @@ const renderTable = () => {
     .join("");
 };
 
+// Resolve a nested field from an object
 const resolveField = (item, path) => {
-  const keys = path.split(".");
-  let value = item;
-  for (const key of keys) {
-    if (value === null || value === undefined) return null;
-    value = value[key];
-  }
-  return value;
+  return path.split(".").reduce((acc, key) => acc?.[key], item) ?? null;
 };
 
+// Render form fields dynamically based on entity metadata
 const renderFormFields = () => {
   if (!activeEntity) return;
   formFields.innerHTML = "";
@@ -198,25 +193,13 @@ const renderFormFields = () => {
     if (field.placeholder) input.placeholder = field.placeholder;
     if (field.required) input.required = true;
     if (field.step) input.step = field.step;
-    if (field.type !== "checkbox") label.appendChild(input);
-    else {
-      input.style.marginRight = "8px";
-      const container = document.createElement("div");
-      container.style.display = "flex";
-      container.style.alignItems = "center";
-      container.appendChild(input);
-      const span = document.createElement("span");
-      span.textContent = field.label;
-      container.appendChild(span);
-      wrapper.appendChild(container);
-      formFields.appendChild(wrapper);
-      return;
-    }
+    label.appendChild(input);
     wrapper.appendChild(label);
     formFields.appendChild(wrapper);
   });
 };
 
+// Reset the form state
 const resetForm = (silent = false) => {
   editingId = null;
   form.reset();
@@ -225,6 +208,7 @@ const resetForm = (silent = false) => {
   if (!silent) showToast("Đã đặt lại form", "success");
 };
 
+// Fill the form with data when editing an existing record
 const fillForm = (record) => {
   if (!record || !activeEntity) return;
   editingId = record.id;
@@ -237,26 +221,23 @@ const fillForm = (record) => {
     if (field.type === "checkbox") {
       input.checked = Boolean(value);
     } else {
-      if (value === null || value === undefined) input.value = "";
-      else input.value = value;
+      input.value = value ?? "";
     }
   });
 };
 
+// Serialize form data for submission
 const serializeForm = () => {
   const data = {};
   activeEntity.fields.forEach((field) => {
     const input = form.querySelector(`[name="${field.name}"]`);
     if (!input) return;
-    if (field.type === "checkbox") {
-      data[field.name] = input.checked;
-    } else {
-      data[field.name] = input.value;
-    }
+    data[field.name] = field.type === "checkbox" ? input.checked : input.value;
   });
   return data;
 };
 
+// Handle form submission (create/update)
 const handleSubmit = async (event) => {
   event.preventDefault();
   if (!activeEntity) return;
@@ -288,6 +269,7 @@ const handleSubmit = async (event) => {
   }
 };
 
+// Handle record deletion
 const handleDelete = async () => {
   if (!editingId || !activeEntity) return;
   if (!confirm("Xác nhận xóa bản ghi này?")) return;
@@ -313,6 +295,7 @@ const handleDelete = async () => {
   }
 };
 
+// Event listeners for form actions
 form.addEventListener("submit", handleSubmit);
 formResetBtn?.addEventListener("click", (event) => {
   event.preventDefault();
@@ -336,5 +319,6 @@ tableBody.addEventListener("click", (event) => {
   }
 });
 
+// Initial setup
 renderTabs();
 switchEntity(activeEntity?.key);

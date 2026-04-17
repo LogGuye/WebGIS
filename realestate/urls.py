@@ -2,8 +2,14 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
+from django.shortcuts import render
 
 from core import views as core_views
+def custom_404(request, exception):
+    return render(request, '404.html', status=404)
+
+def custom_403(request, exception=None):
+    return render(request, '403.html', status=403)
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -15,3 +21,7 @@ urlpatterns = [
 ]
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += [
+        path('test404/', custom_404, {'exception': Exception()}),
+        path('test403/', custom_403),
+    ]
