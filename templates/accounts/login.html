@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Đăng nhập | GeoEstate{% endblock %}
+{% block content %}
+<div class="container py-5" style="max-width:640px">
+  <div class="card-geo p-4 p-md-5">
+    <p class="section-eyebrow">Truy cập tài khoản</p>
+    <h1 class="section-heading mb-4">Đăng nhập</h1>
+    <form method="post" class="d-flex flex-column gap-3">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ next }}" />
+      <div>
+        <label class="form-label">Tên đăng nhập</label>
+        {{ form.username }}
+      </div>
+      <div>
+        <label class="form-label">Mật khẩu</label>
+        {{ form.password }}
+      </div>
+      {% if form.errors %}<div class="alert alert-danger">Sai tên đăng nhập hoặc mật khẩu.</div>{% endif %}
+      <button type="submit" class="btn-geo-primary justify-content-center">Đăng nhập</button>
+    </form>
+    <p class="mt-3 mb-0" style="color:var(--text-muted)">Chưa có tài khoản? <a href="{% url 'accounts:register' %}">Đăng ký</a> hoặc <a href="{% url 'accounts:password_reset' %}">Quên mật khẩu</a></p>
+  </div>
+</div>
+{% endblock %}

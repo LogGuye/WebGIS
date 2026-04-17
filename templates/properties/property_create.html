@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+{% block title %}Đăng tin | GeoEstate{% endblock %}
+{% block content %}
+<div class="container py-5" style="max-width:1100px">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+    <div>
+      <p class="section-eyebrow">Dành cho môi giới</p>
+      <h1 class="section-heading mb-2">{% if is_edit %}Sửa tin bất động sản{% else %}Đăng tin bất động sản{% endif %}</h1>
+      <p style="color:var(--text-muted);margin:0">{% if is_edit %}Cập nhật thông tin tin đăng, vị trí, mô tả và ảnh ngay trên giao diện web.{% else %}Tạo tin mới, nhập địa chỉ hoặc chọn trực tiếp trên bản đồ để đặt vị trí ghim chính xác.{% endif %}</p>
+    </div>
+    <a href="{% url 'properties:list' %}" class="btn-geo-secondary"><i class="bi bi-arrow-left"></i> Quay lại danh sách</a>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-lg-7">
+      <div class="card-geo p-4 p-md-5">
+        <form method="post" class="row g-3" enctype="multipart/form-data">
+          {% csrf_token %}
+          {% if form.non_field_errors %}
+          <div class="col-12"><div class="alert alert-danger">{{ form.non_field_errors }}</div></div>
+          {% endif %}
+
+          <div class="col-12">
+            <label class="form-label">Tiêu đề</label>{{ form.title }}
+            {% if form.title.errors %}<div class="text-danger small mt-1">{{ form.title.errors|striptags }}</div>{% endif %}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Loại bất động sản</label>{{ form.property_type }}
+          </div>
+          {% if form.listing_status %}
+          <div class="col-md-6">
+            <label class="form-label">Trạng thái</label>{{ form.listing_status }}
+          </div>
+          {% else %}
+          <div class="col-md-6">
+            <label class="form-label">Trạng thái</label>
+            <input class="form-geo" value="Chờ duyệt" disabled />
+          </div>
+          {% endif %}
+          <div class="col-md-6">
+            <label class="form-label">Giá bán</label>{{ form.price }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Diện tích (m²)</label>{{ form.area }}
+          </div>
+          <div class="col-12">
+            <label class="form-label">Địa chỉ</label>{{ form.address }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Vĩ độ</label>{{ form.lat }}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Kinh độ</label>{{ form.lng }}
+          </div>
+          <div class="col-12">
+            <label class="form-label">Mô tả</label>{{ form.description }}
+          </div>
+          <div class="col-12">
+            <label class="form-label">Ảnh bất động sản</label>{{ form.images }}
+            <div class="small mt-1" style="color:var(--text-muted)">Có thể chọn nhiều ảnh cùng lúc. Ảnh đầu tiên sẽ được dùng làm ảnh chính.</div>
+            <div class="image-preview-grid" id="imagePreviewContainer">
+              <span class="text-muted" style="font-size:13px">Chưa có ảnh được chọn.</span>
+            </div>
+          </div>
+          {% if form.is_featured %}
+          <div class="col-12 d-flex align-items-center gap-2">
+            {{ form.is_featured }}
+            <label class="form-label" style="margin:0">Đánh dấu nổi bật</label>
+          </div>
+          {% endif %}
+
+          {% if form.errors %}
+          <div class="col-12"><div class="alert alert-danger">Vui lòng kiểm tra lại các trường và thử lại.</div></div>
+          {% endif %}
+
+          <div class="col-12 d-flex gap-2 flex-wrap">
+            <button type="submit" class="btn-admin"><i class="bi bi-building-add"></i> Đăng tin</button>
+            <a href="{% url 'leads:lead_form' %}" class="btn-geo-secondary"><i class="bi bi-person-lines-fill"></i> Tạo khách hàng</a>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="col-lg-5">
+      <div class="card-geo p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap mb-3">
+          <div>
+            <div class="section-eyebrow" style="margin-bottom:6px">Chọn vị trí</div>
+            <div style="color:var(--text-muted);font-size:14px">Nhập địa chỉ rồi tìm, hoặc bấm trực tiếp lên bản đồ để đặt ghim.</div>
+          </div>
+        </div>
+        <div class="d-flex gap-2 flex-wrap mb-3">
+          <button type="button" class="btn-geo-secondary" id="btnGeocode"><i class="bi bi-search"></i> Tìm theo địa chỉ</button>
+          <button type="button" class="btn-geo-secondary" id="btnMyLocation"><i class="bi bi-crosshair"></i> Vị trí của tôi</button>
+        </div>
+        <div id="createPropertyMap" style="height:420px;border-radius:18px;overflow:hidden;border:1px solid var(--border)"></div>
+        <div id="mapHint" style="margin-top:12px;color:var(--text-muted);font-size:13px">Gợi ý: bấm lên bản đồ để đặt ghim và tự điền vĩ độ/kinh độ.</div>
+      </div>
+
+      <div class="card-geo p-4">
+        <div class="section-eyebrow" style="margin-bottom:8px">Lưu ý</div>
+        <ul style="margin:0;padding-left:18px;color:var(--text-muted);line-height:1.8">
+          <li>Môi giới chỉ đăng tin cho chính mình.</li>
+          <li>Tin môi giới tạo mới sẽ vào trạng thái chờ duyệt.</li>
+          <li>Quản trị có thể đăng tin cho toàn hệ thống.</li>
+          <li>Nên kiểm tra lại ghim sau khi tìm theo địa chỉ.</li>
+          <li>Ảnh đầu tiên sẽ được ưu tiên làm ảnh đại diện cho tin.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<style>
+  .image-preview-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .image-preview-card {
+    width: 90px;
+    height: 90px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    background: var(--bg-3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .image-preview-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .image-preview-note {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+</style>
+<script>
+  (() => {
+    const latInput = document.getElementById('id_lat');
+    const lngInput = document.getElementById('id_lng');
+    const addressInput = document.getElementById('id_address');
+    const mapHint = document.getElementById('mapHint');
+    const geocodeBtn = document.getElementById('btnGeocode');
+    const myLocationBtn = document.getElementById('btnMyLocation');
+    const imageInput = document.getElementById('id_images');
+    const imagePreview = document.getElementById('imagePreviewContainer');
+
+    const defaultLat = parseFloat(latInput?.value || '10.7769');
+    const defaultLng = parseFloat(lngInput?.value || '106.7009');
+
+    const renderPreview = () => {
+      if (!imagePreview) return;
+      const files = imageInput?.files ? Array.from(imageInput.files) : [];
+      imagePreview.innerHTML = '';
+      if (!files.length) {
+        const placeholder = document.createElement('span');
+        placeholder.className = 'image-preview-note';
+        placeholder.textContent = 'Chưa có ảnh được chọn.';
+        imagePreview.appendChild(placeholder);
+        return;
+      }
+      files.forEach((file) => {
+        const card = document.createElement('div');
+        card.className = 'image-preview-card';
+        if (!file.type.startsWith('image/')) {
+          const label = document.createElement('span');
+          label.className = 'image-preview-note';
+          label.textContent = file.name;
+          card.appendChild(label);
+          imagePreview.appendChild(card);
+          return;
+        }
+        const img = document.createElement('img');
+        const objectUrl = URL.createObjectURL(file);
+        img.src = objectUrl;
+        img.onload = () => URL.revokeObjectURL(objectUrl);
+        card.appendChild(img);
+        imagePreview.appendChild(card);
+      });
+    };
+
+    imageInput?.addEventListener('change', renderPreview);
+    renderPreview();
+
+    const map = L.map('createPropertyMap').setView([defaultLat, defaultLng], 12);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      subdomains: 'abcd',
+      maxZoom: 20,
+      attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+    }).addTo(map);
+
+    let marker = L.marker([defaultLat, defaultLng], { draggable: true }).addTo(map);
+
+    const updateInputs = (lat, lng, message) => {
+      latInput.value = Number(lat).toFixed(6);
+      lngInput.value = Number(lng).toFixed(6);
+      marker.setLatLng([lat, lng]);
+      map.panTo([lat, lng]);
+      if (message) mapHint.textContent = message;
+    };
+
+    marker.on('dragend', () => {
+      const pos = marker.getLatLng();
+      updateInputs(pos.lat, pos.lng, 'Đã cập nhật vị trí từ ghim kéo trên bản đồ.');
+    });
+
+    map.on('click', (e) => {
+      updateInputs(e.latlng.lat, e.latlng.lng, 'Đã đặt ghim theo vị trí bạn vừa bấm trên bản đồ.');
+    });
+
+    geocodeBtn?.addEventListener('click', async () => {
+      const q = (addressInput?.value || '').trim();
+      if (!q) {
+        mapHint.textContent = 'Hãy nhập địa chỉ trước khi tìm trên bản đồ.';
+        return;
+      }
+      geocodeBtn.disabled = true;
+      mapHint.textContent = 'Đang tìm địa chỉ trên bản đồ...';
+      try {
+        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q + ', Việt Nam')}&limit=1`;
+        const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+        const data = await res.json();
+        if (!data.length) {
+          mapHint.textContent = 'Không tìm thấy địa chỉ phù hợp. Hãy thử nhập chi tiết hơn hoặc bấm trực tiếp lên bản đồ.';
+          return;
+        }
+        const lat = parseFloat(data[0].lat);
+        const lng = parseFloat(data[0].lon);
+        map.setView([lat, lng], 16);
+        updateInputs(lat, lng, 'Đã tìm thấy địa chỉ và đặt ghim lên bản đồ.');
+      } catch (err) {
+        mapHint.textContent = 'Không thể tìm địa chỉ lúc này. Bạn có thể bấm trực tiếp lên bản đồ.';
+      } finally {
+        geocodeBtn.disabled = false;
+      }
+    });
+
+    myLocationBtn?.addEventListener('click', () => {
+      if (!navigator.geolocation) {
+        mapHint.textContent = 'Trình duyệt không hỗ trợ định vị.';
+        return;
+      }
+      myLocationBtn.disabled = true;
+      mapHint.textContent = 'Đang lấy vị trí hiện tại...';
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          map.setView([lat, lng], 16);
+          updateInputs(lat, lng, 'Đã lấy vị trí hiện tại và đặt ghim trên bản đồ.');
+          myLocationBtn.disabled = false;
+        },
+        () => {
+          mapHint.textContent = 'Không lấy được vị trí hiện tại. Hãy thử lại hoặc bấm trực tiếp lên bản đồ.';
+          myLocationBtn.disabled = false;
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    });
+  })();
+</script>
+{% endblock %}

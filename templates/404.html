@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}404 - Không tìm thấy trang{% endblock %}
+
+{% block content %}
+<div class="container py-5 text-center">
+    <div class="error-container py-5">
+        <h1 class="display-1 fw-bold text-geo-primary">404</h1>
+        <div class="error-icon mb-4">
+            <i class="fas fa-map-marked-alt fa-5x text-secondary"></i>
+        </div>
+        <h2 class="mb-3">Mất dấu tọa độ!</h2>
+        <p class="lead mb-5">Xin lỗi, tọa độ bạn đang tìm kiếm không tồn tại trên bản đồ của chúng tôi hoặc đã bị di dời.</p>
+        <div class="d-flex justify-content-center gap-3">
+            <a href="{% url 'core:home' %}" class="btn-geo-primary">
+                <i class="fas fa-home me-2"></i>Về trang chủ
+            </a>
+            <button onclick="history.back()" class="btn-geo-outline">
+                <i class="fas fa-arrow-left me-2"></i>Quay lại
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+    .text-geo-primary { color: #2c3e50; }
+    .btn-geo-primary {
+        background-color: #2c3e50;
+        color: white;
+        padding: 10px 25px;
+        border-radius: 5px;
+        text-decoration: none;
+        transition: 0.3s;
+    }
+    .btn-geo-primary:hover { background-color: #1a252f; color: white; }
+    .btn-geo-outline {
+        border: 2px solid #2c3e50;
+        color: #2c3e50;
+        padding: 8px 25px;
+        border-radius: 5px;
+        background: transparent;
+        transition: 0.3s;
+    }
+    .btn-geo-outline:hover { background-color: #2c3e50; color: white; }
+</style>
+{% endblock %}

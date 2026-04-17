@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load humanize property_format %}
 {% block title %}Property Listings | GeoEstate{% endblock %}
 
 {% block breadcrumb %}
@@ -6,8 +7,8 @@
   <div class="container">
     <nav aria-label="breadcrumb">
       <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="{% url 'core:home' %}"><i class="bi bi-house me-1"></i>Home</a></li>
-        <li class="breadcrumb-item active">Properties</li>
+        <li class="breadcrumb-item"><a href="{% url 'core:home' %}"><i class="bi bi-house me-1"></i>Trang chủ</a></li>
+        <li class="breadcrumb-item active">Bất động sản</li>
       </ol>
     </nav>
   </div>
@@ -15,414 +16,128 @@
 {% endblock %}
 
 {% block head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet" />
 <style>
   /* ══════════════════════════════════════════
      PROPERTY LIST — all colors via var() tokens
   ══════════════════════════════════════════ */
-
-  /* ── Page hero ── */
-  .page-hero {
-    background: var(--bg-2);
-    border-bottom: 1px solid var(--border);
-    padding: 40px 0 36px;
-  }
-
-  .page-eyebrow {
-    font-size: 10.5px; font-weight: 600; letter-spacing: 3px;
-    text-transform: uppercase; color: var(--gold); margin-bottom: 6px;
-  }
-
-  .page-title {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: clamp(1.6rem, 3vw, 2.2rem);
-    font-weight: 700; color: var(--text); line-height: 1.15; margin-bottom: 6px;
-  }
-
+  .page-hero { background: var(--bg-2); border-bottom: 1px solid var(--border); padding: 40px 0 36px; }
+  .page-eyebrow { font-size: 10.5px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; color: var(--gold); margin-bottom: 6px; }
+  .page-title { font-family: 'Cormorant Garamond', serif; font-size: clamp(1.6rem, 3vw, 2.2rem); font-weight: 700; color: var(--text); line-height: 1.15; margin-bottom: 6px; }
   .page-desc { color: var(--text-muted); font-size: 14px; font-weight: 300; }
-
-  /* ── Main layout ── */
-  .list-layout {
-    display: grid;
-    grid-template-columns: 280px 1fr;
-    gap: 28px;
-    align-items: start;
-    padding: 36px 0 80px;
-  }
+  .list-layout { display: grid; grid-template-columns: 280px 1fr; gap: 28px; align-items: start; padding: 36px 0 80px; }
+  .results-stack { display: flex; flex-direction: column; gap: 18px; }
+  .map-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-xl); overflow: hidden; box-shadow: var(--shadow-card); position: relative; }
+  .map-card-header { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+  .map-card-title { font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); }
+  .map-card-note { font-size: 12px; color: var(--text-muted); }
+  #propertyMap { height: 420px; width: 100%; background: var(--bg-3); position: relative; overflow: hidden; }
 
   @media (max-width: 1024px) {
     .list-layout { grid-template-columns: 1fr; }
-    .filter-sidebar { display: none; }
-    .filter-sidebar.open { display: block; }
+    .filter-sidebar { display: none !important; }
+    body.filter-panel-open .filter-sidebar { display: block !important; position: fixed; top: calc(var(--nav-h) + 16px); left: 10px; right: 10px; margin: 0 auto; width: min(420px, 100%); max-height: calc(100vh - var(--nav-h) - 32px); z-index: 1200; box-shadow: 0 20px 60px rgba(0,0,0,.35); transform: translateY(0); }
+    .filter-panel { max-height: 100%; overflow-y: auto; }
+    .filter-backdrop { position: fixed; inset: 0; background: rgba(0, 0, 0, .45); backdrop-filter: blur(4px); opacity: 0; visibility: hidden; pointer-events: none; transition: opacity var(--transition); z-index: 1180; }
+    body.filter-panel-open .filter-backdrop { opacity: 1; visibility: visible; pointer-events: auto; }
+    body.filter-panel-open { overflow: hidden; }
   }
 
-  /* ── Filter sidebar ── */
   .filter-sidebar-sticky { position: sticky; top: calc(var(--nav-h) + 16px); }
-
-  .filter-panel {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-xl);
-    overflow: hidden;
-    box-shadow: var(--shadow-card);
-  }
-
-  .filter-panel-header {
-    padding: 16px 20px;
-    border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: space-between;
-  }
-
-  .filter-panel-title {
-    font-size: 11px; font-weight: 600; letter-spacing: 2px;
-    text-transform: uppercase; color: var(--gold);
-    display: flex; align-items: center; gap: 8px;
-  }
-
-  .filter-clear-btn {
-    font-size: 11.5px; color: var(--text-muted);
-    background: none; border: none; cursor: pointer;
-    font-family: 'Outfit', sans-serif;
-    transition: color var(--transition);
-    padding: 0;
-  }
-
+  .filter-panel { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-xl); overflow: hidden; box-shadow: var(--shadow-card); }
+  .filter-panel-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .filter-panel-title { font-size: 11px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); display: flex; align-items: center; gap: 8px; }
+  .filter-clear-btn { font-size: 11.5px; color: var(--text-muted); background: none; border: none; cursor: pointer; font-family: 'Outfit', sans-serif; transition: color var(--transition); padding: 0; }
   .filter-clear-btn:hover { color: var(--gold); }
-
   .filter-section { padding: 18px 20px; border-bottom: 1px solid var(--border); }
   .filter-section:last-child { border-bottom: none; }
-
-  .filter-section-label {
-    font-size: 11px; font-weight: 600; letter-spacing: 1.5px;
-    text-transform: uppercase; color: var(--text-dim);
-    margin-bottom: 12px; display: flex; align-items: center; gap: 6px;
-  }
-
+  .filter-section-label { font-size: 11px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
   .filter-section-label i { color: var(--gold); }
-
-  /* Field input */
-  .field-input {
-    background: var(--bg-3); border: 1px solid var(--border);
-    border-radius: var(--radius-sm); color: var(--text);
-    font-family: 'Outfit', sans-serif; font-size: 13.5px;
-    padding: 9px 12px; outline: none; width: 100%;
-    transition: border-color var(--transition), box-shadow var(--transition);
-  }
-
+  .field-input { background: var(--bg-3); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font-family: 'Outfit', sans-serif; font-size: 13.5px; padding: 9px 12px; outline: none; width: 100%; transition: border-color var(--transition), box-shadow var(--transition); }
   .field-input::placeholder { color: var(--text-muted); }
   .field-input:focus { border-color: var(--gold-border); box-shadow: 0 0 0 3px var(--gold-dim); }
   .field-input option { background: var(--bg-2); }
-
-  /* Type chips inside filter */
   .type-chip-group { display: flex; flex-direction: column; gap: 6px; }
-
-  .type-chip-radio {
-    display: flex; align-items: center; gap: 10px;
-    padding: 9px 12px; border-radius: var(--radius-sm);
-    border: 1px solid var(--border); background: var(--bg-3);
-    cursor: pointer; transition: all var(--transition);
-    user-select: none;
-  }
-
+  .type-chip-radio { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-3); cursor: pointer; transition: all var(--transition); user-select: none; }
   .type-chip-radio:hover { border-color: var(--gold-border); background: var(--gold-dim); }
   .type-chip-radio.active { border-color: var(--gold-border); background: var(--gold-dim); color: var(--gold); }
   .type-chip-radio input[type="radio"] { display: none; }
-
-  .type-chip-radio-label {
-    font-size: 13px; font-weight: 500; color: var(--text-dim);
-    flex: 1; display: flex; align-items: center; gap: 8px;
-  }
-
+  .type-chip-radio-label { font-size: 13px; font-weight: 500; color: var(--text-dim); flex: 1; display: flex; align-items: center; gap: 8px; }
   .type-chip-radio.active .type-chip-radio-label { color: var(--gold); }
-
-  .type-chip-dot {
-    width: 16px; height: 16px; border-radius: 50%;
-    border: 2px solid var(--border); flex-shrink: 0;
-    display: grid; place-items: center; transition: all var(--transition);
-  }
-
-  .type-chip-radio.active .type-chip-dot {
-    border-color: var(--gold); background: var(--gold);
-  }
-
-  .type-chip-radio.active .type-chip-dot::after {
-    content: ''; width: 6px; height: 6px;
-    background: #0C0F1A; border-radius: 50%;
-  }
-
-  /* Price range inputs */
+  .type-chip-dot { width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--border); flex-shrink: 0; display: grid; place-items: center; transition: all var(--transition); }
+  .type-chip-radio.active .type-chip-dot { border-color: var(--gold); background: var(--gold); }
+  .type-chip-radio.active .type-chip-dot::after { content: ''; width: 6px; height: 6px; background: #0C0F1A; border-radius: 50%; }
   .range-inputs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .range-sep { text-align: center; font-size: 12px; color: var(--text-muted); padding-top: 10px; }
-
-  /* Apply button */
-  .btn-apply-filter {
-    display: flex; align-items: center; justify-content: center; gap: 8px;
-    width: 100%; padding: 12px;
-    background: var(--gold); color: #0C0F1A;
-    border: none; border-radius: var(--radius-md);
-    font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 600;
-    cursor: pointer; transition: all var(--transition);
-    margin-top: 4px;
-  }
-
-  .btn-apply-filter:hover {
-    background: var(--gold-light);
-    box-shadow: 0 6px 20px rgba(200,169,110,.3);
-    transform: translateY(-1px);
-  }
-
-  /* Active filters summary */
-  .active-filters {
-    display: flex; flex-wrap: wrap; gap: 6px; padding: 12px 20px;
-    background: var(--gold-dim); border-bottom: 1px solid var(--gold-border);
-  }
-
-  .active-filter-tag {
-    display: flex; align-items: center; gap: 5px;
-    padding: 3px 10px; border-radius: 999px;
-    background: var(--bg-card); border: 1px solid var(--gold-border);
-    font-size: 11.5px; color: var(--gold); font-weight: 500;
-  }
-
-  .active-filter-tag button {
-    background: none; border: none; cursor: pointer;
-    color: var(--gold); font-size: 13px; padding: 0; line-height: 1;
-    transition: color var(--transition);
-  }
-
+  .btn-apply-filter { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 12px; background: var(--gold); color: #0C0F1A; border: none; border-radius: var(--radius-md); font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; transition: all var(--transition); margin-top: 4px; }
+  .btn-apply-filter:hover { background: var(--gold-light); box-shadow: 0 6px 20px rgba(200,169,110,.3); transform: translateY(-1px); }
+  .active-filters { display: flex; flex-wrap: wrap; gap: 6px; padding: 12px 20px; background: var(--gold-dim); border-bottom: 1px solid var(--gold-border); }
+  .active-filter-tag { display: flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 999px; background: var(--bg-card); border: 1px solid var(--gold-border); font-size: 11.5px; color: var(--gold); font-weight: 500; }
+  .active-filter-tag button { background: none; border: none; cursor: pointer; color: var(--gold); font-size: 13px; padding: 0; line-height: 1; transition: color var(--transition); }
   .active-filter-tag button:hover { color: var(--text); }
-
-  /* ── Results header ── */
-  .results-topbar {
-    display: flex; align-items: center; justify-content: space-between;
-    flex-wrap: wrap; gap: 12px; margin-bottom: 20px;
-  }
-
+  .results-topbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
   .results-count-row { display: flex; align-items: center; gap: 10px; }
-
-  .results-num {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.8rem; font-weight: 700; color: var(--gold); line-height: 1;
-  }
-
+  .results-num { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; font-weight: 700; color: var(--gold); line-height: 1; }
   .results-label { font-size: 13px; color: var(--text-muted); }
-
   .topbar-right { display: flex; align-items: center; gap: 10px; }
-
-  .sort-select {
-    background: var(--bg-3); border: 1px solid var(--border);
-    color: var(--text); border-radius: var(--radius-sm);
-    padding: 8px 12px; font-family: 'Outfit', sans-serif;
-    font-size: 13px; outline: none; cursor: pointer;
-    transition: border-color var(--transition);
-  }
-
+  .sort-select { background: var(--bg-3); border: 1px solid var(--border); color: var(--text); border-radius: var(--radius-sm); padding: 8px 12px; font-family: 'Outfit', sans-serif; font-size: 13px; outline: none; cursor: pointer; transition: border-color var(--transition); }
   .sort-select:focus { border-color: var(--gold-border); }
-  .sort-select option { background: var(--bg-2); }
-
-  /* View toggle */
-  .view-toggle {
-    display: flex; gap: 3px;
-    background: var(--bg-3); border: 1px solid var(--border);
-    border-radius: var(--radius-sm); padding: 3px;
-  }
-
-  .view-btn {
-    padding: 6px 11px; border-radius: 6px; border: none;
-    background: transparent; color: var(--text-muted);
-    font-size: 14px; cursor: pointer; transition: all var(--transition);
-  }
-
-  .view-btn.active { background: var(--bg-card); color: var(--text); }
-
-  /* Mobile filter toggle */
-  .mobile-filter-btn {
-    display: none;
-    align-items: center; gap: 7px;
-    padding: 9px 16px; background: var(--bg-card);
-    border: 1px solid var(--border); border-radius: var(--radius-sm);
-    color: var(--text-dim); font-family: 'Outfit', sans-serif;
-    font-size: 13.5px; font-weight: 500; cursor: pointer;
-    transition: all var(--transition);
-  }
-
+  .mobile-filter-btn { display: none; align-items: center; gap: 7px; padding: 9px 16px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-dim); font-family: 'Outfit', sans-serif; font-size: 13.5px; font-weight: 500; cursor: pointer; transition: all var(--transition); }
   @media (max-width: 1024px) { .mobile-filter-btn { display: flex; } }
-  .mobile-filter-btn:hover { border-color: var(--gold-border); color: var(--gold); }
-
-  /* ── Grid view ── */
-  .prop-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 18px;
-  }
-
-  .prop-card {
-    background: var(--bg-card); border: 1px solid var(--border);
-    border-radius: var(--radius-lg); overflow: hidden;
-    transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition);
-    display: flex; flex-direction: column;
-  }
-
-  .prop-card:hover {
-    border-color: var(--border-hover);
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-card), var(--shadow-glow);
-  }
-
-  .prop-card-thumb {
-    height: 180px;
-    background: linear-gradient(135deg, var(--bg-2) 0%, var(--bg-3) 100%);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 44px; position: relative;
-    flex-shrink: 0;
-  }
-
-  .prop-card-thumb::after {
-    content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 40px;
-    background: linear-gradient(to bottom, transparent, var(--bg-card));
-  }
-
+  .prop-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition); display: flex; flex-direction: column; }
+  .prop-card:hover { border-color: var(--border-hover); transform: translateY(-4px); box-shadow: var(--shadow-card), var(--shadow-glow); }
+  .prop-card-thumb { height: 180px; background: linear-gradient(135deg, var(--bg-2) 0%, var(--bg-3) 100%); display: flex; align-items: center; justify-content: center; font-size: 44px; position: relative; flex-shrink: 0; background-size: cover; background-position: center; overflow: hidden; }
+  .prop-card-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .prop-card-thumb::before { content: ''; position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(0,0,0,.08), rgba(0,0,0,.35)); }
+  .prop-card-thumb::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 40px; background: linear-gradient(to bottom, transparent, var(--bg-card)); }
   .prop-card-body { padding: 16px 18px; flex: 1; display: flex; flex-direction: column; }
-
-  .prop-card-title {
-    font-size: 15px; font-weight: 600; color: var(--text);
-    margin-bottom: 4px; line-height: 1.3;
-    display: -webkit-box; -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical; overflow: hidden;
-  }
-
-  .prop-card-address {
-    font-size: 12px; color: var(--text-muted); margin-bottom: 12px;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }
-
-  .prop-card-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 12px; }
-
-  .prop-tag {
-    font-size: 11px; font-weight: 500; color: var(--text-dim);
-    background: var(--bg-3); border: 1px solid var(--border);
-    border-radius: 6px; padding: 2px 8px;
-    display: flex; align-items: center; gap: 3px;
-  }
-
-  .prop-card-footer {
-    display: flex; align-items: center; justify-content: space-between;
-    padding-top: 12px; border-top: 1px solid var(--border); margin-top: auto;
-  }
-
-  .prop-card-price {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.25rem; font-weight: 700; color: var(--gold);
-  }
-
-  .btn-card-view {
-    display: flex; align-items: center; gap: 5px;
-    padding: 7px 14px; background: transparent;
-    color: var(--text-dim); border: 1px solid var(--border);
-    border-radius: var(--radius-sm); font-family: 'Outfit', sans-serif;
-    font-size: 12.5px; font-weight: 500; text-decoration: none;
-    transition: all var(--transition);
-  }
-
+  .prop-card-title { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 4px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .prop-card-address { font-size: 12px; color: var(--text-muted); margin-bottom: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .prop-card-price { font-family: 'Space Grotesk', 'Outfit', sans-serif; font-size: 1.25rem; font-weight: 600; color: var(--gold); }
+  .btn-card-view { display: flex; align-items: center; gap: 5px; padding: 7px 14px; background: transparent; color: var(--text-dim); border: 1px solid var(--border); border-radius: var(--radius-sm); font-family: 'Outfit', sans-serif; font-size: 12.5px; font-weight: 500; text-decoration: none; transition: all var(--transition); cursor: pointer; }
   .btn-card-view:hover { border-color: var(--gold-border); color: var(--gold); background: var(--gold-dim); }
-
-  /* ── List view ── */
-  .prop-list { display: flex; flex-direction: column; gap: 12px; }
-
-  .prop-list-item {
-    background: var(--bg-card); border: 1px solid var(--border);
-    border-radius: var(--radius-lg); overflow: hidden;
-    display: grid; grid-template-columns: 150px 1fr auto;
-    transition: border-color var(--transition), transform var(--transition), box-shadow var(--transition);
-  }
-
-  .prop-list-item:hover {
-    border-color: var(--border-hover);
-    transform: translateX(4px);
-    box-shadow: var(--shadow-card);
-  }
-
-  .prop-list-thumb {
-    background: linear-gradient(135deg, var(--bg-2) 0%, var(--bg-3) 100%);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 36px; position: relative; min-height: 110px;
-  }
-
-  .prop-list-body { padding: 14px 16px; display: flex; flex-direction: column; justify-content: center; min-width: 0; }
-
-  .prop-list-title {
-    font-size: 14.5px; font-weight: 600; color: var(--text); margin-bottom: 3px;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }
-
-  .prop-list-address { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
-
-  .prop-list-right {
-    display: flex; flex-direction: column; align-items: flex-end;
-    justify-content: center; padding: 14px 16px; gap: 8px;
-    border-left: 1px solid var(--border); min-width: 130px;
-  }
-
-  .prop-list-price {
-    font-family: 'Cormorant Garamond', serif;
-    font-size: 1.2rem; font-weight: 700; color: var(--gold); white-space: nowrap;
-  }
-
-  /* ── Empty state ── */
-  .empty-state {
-    grid-column: 1 / -1; text-align: center; padding: 72px 24px;
-    background: var(--bg-card); border: 1px solid var(--border);
-    border-radius: var(--radius-xl); color: var(--text-muted);
-  }
-
-  .empty-icon { font-size: 52px; margin-bottom: 16px; opacity: .4; }
-  .empty-state h5 { color: var(--text); font-size: 17px; margin-bottom: 8px; }
-  .empty-state p  { font-size: 14px; max-width: 380px; margin: 0 auto 24px; line-height: 1.7; }
-
-  /* ── Pagination ── */
-  .pagination-row {
-    display: flex; align-items: center; justify-content: center;
-    gap: 6px; margin-top: 36px; flex-wrap: wrap;
-  }
-
-  .page-btn {
-    width: 38px; height: 38px; border-radius: var(--radius-sm);
-    background: var(--bg-card); border: 1px solid var(--border);
-    color: var(--text-dim); font-size: 13.5px; font-weight: 500;
-    cursor: pointer; transition: all var(--transition);
-    display: grid; place-items: center;
-    font-family: 'Outfit', sans-serif; text-decoration: none;
-  }
-
+  .property-hero-panel { margin-top: 24px; background: var(--bg-card); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: var(--radius-xl); padding: 20px 26px; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; }
+  .property-hero-stat { flex: 1; min-width: 130px; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: var(--radius-md); padding: 12px 14px; background: var(--bg-3); }
+  .property-card-list { margin-top: 26px; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 22px; }
+  .property-card { background: var(--bg-card); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: var(--radius-xl); overflow: hidden; display: flex; flex-direction: column; min-height: 100%; box-shadow: 0 20px 45px rgba(0, 0, 0, 0.12); }
+  .property-card-media { position: relative; height: 220px; background: linear-gradient(135deg, var(--bg-2) 0%, var(--bg-3) 100%); }
+  .property-card-media img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .property-card-badges { position: absolute; top: 12px; left: 12px; display: flex; flex-wrap: wrap; gap: 6px; }
+  .property-card-badges span { padding: 5px 10px; border-radius: 999px; font-size: 11px; font-weight: 600; background: rgba(0, 0, 0, 0.45); color: #fff; text-transform: uppercase; }
+  .property-card-content { padding: 20px 24px 26px; display: flex; flex-direction: column; gap: 12px; flex: 1; }
+  .property-card-title { font-size: 1.35rem; font-weight: 700; color: var(--text); line-height: 1.3; margin: 0; }
+  .property-card-price { font-family: 'Space Grotesk', 'Outfit', sans-serif; font-size: 1.4rem; font-weight: 700; color: var(--gold); }
+  .property-card-address { font-size: 13px; color: var(--text-muted); }
+  .property-card-meta { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 13px; color: var(--text-muted); }
+  .empty-state { grid-column: 1 / -1; text-align: center; padding: 72px 24px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-xl); color: var(--text-muted); }
+  .pagination-row { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 36px; flex-wrap: wrap; }
+  .page-btn { width: 38px; height: 38px; border-radius: var(--radius-sm); background: var(--bg-card); border: 1px solid var(--border); color: var(--text-dim); font-size: 13.5px; font-weight: 500; cursor: pointer; transition: all var(--transition); display: grid; place-items: center; font-family: 'Outfit', sans-serif; text-decoration: none; }
   .page-btn:hover { border-color: var(--gold-border); color: var(--gold); background: var(--gold-dim); }
   .page-btn.active { background: var(--gold); color: #0C0F1A; border-color: var(--gold); font-weight: 700; }
   .page-btn:disabled { opacity: .35; cursor: not-allowed; }
-
-  /* ── Responsive ── */
-  @media (max-width: 768px) {
-    .prop-list-item { grid-template-columns: 100px 1fr; }
-    .prop-list-right { display: none; }
-  }
-
-  @media (max-width: 480px) {
-    .prop-grid { grid-template-columns: 1fr; }
-  }
 </style>
 {% endblock %}
 
 {% block content %}
 
-<!-- ══ PAGE HERO ══ -->
 <div class="page-hero">
   <div class="container">
     <div class="d-flex align-items-start justify-content-between flex-wrap gap-3">
       <div>
-        <p class="page-eyebrow">Real Estate Listings</p>
-        <h1 class="page-title">Browse Properties</h1>
-        <p class="page-desc">Explore our curated selection of properties across Ho Chi Minh City.</p>
+        <p class="page-eyebrow">Danh sách bất động sản</p>
+        <h1 class="page-title">Khám phá bất động sản</h1>
+        <p class="page-desc">Khám phá các bất động sản nổi bật trên khắp TP.HCM.</p>
       </div>
-      <a href="{% url 'properties:nearby_search' %}" class="btn-geo-secondary" style="font-size:13px;padding:9px 18px;margin-top:8px">
-        <i class="bi bi-geo-alt"></i> Nearby Search
-      </a>
+      <div class="d-flex flex-wrap gap-2" style="margin-top:8px">
+        <a href="{% url 'properties:nearby_search' %}" class="btn-geo-secondary" style="font-size:13px;padding:9px 18px">
+          <i class="bi bi-geo-alt"></i> Tìm kiếm nâng cao
+        </a>
+        <a href="{% url 'properties:compare' %}" class="btn-geo-primary" style="font-size:13px;padding:9px 18px">
+          <i class="bi bi-columns-gap"></i> So sánh hiện tại
+        </a>
+      </div>
     </div>
   </div>
 </div>
@@ -430,431 +145,366 @@
 <div class="container">
   <div class="list-layout">
 
-    <!-- ══ FILTER SIDEBAR ══ -->
-    <aside class="filter-sidebar" id="filterSidebar">
+    <aside class="filter-sidebar" id="filterSidebar" role="complementary" aria-hidden="true">
       <div class="filter-sidebar-sticky">
         <form method="get" id="filterForm">
           <div class="filter-panel">
 
             <div class="filter-panel-header">
-              <div class="filter-panel-title">
-                <i class="bi bi-sliders"></i> Filters
-              </div>
-              <button type="button" class="filter-clear-btn" id="btnClearFilters">
-                Clear all
-              </button>
+              <div class="filter-panel-title"><i class="bi bi-sliders"></i> Bộ lọc</div>
+              <button type="button" class="filter-clear-btn" id="btnClearFilters">Xóa tất cả</button>
             </div>
 
-            <!-- Active filter tags shown here via JS -->
             <div id="activeFilterBar" style="display:none"></div>
 
-            <!-- Property type -->
             <div class="filter-section">
-              <div class="filter-section-label"><i class="bi bi-buildings"></i> Property Type</div>
+              <div class="filter-section-label"><i class="bi bi-buildings"></i> Loại bất động sản</div>
               <div class="type-chip-group" id="typeChipGroup">
                 <label class="type-chip-radio {% if not filters.type %}active{% endif %}">
                   <input type="radio" name="type" value="" {% if not filters.type %}checked{% endif %} />
                   <div class="type-chip-dot"></div>
-                  <span class="type-chip-radio-label">🏘️ All types</span>
+                  <span class="type-chip-radio-label">🏘️ Tất cả loại</span>
                 </label>
                 <label class="type-chip-radio {% if filters.type == 'apartment' %}active{% endif %}">
                   <input type="radio" name="type" value="apartment" {% if filters.type == 'apartment' %}checked{% endif %} />
                   <div class="type-chip-dot"></div>
-                  <span class="type-chip-radio-label">🏢 Apartment</span>
+                  <span class="type-chip-radio-label">🏢 Căn hộ</span>
                 </label>
                 <label class="type-chip-radio {% if filters.type == 'house' %}active{% endif %}">
                   <input type="radio" name="type" value="house" {% if filters.type == 'house' %}checked{% endif %} />
                   <div class="type-chip-dot"></div>
-                  <span class="type-chip-radio-label">🏠 House</span>
+                  <span class="type-chip-radio-label">🏠 Nhà</span>
                 </label>
                 <label class="type-chip-radio {% if filters.type == 'land' %}active{% endif %}">
                   <input type="radio" name="type" value="land" {% if filters.type == 'land' %}checked{% endif %} />
                   <div class="type-chip-dot"></div>
-                  <span class="type-chip-radio-label">🌿 Land</span>
+                  <span class="type-chip-radio-label">🌿 Đất</span>
                 </label>
               </div>
             </div>
 
-            <!-- Price range -->
+            <div class="filter-section" style="background: rgba(181, 137, 47, 0.05);">
+              <div class="filter-section-label"><i class="bi bi-crosshair"></i> Tìm quanh tâm điểm</div>
+              <div class="input-group mb-2">
+                <input type="text" id="addressInputList" class="field-input" style="border-radius:var(--radius-sm) 0 0 var(--radius-sm); border-right:none" placeholder="Nhập địa chỉ, ngã tư..." value="{{ request.GET.q_address }}">
+                <button type="button" id="btnLocateList" class="btn-geo-secondary" style="border-radius:0 var(--radius-sm) var(--radius-sm) 0; padding:0 12px; height: 38px" title="Lấy tọa độ">
+                  <i class="bi bi-geo-alt"></i>
+                </button>
+              </div>
+              <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);margin-bottom:5px">
+                <span>Bán kính vùng đệm:</span>
+                <span><strong id="radius-val" style="color:var(--gold)">{{ filters.radius|default:5 }}</strong> km</span>
+              </div>
+              <input type="range" name="radius" id="radiusRange" class="form-range geo-range" min="1" max="20" value="{{ filters.radius|default:5 }}">
+              <input type="hidden" name="lat" id="latInput" value="{{ filters.lat }}">
+              <input type="hidden" name="lng" id="lngInput" value="{{ filters.lng }}">
+              <input type="hidden" name="q_address" id="addressHidden" value="{{ request.GET.q_address }}">
+            </div>
+
             <div class="filter-section">
-              <div class="filter-section-label"><i class="bi bi-cash-coin"></i> Price Range (VND)</div>
+              <div class="filter-section-label"><i class="bi bi-cash-coin"></i> Khoảng giá (VNĐ)</div>
               <div class="range-inputs">
                 <div>
-                  <div class="filter-section-label" style="font-size:10px;margin-bottom:5px">Min price</div>
-                  <input type="number" name="price_min" class="field-input" step="500000000"
-                         placeholder="0" value="{{ filters.price_min }}" />
+                  <div class="filter-section-label" style="font-size:10px;margin-bottom:5px">Tối thiểu</div>
+                  <input type="number" name="price_min" class="field-input" step="500000000" placeholder="0" value="{{ filters.price_min }}" />
                 </div>
                 <div>
-                  <div class="filter-section-label" style="font-size:10px;margin-bottom:5px">Max price</div>
-                  <input type="number" name="price_max" class="field-input" step="500000000"
-                         placeholder="Any" value="{{ filters.price_max }}" />
+                  <div class="filter-section-label" style="font-size:10px;margin-bottom:5px">Tối đa</div>
+                  <input type="number" name="price_max" class="field-input" step="500000000" placeholder="Không giới hạn" value="{{ filters.price_max }}" />
                 </div>
-              </div>
-
-              <!-- Quick price presets -->
-              <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:10px" id="pricePresets">
-                <button type="button" class="quick-loc-btn" style="font-size:11px;padding:4px 10px"
-                        data-min="" data-max="2000000000">Under 2B</button>
-                <button type="button" class="quick-loc-btn" style="font-size:11px;padding:4px 10px"
-                        data-min="2000000000" data-max="5000000000">2B – 5B</button>
-                <button type="button" class="quick-loc-btn" style="font-size:11px;padding:4px 10px"
-                        data-min="5000000000" data-max="10000000000">5B – 10B</button>
-                <button type="button" class="quick-loc-btn" style="font-size:11px;padding:4px 10px"
-                        data-min="10000000000" data-max="">Over 10B</button>
               </div>
             </div>
 
-            <!-- Area range -->
             <div class="filter-section">
-              <div class="filter-section-label"><i class="bi bi-aspect-ratio"></i> Area (m²)</div>
+              <div class="filter-section-label"><i class="bi bi-aspect-ratio"></i> Diện tích (m²)</div>
               <div class="range-inputs">
                 <div>
-                  <div class="filter-section-label" style="font-size:10px;margin-bottom:5px">Min area</div>
-                  <input type="number" name="area_min" class="field-input" step="10"
-                         placeholder="0" value="{{ filters.area_min }}" />
+                  <input type="number" name="area_min" class="field-input" step="10" placeholder="Từ" value="{{ filters.area_min }}" />
                 </div>
                 <div>
-                  <div class="filter-section-label" style="font-size:10px;margin-bottom:5px">Max area</div>
-                  <input type="number" name="area_max" class="field-input" step="10"
-                         placeholder="Any" value="{{ filters.area_max }}" />
+                  <input type="number" name="area_max" class="field-input" step="10" placeholder="Đến" value="{{ filters.area_max }}" />
                 </div>
               </div>
             </div>
 
-            <!-- Keyword search -->
             <div class="filter-section">
-              <div class="filter-section-label"><i class="bi bi-search"></i> Keyword</div>
-              <input type="text" name="q" class="field-input"
-                     placeholder="Title, address…" value="{{ filters.q|default:'' }}" />
+              <div class="filter-section-label"><i class="bi bi-search"></i> Từ khóa</div>
+              <input type="text" name="q" class="field-input" placeholder="Tiêu đề, địa chỉ…" value="{{ filters.q|default:'' }}" />
+              <input type="hidden" name="bbox" id="bboxInput" value="{{ filters.bbox|default:'' }}" />
             </div>
 
-            <!-- Apply -->
             <div class="filter-section" style="border-bottom:none;padding-bottom:20px">
-              <button type="submit" class="btn-apply-filter">
-                <i class="bi bi-funnel-fill"></i> Apply Filters
-              </button>
+              <button type="submit" class="btn-apply-filter"><i class="bi bi-funnel-fill"></i> Áp dụng bộ lọc</button>
             </div>
 
-          </div><!-- /filter-panel -->
+          </div>
         </form>
       </div>
     </aside>
 
-    <!-- ══ RESULTS ══ -->
-    <div>
+    <div class="results-stack">
 
-      <!-- Results topbar -->
+      <section class="map-card fade-up">
+        <div class="map-card-header">
+          <div>
+            <div class="map-card-title"><i class="bi bi-map me-1"></i> Khám phá bản đồ</div>
+            <div class="map-card-note">Kéo bản đồ để xem, hoặc dùng công cụ "Tìm quanh tâm điểm" ở bộ lọc bên trái để quét bán kính.</div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button type="button" class="btn-card-view" id="btnSearchArea"><i class="bi bi-bounding-box"></i> Quét khung nhìn này</button>
+            <button type="button" class="btn-card-view" id="btnToggleHeatmap"><i class="bi bi-fire"></i> Bản đồ nhiệt</button>
+            <button type="button" class="btn-card-view" id="btnResetMapFilter"><i class="bi bi-arrow-counterclockwise"></i> Reset bản đồ</button>
+          </div>
+        </div>
+        <div id="propertyMap"></div>
+        <div class="map-status" id="mapStatus" aria-live="polite" role="status">
+          <div class="map-status-content"><span class="map-spinner" aria-hidden="true"></span><span class="map-status-message">Đang tải bản đồ...</span></div>
+        </div>
+      </section>
+
       <div class="results-topbar fade-up">
         <div class="results-count-row">
-          <span class="results-num">{{ properties|length }}</span>
-          <span class="results-label">
-            propert{{ properties|length|pluralize:"y,ies" }} found
-          </span>
-          <!-- Mobile filter toggle -->
-          <button class="mobile-filter-btn" id="mobileFilterToggle">
-            <i class="bi bi-sliders"></i> Filters
-          </button>
+          <span class="results-num">{{ total_count|floatformat:0|intcomma }}</span>
+          <span class="results-label">tìm thấy {{ total_count|floatformat:0|intcomma }} bất động sản</span>
+          <button type="button" class="mobile-filter-btn" id="mobileFilterToggle" aria-controls="filterSidebar" aria-expanded="false"><i class="bi bi-sliders"></i> Bộ lọc</button>
         </div>
 
         <div class="topbar-right">
-          <select class="sort-select" id="sortSelect">
-            <option value="default">Sort: Default</option>
-            <option value="price_asc">Price: Low → High</option>
-            <option value="price_desc">Price: High → Low</option>
-            <option value="area_desc">Area: Largest first</option>
-            <option value="area_asc">Area: Smallest first</option>
+          <select class="sort-select" id="sortSelect" name="sort" form="filterForm">
+            <option value="default" {% if filters.sort == 'default' %}selected{% endif %}>Mặc định</option>
+            <option value="newest" {% if filters.sort == 'newest' %}selected{% endif %}>Mới nhất</option>
+            <option value="price_asc" {% if filters.sort == 'price_asc' %}selected{% endif %}>Giá: Thấp → Cao</option>
+            <option value="price_desc" {% if filters.sort == 'price_desc' %}selected{% endif %}>Giá: Cao → Thấp</option>
+            <option value="area_desc" {% if filters.sort == 'area_desc' %}selected{% endif %}>Diện tích: Lớn nhất trước</option>
+            <option value="area_asc" {% if filters.sort == 'area_asc' %}selected{% endif %}>Diện tích: Nhỏ nhất trước</option>
           </select>
-
-          <div class="view-toggle">
-            <button class="view-btn active" id="btnGrid" title="Grid view"><i class="bi bi-grid-3x3-gap"></i></button>
-            <button class="view-btn"        id="btnList" title="List view"><i class="bi bi-list-ul"></i></button>
-          </div>
         </div>
       </div>
 
-      <!-- ── GRID VIEW ── -->
-      <div class="prop-grid fade-up delay-1" id="gridView">
-        {% for p in properties %}
-        <div class="prop-card"
-             data-price="{{ p.price|default:0 }}"
-             data-area="{{ p.area|default:0 }}">
-
-          <div class="prop-card-thumb">
-            {% with t=p.get_property_type_display|lower %}
-              {% if "apartment" in t %}🏢
-              {% elif "house" in t %}🏠
-              {% elif "land" in t %}🌿
-              {% elif "villa" in t %}🏡
-              {% else %}🏗️
-              {% endif %}
-            {% endwith %}
-            <span class="badge-gold" style="position:absolute;top:10px;left:10px;z-index:1">
-              {{ p.get_property_type_display }}
-            </span>
-          </div>
-
-          <div class="prop-card-body">
-            <div class="prop-card-title">{{ p.title }}</div>
-            <div class="prop-card-address">
-              <i class="bi bi-geo-alt" style="color:var(--gold)"></i> {{ p.address }}
-            </div>
-            <div class="prop-card-tags">
-              {% if p.area %}
-              <span class="prop-tag"><i class="bi bi-aspect-ratio"></i> {{ p.area }} m²</span>
-              {% endif %}
-              {% if p.bedrooms %}
-              <span class="prop-tag"><i class="bi bi-door-open"></i> {{ p.bedrooms }} bed</span>
-              {% endif %}
-              {% if p.bathrooms %}
-              <span class="prop-tag"><i class="bi bi-droplet"></i> {{ p.bathrooms }} bath</span>
-              {% endif %}
-            </div>
-            <div class="prop-card-footer">
-              <div class="prop-card-price">
-                {% if p.price %}{{ p.price|floatformat:0 }}<span style="font-size:.8rem;font-weight:400;color:var(--text-muted)"> đ</span>{% else %}<span style="color:var(--text-muted);font-size:.9rem">On request</span>{% endif %}
-              </div>
-              <a class="btn-card-view" href="{% url 'properties:detail' p.pk %}">
-                <i class="bi bi-eye"></i> View
-              </a>
-            </div>
-          </div>
+      <div class="property-hero-panel fade-up">
+        <div>
+          <p class="property-hero-eyebrow">Thống kê</p>
+          <h2>Đang hiển thị {{ total_count|floatformat:0|intcomma|comma_to_dot }} bất động sản</h2>
         </div>
+        <div class="property-hero-stats">
+          <div class="property-hero-stat"><span>Giá trung bình</span><strong>{% if avg_price %}{{ avg_price|price_vn }}{% else %}-{% endif %}</strong></div>
+          <div class="property-hero-stat"><span>Diện tích trung bình</span><strong>{% if avg_area %}{{ avg_area|floatformat:0|intcomma|comma_to_dot }} m²{% else %}-{% endif %}</strong></div>
+          <div class="property-hero-stat"><span>Giá/m² trung bình</span><strong>{% if avg_price and avg_area %}{{ avg_price|price_per_m2:avg_area }}{% else %}-{% endif %}</strong></div>
+        </div>
+      </div>
+
+      <div class="property-card-list fade-up delay-1">
+        {% for p in properties %}
+        <article class="property-card" onclick="window.location.href='{% url 'properties:detail' p.pk %}'" style="cursor:pointer">
+          <div class="property-card-media">
+            {% if p.primary_image_url %}<img src="{{ p.primary_image_url }}" alt="{{ p.title|escape }}" loading="lazy" />{% else %}<span class="prop-thumb-icon" style="font-size:44px;color:#fff"><i class="bi bi-house"></i></span>{% endif %}
+            <div class="property-card-badges"><span>{{ p.get_property_type_display }}</span><span>{{ p.get_listing_status_display }}</span></div>
+          </div>
+          <div class="property-card-content">
+            <h3 class="property-card-title">{{ p.title }}</h3>
+            <div class="property-card-price">{% if p.price %}{{ p.price|price_vn }}{% else %}<span style="color:var(--text-muted);font-size:.95rem">Liên hệ</span>{% endif %}</div>
+            <div class="property-card-address"><i class="bi bi-geo-alt" style="color:var(--gold)"></i> {{ p.address }}</div>
+            <div class="property-card-meta">
+              {% if p.area %}<span><i class="bi bi-aspect-ratio"></i> {{ p.area|floatformat:0|intcomma|comma_to_dot }} m²</span>{% endif %}
+              <span><i class="bi bi-currency-dollar"></i> {% if p.price and p.area %}{{ p.price|price_per_m2:p.area }}{% else %}-{% endif %}</span>
+            </div>
+            <div class="property-card-actions">
+              <a href="{% url 'properties:detail' p.pk %}" class="btn-geo-primary"><i class="bi bi-eye"></i> Xem</a>
+              <a href="{% url 'properties:wishlist_toggle' p.pk %}" class="btn-geo-secondary" onclick="event.stopPropagation();"><i class="bi bi-heart"></i> Lưu</a>
+            </div>
+          </div>
+        </article>
         {% empty %}
         <div class="empty-state">
-          <div class="empty-icon">🏚️</div>
-          <h5>No properties found</h5>
-          <p>Try adjusting your filters or clearing them to see all available listings.</p>
-          <a href="{% url 'properties:list' %}" class="btn-geo-primary" style="display:inline-flex">
-            <i class="bi bi-arrow-counterclockwise"></i> Clear filters
-          </a>
+          <div class="empty-icon">🏚️</div><h5>Không tìm thấy kết quả phù hợp</h5>
+          <p>Có thể khu vực bạn quét bản đồ hoặc bán kính tìm kiếm không chứa bất động sản nào.</p>
+          <a href="{% url 'properties:list' %}" class="btn-geo-primary"><i class="bi bi-arrow-counterclockwise"></i> Xóa bộ lọc</a>
         </div>
         {% endfor %}
       </div>
 
-      <!-- ── LIST VIEW (hidden by default) ── -->
-      <div class="prop-list fade-up delay-1" id="listView" style="display:none">
-        {% for p in properties %}
-        <div class="prop-list-item"
-             data-price="{{ p.price|default:0 }}"
-             data-area="{{ p.area|default:0 }}">
-
-          <div class="prop-list-thumb">
-            {% with t=p.get_property_type_display|lower %}
-              {% if "apartment" in t %}🏢
-              {% elif "house" in t %}🏠
-              {% elif "land" in t %}🌿
-              {% elif "villa" in t %}🏡
-              {% else %}🏗️
-              {% endif %}
-            {% endwith %}
-            <span class="badge-gold" style="position:absolute;bottom:8px;left:8px;font-size:9px">
-              {{ p.get_property_type_display }}
-            </span>
-          </div>
-
-          <div class="prop-list-body">
-            <div class="prop-list-title">{{ p.title }}</div>
-            <div class="prop-list-address">
-              <i class="bi bi-geo-alt me-1" style="color:var(--gold)"></i>{{ p.address }}
-            </div>
-            <div class="prop-card-tags">
-              {% if p.area %}
-              <span class="prop-tag"><i class="bi bi-aspect-ratio"></i> {{ p.area }} m²</span>
-              {% endif %}
-              {% if p.bedrooms %}
-              <span class="prop-tag">{{ p.bedrooms }} bed</span>
-              {% endif %}
-              {% if p.bathrooms %}
-              <span class="prop-tag">{{ p.bathrooms }} bath</span>
-              {% endif %}
-            </div>
-          </div>
-
-          <div class="prop-list-right">
-            <div class="prop-list-price">
-              {% if p.price %}{{ p.price|floatformat:0 }}<span style="font-size:.75rem;color:var(--text-muted)"> đ</span>{% else %}<span style="color:var(--text-muted)">On request</span>{% endif %}
-            </div>
-            <a class="btn-card-view" href="{% url 'properties:detail' p.pk %}">
-              <i class="bi bi-eye"></i> View
-            </a>
-          </div>
-
-        </div>
-        {% empty %}
-        <div class="empty-state">
-          <div class="empty-icon">🏚️</div>
-          <h5>No properties found</h5>
-          <p>Try adjusting your filters or clearing them to see all available listings.</p>
-        </div>
-        {% endfor %}
-      </div>
-
-      <!-- ── PAGINATION ── -->
       {% if is_paginated %}
       <div class="pagination-row">
-        {% if page_obj.has_previous %}
-        <a class="page-btn" href="?page={{ page_obj.previous_page_number }}{% if filters.type %}&type={{ filters.type }}{% endif %}">
-          <i class="bi bi-chevron-left"></i>
-        </a>
-        {% endif %}
-
+        {% if page_obj.has_previous %}<a class="page-btn" href="?{% if filters.type %}type={{ filters.type|urlencode }}&{% endif %}{% if filters.price_min %}price_min={{ filters.price_min|urlencode }}&{% endif %}{% if filters.price_max %}price_max={{ filters.price_max|urlencode }}&{% endif %}{% if filters.lat %}lat={{ filters.lat|urlencode }}&{% endif %}{% if filters.lng %}lng={{ filters.lng|urlencode }}&{% endif %}{% if filters.radius %}radius={{ filters.radius|urlencode }}&{% endif %}page={{ page_obj.previous_page_number }}"><i class="bi bi-chevron-left"></i></a>{% endif %}
         {% for num in page_obj.paginator.page_range %}
-          {% if page_obj.number == num %}
-          <span class="page-btn active">{{ num }}</span>
-          {% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}
-          <a class="page-btn" href="?page={{ num }}{% if filters.type %}&type={{ filters.type }}{% endif %}">{{ num }}</a>
-          {% endif %}
+          {% if page_obj.number == num %}<span class="page-btn active">{{ num }}</span>
+          {% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}<a class="page-btn" href="?{% if filters.type %}type={{ filters.type|urlencode }}&{% endif %}{% if filters.lat %}lat={{ filters.lat|urlencode }}&{% endif %}{% if filters.lng %}lng={{ filters.lng|urlencode }}&{% endif %}{% if filters.radius %}radius={{ filters.radius|urlencode }}&{% endif %}page={{ num }}">{{ num }}</a>{% endif %}
         {% endfor %}
-
-        {% if page_obj.has_next %}
-        <a class="page-btn" href="?page={{ page_obj.next_page_number }}{% if filters.type %}&type={{ filters.type }}{% endif %}">
-          <i class="bi bi-chevron-right"></i>
-        </a>
-        {% endif %}
+        {% if page_obj.has_next %}<a class="page-btn" href="?{% if filters.type %}type={{ filters.type|urlencode }}&{% endif %}{% if filters.lat %}lat={{ filters.lat|urlencode }}&{% endif %}{% if filters.lng %}lng={{ filters.lng|urlencode }}&{% endif %}{% if filters.radius %}radius={{ filters.radius|urlencode }}&{% endif %}page={{ page_obj.next_page_number }}"><i class="bi bi-chevron-right"></i></a>{% endif %}
       </div>
       {% endif %}
 
-    </div><!-- /results -->
-  </div><!-- /list-layout -->
-</div><!-- /container -->
+    </div>
+  </div>
+  <div class="filter-backdrop" id="filterBackdrop" aria-hidden="true"></div>
+</div>
 
 {% endblock %}
 
 {% block scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
 <script>
 (function () {
-
-  /* ── View toggle: Grid ↔ List ── */
-  const gridView = document.getElementById('gridView');
-  const listView = document.getElementById('listView');
-  const btnGrid  = document.getElementById('btnGrid');
-  const btnList  = document.getElementById('btnList');
-
-  btnGrid && btnGrid.addEventListener('click', () => {
-    gridView.style.display = 'grid';
-    listView.style.display = 'none';
-    btnGrid.classList.add('active'); btnList.classList.remove('active');
-    localStorage.setItem('geo_list_view', 'grid');
-  });
-
-  btnList && btnList.addEventListener('click', () => {
-    listView.style.display = 'flex';
-    gridView.style.display = 'none';
-    btnList.classList.add('active'); btnGrid.classList.remove('active');
-    localStorage.setItem('geo_list_view', 'list');
-  });
-
-  // Restore saved preference
-  const savedView = localStorage.getItem('geo_list_view');
-  if (savedView === 'list') btnList && btnList.click();
-
-  /* ── Type chip radio styling ── */
+  /* UI Elements */
   document.querySelectorAll('.type-chip-radio input[type="radio"]').forEach(radio => {
-    radio.addEventListener('change', () => {
-      document.querySelectorAll('.type-chip-radio').forEach(el => el.classList.remove('active'));
-      radio.closest('.type-chip-radio').classList.add('active');
-    });
+    radio.addEventListener('change', () => { document.querySelectorAll('.type-chip-radio').forEach(el => el.classList.remove('active')); radio.closest('.type-chip-radio').classList.add('active'); });
   });
+  document.getElementById('btnClearFilters')?.addEventListener('click', () => window.location.href = window.location.pathname);
+  document.getElementById('sortSelect')?.addEventListener('change', () => document.getElementById('filterForm').requestSubmit());
 
-  /* ── Price preset buttons ── */
-  document.querySelectorAll('#pricePresets button[data-min]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const form = document.getElementById('filterForm');
-      form.querySelector('[name="price_min"]').value = btn.dataset.min;
-      form.querySelector('[name="price_max"]').value = btn.dataset.max;
-    });
-  });
+  const setFilterPanel = (show) => {
+    const sb = document.getElementById('filterSidebar'), tgl = document.getElementById('mobileFilterToggle');
+    if(!sb || !tgl) return;
+    sb.classList.toggle('open', show); document.body.classList.toggle('filter-panel-open', show);
+    sb.setAttribute('aria-hidden', !show); tgl.setAttribute('aria-expanded', show);
+  };
+  document.getElementById('mobileFilterToggle')?.addEventListener('click', () => setFilterPanel(!document.getElementById('filterSidebar').classList.contains('open')));
+  document.getElementById('filterBackdrop')?.addEventListener('click', () => setFilterPanel(false));
+  document.getElementById('filterForm')?.addEventListener('submit', () => setFilterPanel(false));
 
-  /* ── Clear all filters ── */
-  const clearBtn = document.getElementById('btnClearFilters');
-  clearBtn && clearBtn.addEventListener('click', () => {
-    window.location.href = window.location.pathname;
-  });
+  /* Map Logic */
+  const mapEl = document.getElementById('propertyMap');
+  if (mapEl && window.L) {
+    const hcmBounds = L.latLngBounds([10.3500, 106.3500], [11.1600, 106.9500]);
+    const defaultCenter = [10.7769, 106.7009];
+    
+    const map = L.map(mapEl, {
+      maxBounds: hcmBounds,
+      maxBoundsViscosity: 1.0,
+      minZoom: 10
+    }).setView(defaultCenter, 12);
+    
+    const markerLayer = L.markerClusterGroup();
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', attribution: '&copy; HCMUNRE' }).addTo(map);
 
-  /* ── Client-side sort ── */
-  const sortSelect = document.getElementById('sortSelect');
+    // BÁN KÍNH TÌM KIẾM
+    const latInput = document.getElementById('latInput');
+    const lngInput = document.getElementById('lngInput');
+    const radiusRange = document.getElementById('radiusRange');
+    const addressInputList = document.getElementById('addressInputList');
+    const addressHidden = document.getElementById('addressHidden');
+    const btnLocateList = document.getElementById('btnLocateList');
+    
+    let searchCircle = null;
+    let centerMarker = null;
 
-  function sortCards(key) {
-    [gridView, listView].forEach(container => {
-      if (!container) return;
-      const selector = container === gridView ? '.prop-card' : '.prop-list-item';
-      const items = [...container.querySelectorAll(selector)];
-      items.sort((a, b) => {
-        const ap = parseFloat(a.dataset.price), bp = parseFloat(b.dataset.price);
-        const aa = parseFloat(a.dataset.area),  ba = parseFloat(b.dataset.area);
-        if (key === 'price_asc')  return ap - bp;
-        if (key === 'price_desc') return bp - ap;
-        if (key === 'area_desc')  return ba - aa;
-        if (key === 'area_asc')   return aa - ba;
-        return 0;
+    function drawRadius(lat, lng, rad) {
+      if(searchCircle) map.removeLayer(searchCircle);
+      if(centerMarker) map.removeLayer(centerMarker);
+      searchCircle = L.circle([lat, lng], { color: '#b5892f', fillColor: '#b5892f', fillOpacity: 0.15, weight: 2, radius: rad * 1000 }).addTo(map);
+      centerMarker = L.marker([lat, lng], {draggable: true}).addTo(map).bindPopup("<b>Kéo ghim</b> hoặc <b>nhấp bản đồ</b> để dời tâm!").openPopup();
+
+      centerMarker.on('dragend', function(e) {
+          const p = e.target.getLatLng();
+          latInput.value = p.lat.toFixed(6); lngInput.value = p.lng.toFixed(6);
+          searchCircle.setLatLng(p);
       });
-      items.forEach(item => container.appendChild(item));
-    });
-  }
-
-  sortSelect && sortSelect.addEventListener('change', () => sortCards(sortSelect.value));
-
-  /* ── Mobile filter sidebar toggle ── */
-  const mobileToggle = document.getElementById('mobileFilterToggle');
-  const sidebar      = document.getElementById('filterSidebar');
-
-  mobileToggle && mobileToggle.addEventListener('click', () => {
-    sidebar.classList.toggle('open');
-    mobileToggle.innerHTML = sidebar.classList.contains('open')
-      ? '<i class="bi bi-x-lg"></i> Close'
-      : '<i class="bi bi-sliders"></i> Filters';
-  });
-
-  /* ── Active filter tags ── */
-  (function renderActiveFilters() {
-    const params  = new URLSearchParams(window.location.search);
-    const bar     = document.getElementById('activeFilterBar');
-    if (!bar) return;
-
-    const labels = {
-      type:      v => ({ label: `Type: ${v}` }),
-      price_min: v => ({ label: `Min: ${Number(v).toLocaleString()} đ` }),
-      price_max: v => ({ label: `Max: ${Number(v).toLocaleString()} đ` }),
-      area_min:  v => ({ label: `Area ≥ ${v} m²` }),
-      area_max:  v => ({ label: `Area ≤ ${v} m²` }),
-      q:         v => ({ label: `"${v}"` }),
-    };
-
-    const tags = [];
-    for (const [key, fn] of Object.entries(labels)) {
-      const val = params.get(key);
-      if (val) tags.push({ key, val, ...fn(val) });
     }
 
-    if (tags.length === 0) { bar.style.display = 'none'; return; }
+    if (latInput.value && lngInput.value) {
+      drawRadius(parseFloat(latInput.value), parseFloat(lngInput.value), parseFloat(radiusRange.value));
+    }
 
-    bar.style.display = 'flex';
-    bar.className = 'active-filters';
-    bar.innerHTML = tags.map(t => `
-      <span class="active-filter-tag">
-        ${t.label}
-        <button onclick="removeFilter('${t.key}')" title="Remove filter">×</button>
-      </span>
-    `).join('');
-  })();
+    map.on('click', function(e) {
+      if(document.body.classList.contains('filter-panel-open')) return;
+      drawRadius(e.latlng.lat, e.latlng.lng, parseFloat(radiusRange.value));
+      latInput.value = e.latlng.lat.toFixed(6); lngInput.value = e.latlng.lng.toFixed(6);
+    });
 
-  window.removeFilter = function(key) {
+    radiusRange?.addEventListener('input', function() {
+      document.getElementById('radius-val').innerText = this.value;
+      if (searchCircle) searchCircle.setRadius(this.value * 1000);
+    });
+
+    btnLocateList?.addEventListener('click', function() {
+      const address = addressInputList.value.trim();
+      if(!address) { alert("Nhập địa chỉ ngã tư, phường..."); return; }
+      this.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+      fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address + ', TP Hồ Chí Minh, Việt Nam')}&limit=1`)
+        .then(r => r.json())
+        .then(d => {
+            if(d.length > 0) {
+                latInput.value = parseFloat(d[0].lat).toFixed(6);
+                lngInput.value = parseFloat(d[0].lon).toFixed(6);
+                addressHidden.value = address;
+                drawRadius(d[0].lat, d[0].lon, parseFloat(radiusRange.value));
+                map.setView([d[0].lat, d[0].lon], 14);
+                this.innerHTML = '<i class="bi bi-check2"></i>';
+            } else alert("Không tìm thấy địa chỉ.");
+        }).finally(() => { setTimeout(() => this.innerHTML = '<i class="bi bi-geo-alt"></i>', 2000); });
+    });
+
+    // LOAD MARKERS
+    async function loadMarkers() {
+      const mapStatusEl = document.getElementById('mapStatus');
+      mapStatusEl.classList.add('visible');
+      try {
+        const res = await fetch(`{% url 'properties:map_data' %}?${new URLSearchParams(window.location.search).toString()}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+        const data = await res.json();
+        markerLayer.clearLayers();
+        const bounds = [];
+        data.results.forEach(item => {
+          const marker = L.marker([item.lat, item.lng]);
+          marker.bindPopup(`<b>${item.title}</b><br><span style="color:#b5892f;font-weight:bold">${item.price} VNĐ</span><br><a href="${item.detail_url}">Xem chi tiết</a>`);
+          markerLayer.addLayer(marker);
+          bounds.push([item.lat, item.lng]);
+        });
+        if (!map.hasLayer(markerLayer)) map.addLayer(markerLayer);
+
+        if (bounds.length) {
+          // Ưu tiên fit vòng tròn nếu có, không thì fit theo kết quả
+          if (searchCircle) map.fitBounds(searchCircle.getBounds(), { padding: [30, 30] });
+          else map.fitBounds(bounds, { padding: [30, 30] });
+        } else {
+          if (searchCircle) map.fitBounds(searchCircle.getBounds(), { padding: [30, 30] });
+          else map.setView(defaultCenter, 12);
+        }
+      } catch (err) { console.error(err); }
+      mapStatusEl.classList.remove('visible');
+    }
+
+    document.getElementById('btnSearchArea')?.addEventListener('click', () => {
+      const b = map.getBounds();
+      document.getElementById('bboxInput').value = [b.getWest().toFixed(6), b.getSouth().toFixed(6), b.getEast().toFixed(6), b.getNorth().toFixed(6)].join(',');
+      document.getElementById('filterForm').requestSubmit();
+    });
+
+    document.getElementById('btnResetMapFilter')?.addEventListener('click', () => {
+      document.getElementById('bboxInput').value = '';
+      latInput.value = ''; lngInput.value = '';
+      document.getElementById('filterForm').requestSubmit();
+    });
+
+    let heatLayer = null;
+    document.getElementById('btnToggleHeatmap')?.addEventListener('click', () => {
+      if(!heatLayer) heatLayer = L.heatLayer({{ heatmap_points|safe }}, { radius: 25, blur: 18 });
+      map.hasLayer(heatLayer) ? map.removeLayer(heatLayer) : map.addLayer(heatLayer);
+    });
+
+    loadMarkers();
+  }
+
+  (function renderActiveFilters() {
     const params = new URLSearchParams(window.location.search);
-    params.delete(key);
-    window.location.search = params.toString();
-  };
-
+    const bar = document.getElementById('activeFilterBar');
+    const tags = [];
+    if(params.get('radius')) tags.push({k:'radius', l: `Bán kính: ${params.get('radius')} km`});
+    if(params.get('q')) tags.push({k:'q', l: `"${params.get('q')}"`});
+    if(params.get('type')) tags.push({k:'type', l: params.get('type')==='apartment'?'Căn hộ':params.get('type')==='house'?'Nhà':'Đất'});
+    if(tags.length === 0) return;
+    bar.style.display = 'flex'; bar.className = 'active-filters';
+    bar.innerHTML = tags.map(t => `<span class="active-filter-tag">${t.l}<button onclick="removeFilter('${t.k}')">×</button></span>`).join('');
+  })();
+  window.removeFilter = function(k) { const p = new URLSearchParams(window.location.search); p.delete(k); if(k==='radius'){p.delete('lat');p.delete('lng');} window.location.search = p.toString(); };
 })();
 </script>
-
 <style>
-  .quick-loc-btn {
-    background: var(--bg-3); border: 1px solid var(--border);
-    border-radius: 999px; padding: 5px 14px;
-    font-size: 12px; font-weight: 500; color: var(--text-dim);
-    cursor: pointer; transition: all var(--transition);
-    font-family: 'Outfit', sans-serif;
-  }
-  .quick-loc-btn:hover { border-color: var(--gold-border); color: var(--gold); background: var(--gold-dim); }
+  .map-status { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(12, 15, 26, 0.55); opacity: 0; pointer-events: none; transition: opacity var(--transition); z-index: 1000; }
+  .map-status.visible { opacity: 1; }
+  .map-status-content { background: rgba(0, 0, 0, 0.7); padding: 10px 20px; border-radius: 999px; color: #fff; font-size: 13px; display: flex; gap: 10px; align-items: center; }
+  .map-spinner { width: 16px; height: 16px; border: 2px solid rgba(255, 255, 255, 0.3); border-top-color: var(--gold); border-radius: 50%; animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
 </style>
 {% endblock %}

@@ -6,10 +6,22 @@ from properties.models import Property
 
 
 class Lead(models.Model):
+    class PipelineStage(models.TextChoices):
+        NEW = "new", "Mới"
+        CONSULTING = "consulting", "Đang tư vấn"
+        VIEWING = "viewing", "Đã hẹn xem"
+        NEGOTIATING = "negotiating", "Đang thương lượng"
+        WON = "won", "Đã chốt"
+        LOST = "lost", "Đã hủy"
+
     name = models.CharField(max_length=255)
     phone = models.CharField(max_length=20)
     budget = models.DecimalField(max_digits=14, decimal_places=2)
     desired_location = models.PointField(geography=True, srid=4326)
+    property_interest = models.CharField(max_length=255, blank=True)
+    notes = models.TextField(blank=True)
+    alert_enabled = models.BooleanField(default=False)
+    pipeline_stage = models.CharField(max_length=24, choices=PipelineStage.choices, default=PipelineStage.NEW)
     assigned_agent = models.ForeignKey(Agent, on_delete=models.SET_NULL, null=True, blank=True, related_name="leads")
     created_at = models.DateTimeField(auto_now_add=True)
 

@@ -1,0 +1,115 @@
+:root {
+  --compare-panel-max: 860px;
+}
+
+.compare-panel {
+  margin: 40px auto 120px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 32px;
+  max-width: var(--compare-panel-max);
+  box-shadow: var(--shadow-card);
+}
+
+.compare-panel header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 18px;
+  margin-bottom: 24px;
+}
+
+.compare-panel .label {
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+.compare-panel h2 {
+  margin: 8px 0 4px;
+  font-size: 1.6rem;
+  font-family: 'Space Grotesk', 'Outfit', sans-serif;
+  color: var(--text);
+}
+
+.compare-panel p {
+  margin: 0;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.compare-preview {
+  min-height: 120px;
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.compare-preview article {
+  flex: 1;
+  min-width: 220px;
+  background: var(--bg-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.compare-preview article .avatar {
+  width: 54px;
+  height: 54px;
+  border-radius: 12px;
+  background-size: cover;
+  background-position: center;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.compare-preview article h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.compare-preview article p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.empty-note {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.compare-panel-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.compare-panel-actions .btn-geo-primary,
+.compare-panel-actions .btn-geo-secondary {
+  padding: 10px 18px;
+  font-size: 13px;
+}
+
+@media (max-width: 720px) {
+  .compare-panel {
+    padding: 24px;
+  }
+
+  .compare-preview article {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .compare-panel-actions {
+    flex-direction: column;
+  }
+}
